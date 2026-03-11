@@ -854,9 +854,8 @@ function showScreen(name) {
   const navEl = document.getElementById('nav-'+name);
   if(screenEl) screenEl.classList.add('active');
   if(navEl) navEl.classList.add('active');
-  if(name==='detail') drawAllCharts();
+  if(name==='detail') { updateStockPrice(currentStock); loadKlineAndDraw(); }
   if(name==='a') updateAStockBadge();
-  if(name==='detail') updateStockPrice(currentStock);
   if(name==='b') updateBadge('b');
   if(name==='c') updateBadge('c');
   if(name==='d') updateBadge('d');
@@ -883,6 +882,7 @@ function doSearch(val) {
 function goStock(code) {
   const s = stockDB[code]; if(!s) return;
   currentStock = code;
+  klineData = null; // 清除舊資料
   const si=document.getElementById('searchInput'); if(si) si.value='';
   setEl('searchResults','display','none');
   setEl('d-name','text',s.name);
@@ -909,47 +909,184 @@ function goStock(code) {
   showScreen('detail');
 }
 
+let klineCache = {};      // 快取各股各週期資料
+let currentPeriod = '日'; // 目前選取週期
+let klineData = null;     // 目前顯示中的K線資料
+
 function setPeriod(el) {
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  drawAllCharts();
+  currentPeriod = el.textContent.trim();
+  loadKlineAndDraw();
 }
 
-function drawAllCharts() { drawKline(); drawVolume(); drawForeign(); drawTrust(); drawMain(); }
+function drawAllCharts() { drawKline(klineData); drawVolume(klineData); drawForeign(); drawTrust(); drawMain(); }
 
-function drawKline() {
+// 根據週期對應fetchHistory的參數
+function periodToRange(p) {
+  if(p==='日') return { range:'60d', interval:'1d' };
+  if(p==='週') return { range:'1y',  interval:'1wk' };
+  if(p==='月') return { range:'3y',  interval:'1mo' };
+  if(p==='季') return { range:'5y',  interval:'3mo' };
+  return { range:'60d', interval:'1d' };
+}
+
+async function fetchHistoryByPeriod(code, period) {
+  const { range, interval } = periodToRange(period);
+  const cacheKey = code + '_' + period;
+  if(klineCache[cacheKey]) return klineCache[cacheKey];
+
+  const suffix = STOCK_SUFFIX[code] || 'TW';
+  const url = PROXY + encodeURIComponent(
+    `https://query1.finance.yahoo.com/v8/finance/chart/${code}.${suffix}?interval=${interval}&range=${range}`
+  );
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp;
+    const quotes = result.indicators.quote[0];
+    const rows = timestamps.map((t, i) => {
+      const d = new Date(t * 1000);
+      let label;
+      if(interval==='1d')      label = d.toLocaleDateString('zh-TW', {month:'2-digit',day:'2-digit'});
+      else if(interval==='1wk') label = d.toLocaleDateString('zh-TW', {month:'2-digit',day:'2-digit'});
+      else if(interval==='1mo') label = d.toLocaleDateString('zh-TW', {year:'2-digit',month:'2-digit'}).replace('/','年').replace('/','/');
+      else                      label = d.getFullYear()+'Q'+(Math.floor(d.getMonth()/3)+1);
+      return {
+        date: label,
+        open:  parseFloat(quotes.open[i]?.toFixed(2)),
+        high:  parseFloat(quotes.high[i]?.toFixed(2)),
+        low:   parseFloat(quotes.low[i]?.toFixed(2)),
+        close: parseFloat(quotes.close[i]?.toFixed(2)),
+        volume: quotes.volume[i] || 0
+      };
+    }).filter(d => d.close && !isNaN(d.close));
+    klineCache[cacheKey] = rows;
+    return rows;
+  } catch(e) {
+    return null;
+  }
+}
+
+async function loadKlineAndDraw() {
+  const svgK = document.getElementById('kline-svg');
+  const svgV = document.getElementById('vol-svg');
+  // 顯示載入中
+  if(svgK) svgK.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#8b949e">載入中...</text>`;
+  if(svgV) svgV.innerHTML = '';
+
+  const rows = await fetchHistoryByPeriod(currentStock, currentPeriod);
+  if(rows && rows.length > 0) {
+    klineData = rows;
+  } else {
+    klineData = null;
+    if(svgK) svgK.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#f85149">資料載入失敗，請稍後再試</text>`;
+  }
+  drawKline(klineData);
+  drawVolume(klineData);
+  drawForeign();
+  drawTrust();
+  drawMain();
+}
+
+function drawKline(rows) {
   const svg = document.getElementById('kline-svg');
-  const W=330,H=180,PL=42,PR=10,PT=10,PB=24,cw=W-PL-PR,ch=H-PT-PB,n=30;
-  let price = currentStock==='2330'?980:currentStock==='2317'?210:100;
-  const bars=[];
-  for(let i=0;i<n;i++){
-    const o=price+(Math.random()-0.5)*20, c=o+(Math.random()-0.48)*25;
-    const h=Math.max(o,c)+Math.random()*10, l=Math.min(o,c)-Math.random()*10;
-    bars.push({o,c,h,l}); price=c;
+  if(!svg) return;
+  const W=330,H=180,PL=46,PR=8,PT=10,PB=24,cw=W-PL-PR,ch=H-PT-PB;
+
+  // 若無資料用假資料fallback
+  let bars;
+  if(rows && rows.length > 0) {
+    bars = rows;
+  } else {
+    let price = currentStock==='2330'?980:currentStock==='2317'?210:100;
+    bars = [];
+    for(let i=0;i<30;i++){
+      const o=price+(Math.random()-0.5)*20, c=o+(Math.random()-0.48)*25;
+      const h=Math.max(o,c)+Math.random()*10, l=Math.min(o,c)-Math.random()*10;
+      bars.push({open:o,close:c,high:h,low:l,date:'--'}); price=c;
+    }
   }
-  const maxP=Math.max(...bars.map(b=>b.h)), minP=Math.min(...bars.map(b=>b.l)), range=maxP-minP||1;
-  const bsp=cw/n, bw=bsp*0.65;
-  let html='';
-  for(let i=0;i<=4;i++){
-    const y=PT+ch/4*i, val=maxP-range/4*i;
-    html+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#30363d" stroke-width="0.5"/>`;
-    html+=`<text x="${PL-4}" y="${y+4}" text-anchor="end" font-size="9" fill="#8b949e">${val.toFixed(0)}</text>`;
+
+  const n = bars.length;
+  const maxP = Math.max(...bars.map(b=>b.high));
+  const minP = Math.min(...bars.map(b=>b.low));
+  const range = (maxP - minP) || 1;
+  const bsp = cw / n, bw = Math.max(1.5, bsp * 0.6);
+
+  // 計算MA5/MA20
+  const closes = bars.map(b=>b.close);
+  function calcMA(arr, period) {
+    return arr.map((_, i) => i < period-1 ? null : arr.slice(i-period+1,i+1).reduce((s,v)=>s+v,0)/period);
   }
-  bars.forEach((b,i)=>{
-    const x=PL+i*bsp+bsp/2, up=b.c>=b.o, col=up?'#f85149':'#3fb950';
-    const y1=PT+(maxP-b.h)/range*ch, y2=PT+(maxP-b.l)/range*ch;
-    const yo=PT+(maxP-Math.max(b.o,b.c))/range*ch, yc=PT+(maxP-Math.min(b.o,b.c))/range*ch;
-    html+=`<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${col}" stroke-width="1"/>`;
-    html+=`<rect x="${x-bw/2}" y="${yo}" width="${bw}" height="${Math.max(1,yc-yo)}" fill="${col}"/>`;
-    if(i%5===0){const lbs=['11/1','11/6','11/11','11/16','11/21','11/26']; html+=`<text x="${x}" y="${H-4}" text-anchor="middle" font-size="8" fill="#8b949e">${lbs[i/5]||''}</text>`;}
+  const ma5  = calcMA(closes, 5);
+  const ma20 = calcMA(closes, 20);
+  function priceY(p) { return PT + (maxP - p) / range * ch; }
+
+  let html = '';
+
+  // 格線 + Y軸標籤
+  const steps = 4;
+  for(let i=0;i<=steps;i++){
+    const y = PT + ch/steps*i;
+    const val = maxP - range/steps*i;
+    html += `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#30363d" stroke-width="0.5"/>`;
+    html += `<text x="${PL-3}" y="${y+3.5}" text-anchor="end" font-size="8.5" fill="#8b949e">${val>=1000?val.toFixed(0):val.toFixed(1)}</text>`;
+  }
+
+  // K線本體
+  bars.forEach((b,i) => {
+    const x = PL + i*bsp + bsp/2;
+    const up = b.close >= b.open;
+    const col = up ? '#f85149' : '#3fb950';
+    const y1 = priceY(b.high), y2 = priceY(b.low);
+    const yo = priceY(Math.max(b.open,b.close)), yc = priceY(Math.min(b.open,b.close));
+    html += `<line x1="${x.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="1"/>`;
+    html += `<rect x="${(x-bw/2).toFixed(1)}" y="${yo.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,yc-yo).toFixed(1)}" fill="${col}"/>`;
   });
-  svg.innerHTML=html;
+
+  // X軸日期標籤（最多顯示6個）
+  const labelStep = Math.max(1, Math.floor(n/6));
+  bars.forEach((b,i) => {
+    if(i % labelStep === 0 || i === n-1) {
+      const x = PL + i*bsp + bsp/2;
+      html += `<text x="${x.toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="7.5" fill="#8b949e">${b.date}</text>`;
+    }
+  });
+
+  // MA5（橙色）
+  let ma5Path = '';
+  ma5.forEach((v,i) => {
+    if(v===null) return;
+    const x = PL + i*bsp + bsp/2, y = priceY(v);
+    ma5Path += ma5Path==='' ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  if(ma5Path) html += `<path d="${ma5Path}" stroke="#f0b429" stroke-width="1" fill="none" opacity="0.9"/>`;
+
+  // MA20（藍色）
+  let ma20Path = '';
+  ma20.forEach((v,i) => {
+    if(v===null) return;
+    const x = PL + i*bsp + bsp/2, y = priceY(v);
+    ma20Path += ma20Path==='' ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  if(ma20Path) html += `<path d="${ma20Path}" stroke="#58a6ff" stroke-width="1" fill="none" opacity="0.9"/>`;
+
+  // 圖例
+  html += `<rect x="${PL}" y="2" width="6" height="6" fill="#f0b429"/>`;
+  html += `<text x="${PL+8}" y="9" font-size="8" fill="#f0b429">MA5</text>`;
+  html += `<rect x="${PL+30}" y="2" width="6" height="6" fill="#58a6ff"/>`;
+  html += `<text x="${PL+38}" y="9" font-size="8" fill="#58a6ff">MA20</text>`;
+
+  svg.innerHTML = html;
 }
 
-function drawBarChart(svgId, data, colors, isNeg) {
+function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
   const svg=document.getElementById(svgId);
+  if(!svg) return;
   const W=330,H=80,PL=36,PR=8,PT=6,PB=18,cw=W-PL-PR,ch=H-PT-PB,n=data.length;
-  const maxV=Math.max(...data.map(Math.abs))||1, bsp=cw/n, bw=bsp*0.65;
+  const maxV=Math.max(...data.map(Math.abs))||1, bsp=cw/n, bw=Math.max(1.5,bsp*0.65);
   let html='';
   if(isNeg){const midY=PT+ch/2; html+=`<line x1="${PL}" y1="${midY}" x2="${W-PR}" y2="${midY}" stroke="#30363d" stroke-width="1"/>`;}
   data.forEach((v,i)=>{
@@ -957,22 +1094,36 @@ function drawBarChart(svgId, data, colors, isNeg) {
     let y,h;
     if(isNeg){const midY=PT+ch/2; h=Math.abs(v)/maxV*(ch/2); y=v>=0?midY-h:midY;}
     else{h=v/maxV*ch; y=PT+ch-h;}
-    html+=`<rect x="${x-bw/2}" y="${y}" width="${bw}" height="${Math.max(1,h)}" fill="${col}" rx="2"/>`;
+    html+=`<rect x="${(x-bw/2).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" fill="${col}" rx="1"/>`;
   });
-  const xLbs=['11/1','11/5','11/11','11/15','11/20','11/25','11/28'], step=Math.floor(n/6)||1;
-  for(let i=0;i<n;i+=step){const x=PL+i*bsp+bsp/2; html+=`<text x="${x}" y="${H-2}" text-anchor="middle" font-size="8" fill="#8b949e">${xLbs[Math.floor(i/step)]||''}</text>`;}
+  const labelStep = Math.max(1, Math.floor(n/6));
+  data.forEach((_,i)=>{
+    if(i % labelStep === 0 || i === n-1) {
+      const x=PL+i*bsp+bsp/2;
+      const lbl = dateLabels ? (dateLabels[i]||'') : '';
+      html+=`<text x="${x.toFixed(1)}" y="${H-2}" text-anchor="middle" font-size="7.5" fill="#8b949e">${lbl}</text>`;
+    }
+  });
   if(isNeg){
     html+=`<text x="${PL-3}" y="${PT+4}" text-anchor="end" font-size="8" fill="#8b949e">${Math.round(maxV)}</text>`;
     html+=`<text x="${PL-3}" y="${PT+ch/2+4}" text-anchor="end" font-size="8" fill="#8b949e">0</text>`;
     html+=`<text x="${PL-3}" y="${H-PB+4}" text-anchor="end" font-size="8" fill="#8b949e">-${Math.round(maxV)}</text>`;
   } else {
-    html+=`<text x="${PL-3}" y="${PT+4}" text-anchor="end" font-size="8" fill="#8b949e">${Math.round(maxV)}</text>`;
+    const maxLabel = maxV>=10000 ? (maxV/10000).toFixed(1)+'萬' : Math.round(maxV).toString();
+    html+=`<text x="${PL-3}" y="${PT+4}" text-anchor="end" font-size="8" fill="#8b949e">${maxLabel}</text>`;
     html+=`<text x="${PL-3}" y="${H-PB+4}" text-anchor="end" font-size="8" fill="#8b949e">0</text>`;
   }
   svg.innerHTML=html;
 }
 
-function drawVolume() { drawBarChart('vol-svg', Array.from({length:20},()=>Math.round(3000+Math.random()*8000)), '#58a6ff', false); }
+function drawVolume(rows) {
+  if(rows && rows.length > 0) {
+    const vols = rows.map(b => Math.round((b.volume||0)/1000)); // 轉換為張
+    drawBarChart('vol-svg', vols, '#58a6ff', false, rows.map(b=>b.date));
+  } else {
+    drawBarChart('vol-svg', Array.from({length:20},()=>Math.round(3000+Math.random()*8000)), '#58a6ff', false);
+  }
+}
 function drawForeign() { drawBarChart('foreign-svg', Array.from({length:20},()=>Math.round((Math.random()-0.4)*300)), ['#f85149','#3fb950'], true); }
 function drawTrust()   { drawBarChart('trust-svg',   Array.from({length:10},()=>Math.round((Math.random()-0.35)*60)),  ['#f85149','#3fb950'], true); }
 
