@@ -537,6 +537,37 @@
   <!-- 浮動約定圖示 -->
   <div id="cert-float-btn" onclick="showCertModal()" style="display:none;position:absolute;bottom:135px;right:12px;z-index:100;width:38px;height:38px;background:linear-gradient(135deg,#f0b429,#d29922);border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(240,180,41,0.5);font-size:18px;">📜</div>
 
+  <!-- 浮動設定按鈕 -->
+  <div id="setting-float-btn" onclick="showKeyModal()" style="display:none;position:absolute;bottom:182px;right:12px;z-index:100;width:38px;height:38px;background:linear-gradient(135deg,#30363d,#21262d);border:1.5px solid #58a6ff;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(88,166,255,0.3);font-size:16px;">⚙️</div>
+
+  <!-- 換Key Modal -->
+  <div id="key-modal" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:250;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:var(--bg);border:1.5px solid #58a6ff;border-radius:18px;padding:22px;width:100%;">
+      <div style="font-size:16px;font-weight:900;color:#58a6ff;margin-bottom:16px;">⚙️ Gemini API Key 設定</div>
+
+      <!-- 已有Key的狀態 -->
+      <div id="key-modal-has-key" style="display:none;">
+        <div style="background:rgba(63,185,80,0.1);border:1.5px solid #3fb950;border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
+          <span style="font-size:18px;">✅</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#3fb950;">Gemini AI 已啟用</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">AI診斷功能已開啟</div>
+          </div>
+        </div>
+        <button onclick="startChangeKey()" style="width:100%;background:transparent;color:#f85149;border:1.5px solid #f85149;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">🔄 更換 API Key</button>
+      </div>
+
+      <!-- 未有Key / 換Key輸入框 -->
+      <div id="key-modal-input-area">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">請輸入您的 Gemini API Key，儲存後即可使用AI診斷功能。</div>
+        <input id="modal-key-input" type="password" placeholder="請輸入 Gemini API Key" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:12px;">
+        <button onclick="saveKeyFromModal()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 儲存 Key</button>
+      </div>
+
+      <button onclick="closeKeyModal()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">關閉</button>
+    </div>
+  </div>
+
   <!-- 約定證明 Modal -->
   <div id="cert-modal" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:250;align-items:center;justify-content:center;padding:20px;">
     <div style="background:var(--bg);border:1.5px solid var(--accent);border-radius:18px;padding:20px;width:100%;max-height:85%;overflow-y:auto;">
@@ -689,9 +720,11 @@ function enterApp() {
   document.getElementById('page-quiz').style.display = 'none';
   document.getElementById('page-done').style.display = 'none';
   loadHomePrices();
-  // 顯示浮動約定圖示
+  // 顯示浮動按鈕
   const fb = document.getElementById('cert-float-btn');
   if(fb) fb.style.display = 'flex';
+  const sb = document.getElementById('setting-float-btn');
+  if(sb) sb.style.display = 'flex';
 }
 
 function showCertModal() {
@@ -711,6 +744,48 @@ function showCertModal() {
     <div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:10px;text-align:center;font-size:11px;color:var(--muted);">本人已完整閱讀上述條款並回答確認題目，本約定於登入時自動生效</div>
   `;
   document.getElementById('cert-modal').style.display = 'flex';
+}
+
+// ===== 換Key 浮動面板 =====
+function showKeyModal() {
+  const modal = document.getElementById('key-modal');
+  const hasKeyArea = document.getElementById('key-modal-has-key');
+  const inputArea = document.getElementById('key-modal-input-area');
+  const inp = document.getElementById('modal-key-input');
+  if(geminiApiKey) {
+    hasKeyArea.style.display = 'block';
+    inputArea.style.display = 'none';
+  } else {
+    hasKeyArea.style.display = 'none';
+    inputArea.style.display = 'block';
+  }
+  if(inp) inp.value = '';
+  modal.style.display = 'flex';
+}
+function closeKeyModal() {
+  document.getElementById('key-modal').style.display = 'none';
+}
+function startChangeKey() {
+  document.getElementById('key-modal-has-key').style.display = 'none';
+  document.getElementById('key-modal-input-area').style.display = 'block';
+  document.getElementById('modal-key-input').value = '';
+  document.getElementById('modal-key-input').focus();
+}
+function saveKeyFromModal() {
+  const inp = document.getElementById('modal-key-input');
+  const key = inp ? inp.value.trim() : '';
+  if(!key) { alert('請輸入 API Key'); return; }
+  geminiApiKey = key;
+  localStorage.setItem('geminiApiKey', key);
+  // 同步隱藏各頁輸入區、顯示saved-bar
+  ['a','b','c','d','my'].forEach(p => {
+    const sec = document.getElementById(p + '-apikey-section');
+    const bar = document.getElementById(p + '-apikey-saved-bar');
+    if(sec) sec.style.display = 'none';
+    if(bar) bar.style.display = 'flex';
+  });
+  closeKeyModal();
+  alert('✅ API Key 已儲存！AI診斷功能已啟用。');
 }
 
 // Enter鍵登入
