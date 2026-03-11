@@ -1262,88 +1262,6 @@ function updateAStockBadge() {
   if(s) setEl('a-stock-badge','text',s.name + ' ' + currentStock);
 }
 
-async function runKlineDiagnosis() {
-  if(!geminiApiKey) { alert('請先輸入 Gemini API Key'); return; }
-  const s = stockDB[currentStock];
-  if(!s) return;
-
-  // 顯示過場
-  const overlay = document.getElementById('loading-overlay');
-  const bar = document.getElementById('loading-bar');
-  overlay.style.display = 'flex';
-  bar.style.width = '0%';
-
-  // 進度條假跑到85%等AI
-  let prog = 0;
-  const fakeTimer = setInterval(() => {
-    if(prog < 85) { prog += 1; bar.style.width = prog + '%'; }
-    else clearInterval(fakeTimer);
-  }, 30);
-
-  setEl('a-result','display','none');
-  setEl('a-error','display','none');
-
-  const prompt = `你是一位專業的台股技術分析師。請針對以下股票進行K線技術分析，用繁體中文回答，格式要清楚：
-
-股票：${s.name}（${currentStock}）
-目前股價：${s.price} 元
-今日漲跌：${s.chg}
-
-請分析以下四個項目，每項用1-3句話說明：
-1. 趨勢判斷：目前是多頭、空頭還是盤整？強度如何？
-2. 支撐壓力位：近期主要支撐價位和壓力價位各是多少？
-3. 技術指標解讀：KD、MACD、RSI目前狀態如何？有何訊號？
-4. 風險提示：目前操作需注意哪些風險？
-
-請用JSON格式回傳，欄位名稱：trend、support、indicators、risk`;
-
-
-
-  try {
-    let result;
-    if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
-      // 展示模式：用假資料
-      await new Promise(r => setTimeout(r, 1800));
-      result = mock;
-    } else {
-      // 真實API
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] })
-      });
-      const data = await res.json();
-      if(data.error) throw new Error(data.error.message);
-      const raw = data.candidates[0].content.parts[0].text;
-      const clean = raw.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
-      result = { trend: parsed.trend, support: parsed.support, indicators: parsed.indicators, risk: parsed.risk };
-    }
-
-    // 進度條跑完
-    clearInterval(fakeTimer);
-    bar.style.width = '100%';
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      bar.style.width = '0%';
-    }, 300);
-
-    setEl('a-trend','html',result.trend);
-    setEl('a-support','html',result.support);
-    setEl('a-indicators','html',result.indicators);
-    setEl('a-risk','html',result.risk);
-    setEl('a-result','display','block');
-
-  } catch(err) {
-    clearInterval(fakeTimer);
-    overlay.style.display = 'none';
-    bar.style.width = '0%';
-    setEl('a-error','display','block');
-    setEl('a-error','text','❌ 發生錯誤：' + err.message);
-  }
-}
-
-
   // 假資料庫（展示用）
 const mockDB = {
     '2330': { trend:'📈 多頭趨勢明確，股價站穩5日、20日均線之上，短中期走勢偏多，動能仍強。', support:'🟢 支撐位：1,000 元（20MA）、980 元（月線）<br>🔴 壓力位：1,060 元（前高）、1,100 元（整數關卡）', indicators:'KD 值 72/68，黃金交叉後高檔鈍化，留意短線拉回修正。MACD 柱狀體縮短，多空動能略有消退。RSI 61，偏多但尚未過熱。', risk:'⚠️ 短線漲幅較大，建議分批佈局，避免追高。若跌破 1,000 元支撐，宜觀望等待再進場。' },
@@ -1378,115 +1296,170 @@ function updateBadge(page) {
   if(s) document.getElementById(page+'-stock-badge').textContent = s.name + ' ' + currentStock;
 }
 
-function runMockDiagnosis(page, mockData, fields) {
-  const overlay = document.getElementById('loading-overlay');
-  const bar = document.getElementById('loading-bar');
-  overlay.style.display = 'flex';
-  bar.style.width = '0%';
-  let prog = 0;
-  const timer = setInterval(() => {
-    prog += 1.2;
-    bar.style.width = Math.min(prog, 100) + '%';
-    if(prog >= 100) {
-      clearInterval(timer);
-      setTimeout(() => {
-        overlay.style.display = 'none';
-        bar.style.width = '0%';
-        const mock = mockData[currentStock] || mockData['default'];
-        fields.forEach(([field, id]) => {
-          setEl(id,'html',mock[field]);
-        });
-        setEl(page+'-result','display','block');
-      }, 200);
-    }
-  }, 24);
+// ===== 通用 Gemini 呼叫函式 =====
+async function callGemini(prompt) {
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] })
+  });
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  const raw = data.candidates[0].content.parts[0].text;
+  return JSON.parse(raw.replace(/```json|```/g, '').trim());
 }
 
-function runAllDiagnosis() {
-  // 清空所有結果
-  ['a','b','c','d'].forEach(p => {
-    setEl(p+'-result','display','none');
-  });
-
-  // 過場動畫
+// ===== 過場動畫工具函式 =====
+function showLoading() {
   const overlay = document.getElementById('loading-overlay');
   const bar = document.getElementById('loading-bar');
   overlay.style.display = 'flex';
   bar.style.width = '0%';
   let prog = 0;
   const timer = setInterval(() => {
-    prog += 1.2;
-    bar.style.width = Math.min(prog, 100) + '%';
-    if(prog >= 100) {
-      clearInterval(timer);
-      setTimeout(() => {
-        overlay.style.display = 'none';
-        bar.style.width = '0%';
+    if(prog < 88) { prog += 0.8; bar.style.width = prog + '%'; }
+    else clearInterval(timer);
+  }, 25);
+  return timer;
+}
+function hideLoading(timer) {
+  clearInterval(timer);
+  const bar = document.getElementById('loading-bar');
+  bar.style.width = '100%';
+  setTimeout(() => {
+    document.getElementById('loading-overlay').style.display = 'none';
+    bar.style.width = '0%';
+  }, 300);
+}
 
-        // 填入A頁結果
-        const mA = (mockDB[currentStock] || mockDB['default']);
-        setEl('a-trend','html',mA.trend); setEl('a-support','html',mA.support);
-        setEl('a-indicators','html',mA.indicators); setEl('a-risk','html',mA.risk);
-        setEl('a-result','display','block');
-
-        // 填入B頁結果
-        const mB = mockB[currentStock] || mockB['default'];
-        setEl('b-arrangement','html',mB.arrangement); setEl('b-signal','html',mB.signal);
-        setEl('b-cross','html',mB.cross); setEl('b-advice','html',mB.advice);
-        setEl('b-result','display','block');
-
-        // 填入C頁結果
-        const mC = mockC[currentStock] || mockC['default'];
-        setEl('c-bigplayer','html',mC.bigplayer); setEl('c-retail','html',mC.retail);
-        setEl('c-concentration','html',mC.concentration); setEl('c-warning','html',mC.warning);
-        setEl('c-result','display','block');
-
-        // 填入D頁結果
-        const mD = mockD[currentStock] || mockD['default'];
-        setEl('d-current','html',mD.current); setEl('d-growth','html',mD.growth);
-        setEl('d-trend','html',mD.trend); setEl('d-risk','html',mD.risk);
-        setEl('d-result','display','block');
-
-        // 填入操作建議
-        fillMyResult();
-
-        // 隱藏所有診斷按鈕
-        ['a','b','c','d'].forEach(p => {
-          const btn = document.getElementById('btn-'+p);
-          if(btn) btn.style.display = 'none';
-        });
-
-      }, 200);
+// ===== A頁：K線診斷（單獨執行） =====
+async function runKlineOnly() {
+  const s = stockDB[currentStock]; if(!s) return;
+  const timer = showLoading();
+  setEl('a-result','display','none'); setEl('a-error','display','none');
+  try {
+    let r;
+    if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
+      await new Promise(x => setTimeout(x, 1800));
+      r = mockDB[currentStock] || mockDB['default'];
+    } else {
+      r = await callGemini(`你是台股技術分析師，用繁體中文分析以下股票K線，以JSON格式回傳，欄位：trend、support、indicators、risk，每項1-3句話。
+股票：${s.name}（${currentStock}）股價：${s.price}元 漲跌：${s.chg}`);
     }
-  }, 24);
+    hideLoading(timer);
+    setEl('a-trend','html',r.trend); setEl('a-support','html',r.support);
+    setEl('a-indicators','html',r.indicators); setEl('a-risk','html',r.risk);
+    setEl('a-result','display','block');
+    setEl('btn-a','display','none');
+  } catch(err) {
+    hideLoading(timer);
+    setEl('a-error','display','block');
+    setEl('a-error','text','❌ 發生錯誤：' + err.message);
+  }
+}
+
+// ===== 主診斷：A/B/C/D + 操作建議 全部一次 =====
+async function runAllDiagnosis() {
+  ['a','b','c','d'].forEach(p => setEl(p+'-result','display','none'));
+  const s = stockDB[currentStock]; if(!s) return;
+  const timer = showLoading();
+
+  try {
+    let rA, rB, rC, rD, rMy;
+
+    if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
+      // 展示模式：假資料
+      await new Promise(x => setTimeout(x, 2000));
+      rA  = mockDB[currentStock]  || mockDB['default'];
+      rB  = mockB[currentStock]   || mockB['default'];
+      rC  = mockC[currentStock]   || mockC['default'];
+      rD  = mockD[currentStock]   || mockD['default'];
+      rMy = mockMy[currentStock]  || mockMy['default'];
+    } else {
+      // 真實 Gemini：4頁平行呼叫
+      const stock_info = `股票：${s.name}（${currentStock}）目前股價：${s.price}元 今日漲跌：${s.chg}`;
+
+      [rA, rB, rC, rD, rMy] = await Promise.all([
+
+        // A頁：K線技術分析
+        callGemini(`你是台股技術分析師，用繁體中文分析K線，JSON格式，欄位：trend、support、indicators、risk，各1-3句話。
+${stock_info}`),
+
+        // B頁：均線趨勢
+        callGemini(`你是台股均線分析師，用繁體中文分析均線趨勢，JSON格式，欄位：arrangement（均線排列狀態）、signal（多空訊號）、cross（均線交叉狀況）、advice（操作建議），各1-3句話。
+${stock_info}`),
+
+        // C頁：籌碼大戶動向
+        callGemini(`你是台股籌碼分析師，用繁體中文分析法人籌碼，JSON格式，欄位：bigplayer（外資投信動向）、retail（散戶融資動向）、concentration（籌碼集中度）、warning（風險提示），各1-3句話。
+${stock_info}`),
+
+        // D頁：產業展望
+        callGemini(`你是台股產業分析師，用繁體中文分析產業前景，JSON格式，欄位：current（產業現況）、growth（成長動能）、trend（長期趨勢）、risk（產業風險），各1-3句話。
+${stock_info}`),
+
+        // 操作建議（綜合）
+        callGemini(`你是台股投資顧問，用繁體中文給出操作建議，JSON格式，欄位：
+score（1-5整數評分），label（評分標籤，如「強力看多」「中性觀望」「偏空謹慎」），
+direction（操作方向，如「🟢 買進」「🟡 持股觀望」「🔴 建議減碼」），
+dirBg（對應CSS，看多用"background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;"，中性用"background:rgba(210,153,34,0.15);border:1.5px solid #d29922;"，看空用"background:rgba(248,81,73,0.15);border:1.5px solid #f85149;"），
+buy（建議買進價位，純數字字串）、stop（停損價位，純數字字串）、target（目標價位，純數字字串），
+thinking（操作思維，綜合技術面籌碼面產業面，3-5句話）。
+${stock_info}`)
+      ]);
+    }
+
+    hideLoading(timer);
+
+    // 填入A頁
+    setEl('a-trend','html',rA.trend); setEl('a-support','html',rA.support);
+    setEl('a-indicators','html',rA.indicators); setEl('a-risk','html',rA.risk);
+    setEl('a-result','display','block');
+
+    // 填入B頁
+    setEl('b-arrangement','html',rB.arrangement); setEl('b-signal','html',rB.signal);
+    setEl('b-cross','html',rB.cross); setEl('b-advice','html',rB.advice);
+    setEl('b-result','display','block');
+
+    // 填入C頁
+    setEl('c-bigplayer','html',rC.bigplayer); setEl('c-retail','html',rC.retail);
+    setEl('c-concentration','html',rC.concentration); setEl('c-warning','html',rC.warning);
+    setEl('c-result','display','block');
+
+    // 填入D頁
+    setEl('d-current','html',rD.current); setEl('d-growth','html',rD.growth);
+    setEl('d-trend','html',rD.trend); setEl('d-risk','html',rD.risk);
+    setEl('d-result','display','block');
+
+    // 填入操作建議
+    const stars = '★'.repeat(rMy.score) + '☆'.repeat(5 - rMy.score);
+    setEl('my-stars','text',stars);
+    setEl('my-score-label','text',rMy.label);
+    setEl('my-direction','text',rMy.direction);
+    setEl('my-direction-card','cssText',(rMy.dirBg||'')+'margin-bottom:12px;border-radius:16px;padding:16px;text-align:center;');
+    setEl('my-buy','text',rMy.buy);
+    setEl('my-stop','text',rMy.stop);
+    setEl('my-target','text',rMy.target);
+    setEl('my-thinking','text',rMy.thinking);
+    setEl('my-pending','display','none');
+    setEl('my-result','display','block');
+
+    // 隱藏所有診斷按鈕
+    ['a','b','c','d'].forEach(p => {
+      const btn = document.getElementById('btn-'+p);
+      if(btn) btn.style.display = 'none';
+    });
+
+  } catch(err) {
+    hideLoading(timer);
+    // 顯示錯誤在A頁
+    setEl('a-error','display','block');
+    setEl('a-error','text','❌ AI分析失敗：' + err.message + '\n請確認API Key是否正確，或稍後再試。');
+  }
 }
 
 function runBDiagnosis() { runAllDiagnosis(); }
 function runCDiagnosis() { runAllDiagnosis(); }
 function runDDiagnosis() { runAllDiagnosis(); }
-
-
-// ===== 操作建議假資料 =====
-const mockMy = {
-  '2330': {
-    score: 4, label: '強力看多',
-    direction: '🟢 買進', dirBg: 'background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;',
-    buy: '1,000', stop: '960', target: '1,120',
-    thinking: '台積電技術面多頭排列、法人持續買超、AI需求強勁，三面共振向上。建議在均線支撐附近分批買進，以1,000元為核心支撐，跌破960元停損，上方目標看1,120元前高。持股期間密切關注外資動向，若外資連續賣超3日需提高警覺。'
-  },
-  '2317': {
-    score: 3, label: '中性觀望',
-    direction: '🟡 持股觀望', dirBg: 'background:rgba(210,153,34,0.15);border:1.5px solid #d29922;',
-    buy: '218', stop: '210', target: '240',
-    thinking: '鴻海目前均線盤整、籌碼分散，短期方向不明。建議持股者設好停損，空手者觀望為主。待股價有效突破232元壓力並放量確認後，再考慮加碼。電動車題材為中長期看點，耐心等待觸媒。'
-  },
-  'default': {
-    score: 3, label: '中性偏多',
-    direction: '🟡 持股觀望', dirBg: 'background:rgba(210,153,34,0.15);border:1.5px solid #d29922;',
-    buy: '參考支撐位', stop: '參考前低', target: '參考前高',
-    thinking: '綜合技術面、籌碼面與產業面評估，目前訊號中性偏多。建議小量試單，嚴守停損，等待更明確的進場訊號後再加碼布局。'
-  }
-};
 
 function fillMyResult() {
   const m = mockMy[currentStock] || mockMy['default'];
@@ -1502,7 +1475,6 @@ function fillMyResult() {
   setEl('my-pending','display','none');
   setEl('my-result','display','block');
 }
-
 
 // ===== 同溫層系統 =====
 let communityData = {};
