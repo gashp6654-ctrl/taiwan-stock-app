@@ -342,7 +342,7 @@
         </div>
         <div id="a-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
       </div>
-      <div id="a-apikey-section" style="display:none;margin:12px 16px;background:var(--card);border:1px solid var(--yellow);border-radius:14px;padding:12px 14px;">
+      <div id="a-apikey-section" style="margin:12px 16px;background:var(--card);border:1px solid var(--yellow);border-radius:14px;padding:12px 14px;">
         <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:8px;">🔑 Gemini API Key</div>
         <div style="display:flex;gap:8px;">
           <input id="a-apikey-input" type="password" placeholder="請輸入您的 Gemini API Key" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
@@ -370,6 +370,13 @@
         </div>
         <div id="b-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
       </div>
+      <div id="b-apikey-section" style="margin:12px 16px 0;background:var(--card);border:1.5px solid var(--yellow);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px;">🔑 Gemini API Key <span style="font-weight:400;color:var(--muted);font-size:11px;">（設定一次，五頁通用）</span></div>
+        <div style="display:flex;gap:8px;">
+          <input id="b-apikey-input" type="password" placeholder="請輸入您的 Gemini API Key" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+          <button onclick="saveApiKeyFrom('b')" style="background:var(--yellow);color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;">儲存</button>
+        </div>
+      </div>
       <div style="margin:12px 16px 14px;">
         <button id="btn-b" onclick="runBDiagnosis()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">🐮 開始AI分析</button>
       </div>
@@ -391,6 +398,13 @@
         </div>
         <div id="c-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
       </div>
+      <div id="c-apikey-section" style="margin:12px 16px 0;background:var(--card);border:1.5px solid var(--yellow);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px;">🔑 Gemini API Key <span style="font-weight:400;color:var(--muted);font-size:11px;">（設定一次，五頁通用）</span></div>
+        <div style="display:flex;gap:8px;">
+          <input id="c-apikey-input" type="password" placeholder="請輸入您的 Gemini API Key" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+          <button onclick="saveApiKeyFrom('c')" style="background:var(--yellow);color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;">儲存</button>
+        </div>
+      </div>
       <div style="margin:12px 16px 14px;">
         <button id="btn-c" onclick="runCDiagnosis()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">🐮 開始AI分析</button>
       </div>
@@ -411,6 +425,13 @@
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">AI牛牛產業洞察</div>
         </div>
         <div id="d-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
+      </div>
+      <div id="d-apikey-section" style="margin:12px 16px 0;background:var(--card);border:1.5px solid var(--yellow);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px;">🔑 Gemini API Key <span style="font-weight:400;color:var(--muted);font-size:11px;">（設定一次，五頁通用）</span></div>
+        <div style="display:flex;gap:8px;">
+          <input id="d-apikey-input" type="password" placeholder="請輸入您的 Gemini API Key" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+          <button onclick="saveApiKeyFrom('d')" style="background:var(--yellow);color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;">儲存</button>
+        </div>
       </div>
       <div style="margin:12px 16px 14px;">
         <button id="btn-d" onclick="runDDiagnosis()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:900;cursor:pointer;font-family:inherit;letter-spacing:0.5px;">🐮 開始AI分析</button>
@@ -434,6 +455,13 @@
         <div id="my-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
       </div>
 
+      <div id="my-apikey-section" style="margin:12px 16px 0;background:var(--card);border:1.5px solid var(--yellow);border-radius:14px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--yellow);margin-bottom:6px;">🔑 Gemini API Key <span style="font-weight:400;color:var(--muted);font-size:11px;">（設定一次，五頁通用）</span></div>
+        <div style="display:flex;gap:8px;">
+          <input id="my-apikey-input" type="password" placeholder="請輸入您的 Gemini API Key" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+          <button onclick="saveApiKeyFrom('my')" style="background:var(--yellow);color:#000;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;">儲存</button>
+        </div>
+      </div>
       <!-- 未診斷提示 -->
       <div id="my-pending" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 30px;text-align:center;">
         <div style="font-size:48px;margin-bottom:16px;">🐮</div>
@@ -906,6 +934,13 @@ function goStock(code) {
   setEl('a-support','html','');
   setEl('a-indicators','html','');
   setEl('a-risk','html','');
+  // 若無 Key，重新顯示輸入框
+  if(!geminiApiKey) {
+    ['a','b','c','d','my'].forEach(p => {
+      const sec = document.getElementById(p+'-apikey-section');
+      if(sec) sec.style.display = 'block';
+    });
+  }
   showScreen('detail');
 }
 
@@ -1248,14 +1283,25 @@ function drawQuarterlyChart(data) {
 // ===== K線診斷 API =====
 let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
 
-function saveApiKey() {
-  const key = document.getElementById('a-apikey-input').value.trim();
-  if(!key) return;
+// 通用：任一頁都可以儲存Key，儲存後隱藏該頁輸入區塊
+function saveApiKeyFrom(pageId) {
+  const input = document.getElementById(pageId + '-apikey-input');
+  const key = input ? input.value.trim() : '';
+  if(!key) { alert('請輸入 API Key'); return; }
   geminiApiKey = key;
   localStorage.setItem('geminiApiKey', key);
-  document.getElementById('a-apikey-input').value = '••••••••••••••••';
-  alert('API Key 已儲存！');
+  // 所有頁的輸入框都更新並隱藏
+  ['a','b','c','d','my'].forEach(p => {
+    const inp = document.getElementById(p + '-apikey-input');
+    const sec = document.getElementById(p + '-apikey-section');
+    if(inp) inp.value = '••••••••••••••••';
+    if(sec) sec.style.display = 'none';
+  });
+  alert('✅ API Key 已儲存！\n五頁診斷功能已全部啟用，現在可以開始AI分析。');
 }
+
+// 舊版相容
+function saveApiKey() { saveApiKeyFrom('a'); }
 
 function updateAStockBadge() {
   const s = stockDB[currentStock];
@@ -1381,30 +1427,64 @@ async function runAllDiagnosis() {
 
       [rA, rB, rC, rD, rMy] = await Promise.all([
 
-        // A頁：K線技術分析
-        callGemini(`你是台股技術分析師，用繁體中文分析K線，JSON格式，欄位：trend、support、indicators、risk，各1-3句話。
-${stock_info}`),
+        // A頁：K線技術分析（目標500字以上）
+        callGemini(`你是一位資深台股技術分析師，擁有20年以上的K線分析經驗。請針對以下股票進行深入的K線技術分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體、專業、有深度，不能只是泛泛而談。
 
-        // B頁：均線趨勢
-        callGemini(`你是台股均線分析師，用繁體中文分析均線趨勢，JSON格式，欄位：arrangement（均線排列狀態）、signal（多空訊號）、cross（均線交叉狀況）、advice（操作建議），各1-3句話。
-${stock_info}`),
+【分析對象】${stock_info}
 
-        // C頁：籌碼大戶動向
-        callGemini(`你是台股籌碼分析師，用繁體中文分析法人籌碼，JSON格式，欄位：bigplayer（外資投信動向）、retail（散戶融資動向）、concentration（籌碼集中度）、warning（風險提示），各1-3句話。
-${stock_info}`),
+請回傳純JSON格式（不含markdown），欄位如下：
+- trend：【趨勢判斷】詳細分析目前股價處於多頭、空頭或盤整格局，說明趨勢的強弱程度、持續時間、突破或跌破關鍵位置的意義，以及短中長期趨勢的一致性，並預測未來可能的走向。
+- support：【支撐壓力位】詳細列出近期主要支撐價位（至少2個）和壓力價位（至少2個），說明每個價位形成的原因（如前高前低、均線、整數關卡、斐波那契回調位等），以及突破或跌破這些位置後的意義與後續目標。
+- indicators：【技術指標解讀】詳細解讀KD、MACD、RSI、布林通道等技術指標的現況，說明各指標發出的訊號是否一致，是否有背離現象，指標之間的共鳴或分歧代表什麼意義，以及如何搭配使用這些指標做出判斷。
+- risk：【風險提示】詳細說明目前技術面存在的風險，包含短線、中線可能的反轉訊號，需要注意的型態破壞，以及建議的停損設置方式和風控思路。`),
 
-        // D頁：產業展望
-        callGemini(`你是台股產業分析師，用繁體中文分析產業前景，JSON格式，欄位：current（產業現況）、growth（成長動能）、trend（長期趨勢）、risk（產業風險），各1-3句話。
-${stock_info}`),
+        // B頁：均線趨勢分析（目標500字以上）
+        callGemini(`你是一位專精均線分析的台股操盤手，精通葛蘭碧八大法則與均線系統理論。請針對以下股票進行深入的均線趨勢分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業。
 
-        // 操作建議（綜合）
-        callGemini(`你是台股投資顧問，用繁體中文給出操作建議，JSON格式，欄位：
-score（1-5整數評分），label（評分標籤，如「強力看多」「中性觀望」「偏空謹慎」），
-direction（操作方向，如「🟢 買進」「🟡 持股觀望」「🔴 建議減碼」），
-dirBg（對應CSS，看多用"background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;"，中性用"background:rgba(210,153,34,0.15);border:1.5px solid #d29922;"，看空用"background:rgba(248,81,73,0.15);border:1.5px solid #f85149;"），
-buy（建議買進價位，純數字字串）、stop（停損價位，純數字字串）、target（目標價位，純數字字串），
-thinking（操作思維，綜合技術面籌碼面產業面，3-5句話）。
-${stock_info}`)
+【分析對象】${stock_info}
+
+請回傳純JSON格式（不含markdown），欄位如下：
+- arrangement：【均線排列狀態】詳細描述5日、10日、20日、60日、120日、240日均線的排列狀況，說明是多頭排列、空頭排列或糾結盤整，各均線的斜率變化、距離遠近，股價與均線的相對位置，以及這種排列狀態在歷史上通常意味著什麼。
+- signal：【多空訊號判讀】詳細說明目前均線系統發出的多空訊號，包含葛蘭碧法則中買進或賣出訊號的對應，哪條均線是目前最關鍵的支撐或壓力，均線扇形的收斂或發散代表什麼趨勢動能，以及整體訊號的可靠程度評估。
+- cross：【均線交叉分析】詳細分析近期均線交叉的情況，包含黃金交叉或死亡交叉的形成過程、交叉的角度與力道、成交量配合情況，以及這次交叉在更大時間框架下的意義，歷史上類似的交叉形態後續走勢如何。
+- advice：【操作建議】根據均線系統給出具體的操作建議，包含建議的買進或減碼時機（以哪條均線作為參考）、停損設置（以哪條均線或價位為依據）、倉位管理建議，以及需要特別留意的均線變化警訊。`),
+
+        // C頁：籌碼大戶動向（目標500字以上）
+        callGemini(`你是一位專精台股籌碼分析的法人研究員，深入了解外資、投信、自營商及大戶的操作習慣。請針對以下股票進行深入的籌碼分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業。
+
+【分析對象】${stock_info}
+
+請回傳純JSON格式（不含markdown），欄位如下：
+- bigplayer：【大戶法人動向】詳細分析外資、投信、自營商三大法人的操作動態，說明各法人的買賣超方向與累計金額意義，三大法人是否同向操作，法人的持倉成本估算，以及法人買超或賣超背後可能的戰略意圖（如建倉、出貨、避險等）。
+- retail：【散戶籌碼動態】詳細分析散戶的融資餘額變化、融券餘額、券資比，說明散戶的情緒與信心，融資增減對股價的影響，是否有軋空條件，借貸比例是否健康，以及散戶與法人之間籌碼消長的意涵。
+- concentration：【籌碼集中度分析】詳細分析大股東持股比例的變化、董監持股、庫藏股執行狀況，說明籌碼是否在向特定機構或大戶集中，浮動籌碼的多寡對股價波動的影響，集中度的變化趨勢，以及高度集中或分散各自代表的投資意義。
+- warning：【籌碼面警示】詳細說明目前籌碼面存在的風險與警示訊號，包含法人是否有逐步出貨的跡象、融資斷頭風險、大股東減持動態，以及建議投資人在籌碼面需要特別監控的指標和閾值。`),
+
+        // D頁：產業展望（目標500字以上）
+        callGemini(`你是一位頂尖的台股產業研究分析師，深入追蹤各大產業的發展趨勢與競爭格局。請針對以下股票所在產業進行深入分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業有深度。
+
+【分析對象】${stock_info}
+
+請回傳純JSON格式（不含markdown），欄位如下：
+- current：【產業現況】詳細說明該公司所在產業目前的景氣循環位置、市場規模、主要玩家競爭格局、供需關係、庫存水位，以及近期影響產業的重大事件（如政策、技術突破、客戶需求變化等），並說明該公司在產業中的定位與市占率。
+- growth：【成長動能】詳細分析推動該公司未來成長的核心驅動力，包含新產品或新技術的商業化進度、新客戶或新市場的拓展、產能擴張計畫與時程，以及量化的成長預期（如營收成長率、訂單能見度、市場擴大空間等），說明成長的可持續性。
+- trend：【長期趨勢】詳細分析未來3-5年影響該產業的長期結構性趨勢，包含AI、電動車、綠能、地緣政治重組等宏觀趨勢對該公司的影響，技術演進路線圖，以及該公司是否具備長期競爭優勢（護城河），在趨勢中是受益者還是被挑戰者。
+- risk：【潛在風險】詳細說明該公司面臨的主要風險，包含產業週期風險、客戶集中度風險、技術被取代風險、地緣政治風險（如美中貿易戰、台海局勢）、匯率風險、原物料成本風險，以及每項風險的發生概率和潛在衝擊程度評估。`),
+
+        // 操作建議（目標500字，綜合分析）
+        callGemini(`你是一位頂尖的台股投資顧問，擅長整合技術面、籌碼面、產業面給出完整的投資建議。請針對以下股票給出專業的操作建議，用繁體中文撰寫。
+
+【分析對象】${stock_info}
+
+請回傳純JSON格式（不含markdown），欄位如下：
+- score：整數1-5（1=強力看空、2=偏空、3=中性觀望、4=偏多、5=強力看多）
+- label：評分標籤文字（如「強力看多⭐⭐⭐⭐⭐」「穩健偏多⭐⭐⭐⭐」「中性觀望⭐⭐⭐」「偏空謹慎⭐⭐」「強力看空⭐」）
+- direction：操作方向（看多用「🟢 積極買進」或「🟢 分批買進」，中性用「🟡 持股觀望」或「🟡 空手觀望」，看空用「🔴 建議減碼」或「🔴 建議出場」）
+- dirBg：對應CSS樣式字串（看多："background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;" 中性:"background:rgba(210,153,34,0.15);border:1.5px solid #d29922;" 看空:"background:rgba(248,81,73,0.15);border:1.5px solid #f85149;"）
+- buy：建議買進或加碼價位（純數字字串，如"980"或"1000-1020"）
+- stop：建議停損價位（純數字字串）
+- target：短中期目標價（純數字字串）
+- thinking：【完整操作思維】至少200字，從技術面（趨勢、支撐壓力、指標訊號）、籌碼面（法人動向、散戶情緒）、產業面（景氣、成長動能）三個維度綜合分析，說明給出此評分的理由，操作的時機選擇，倉位管理建議，以及需要改變看法的條件（如什麼情況下會轉多/轉空）。`)
       ]);
     }
 
@@ -1443,10 +1523,12 @@ ${stock_info}`)
     setEl('my-pending','display','none');
     setEl('my-result','display','block');
 
-    // 隱藏所有診斷按鈕
-    ['a','b','c','d'].forEach(p => {
+    // 隱藏所有診斷按鈕和API Key輸入框
+    ['a','b','c','d','my'].forEach(p => {
       const btn = document.getElementById('btn-'+p);
       if(btn) btn.style.display = 'none';
+      const sec = document.getElementById(p+'-apikey-section');
+      if(sec) sec.style.display = 'none';
     });
 
   } catch(err) {
@@ -1687,7 +1769,20 @@ function cowTalk() { cowIdx=(cowIdx+1)%cowTexts.length; setEl('bubbleText','text
 
 drawAllCharts();
 if(document.getElementById('watchlistEl')) renderWatchlist();
-if(geminiApiKey && document.getElementById('a-apikey-input')) document.getElementById('a-apikey-input').value='••••••••••••••••';
+// 初始化：根據是否已有 API Key 決定顯示或隱藏輸入框
+(function initApiKeyUI() {
+  ['a','b','c','d','my'].forEach(p => {
+    const sec = document.getElementById(p + '-apikey-section');
+    const inp = document.getElementById(p + '-apikey-input');
+    if(!sec) return;
+    if(geminiApiKey) {
+      sec.style.display = 'none';
+      if(inp) inp.value = '••••••••••••••••';
+    } else {
+      sec.style.display = 'block';
+    }
+  });
+})();
 </script>
 </body>
 </html>
