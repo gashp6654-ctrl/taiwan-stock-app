@@ -640,6 +640,7 @@ function enterApp() {
   document.getElementById('page-login').style.display = 'none';
   document.getElementById('page-quiz').style.display = 'none';
   document.getElementById('page-done').style.display = 'none';
+  loadHomePrices();
   // 顯示浮動約定圖示
   const fb = document.getElementById('cert-float-btn');
   if(fb) fb.style.display = 'flex';
@@ -671,6 +672,95 @@ document.addEventListener('keydown', function(e) {
     if(loginPage && loginPage.style.display !== 'none') doLogin();
   }
 });
+
+
+// ===== 真實股價 API =====
+const PROXY = 'https://corsproxy.io/?';
+const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+
+// 股票代號對應（上市加.TW，上櫃加.TWO）
+const STOCK_SUFFIX = {
+  '2330':'TW','2317':'TW','2454':'TW','2303':'TW','2308':'TW',
+  '2882':'TW','0050':'TW','2412':'TW','2886':'TW','3008':'TW'
+};
+
+async function fetchRealPrice(code) {
+  const suffix = STOCK_SUFFIX[code] || 'TW';
+  const url = PROXY + encodeURIComponent(YF_BASE + code + '.' + suffix + '?interval=1d&range=1d');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const meta = data.chart.result[0].meta;
+    const price = meta.regularMarketPrice;
+    const prev = meta.chartPreviousClose;
+    const chg = ((price - prev) / prev * 100).toFixed(2);
+    const up = price >= prev;
+    return { price, prev, chg: Math.abs(chg), up, name: stockDB[code]?.name || code };
+  } catch(e) {
+    return null;
+  }
+}
+
+async function fetchHistory(code, days) {
+  const suffix = STOCK_SUFFIX[code] || 'TW';
+  const url = PROXY + encodeURIComponent(YF_BASE + code + '.' + suffix + '?interval=1d&range=' + days + 'd');
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp;
+    const quotes = result.indicators.quote[0];
+    return timestamps.map((t, i) => ({
+      date: new Date(t * 1000).toLocaleDateString('zh-TW', {month:'2-digit', day:'2-digit'}),
+      open: quotes.open[i]?.toFixed(0),
+      high: quotes.high[i]?.toFixed(0),
+      low: quotes.low[i]?.toFixed(0),
+      close: quotes.close[i]?.toFixed(0),
+      volume: quotes.volume[i]
+    })).filter(d => d.close);
+  } catch(e) {
+    return null;
+  }
+}
+
+async function updateStockPrice(code) {
+  const badge = document.getElementById('d-badge-price');
+  const data = await fetchRealPrice(code);
+  if(!data) return;
+
+  // 更新stockDB
+  if(stockDB[code]) {
+    stockDB[code].price = data.price;
+    stockDB[code].chg = data.chg;
+    stockDB[code].up = data.up;
+  }
+
+  // 更新K線頁股價顯示
+  const priceEl = document.getElementById('d-price');
+  const chgEl = document.getElementById('d-chg');
+  if(priceEl) priceEl.textContent = data.price.toLocaleString();
+  if(chgEl) {
+    chgEl.textContent = (data.up ? '▲ ' : '▼ ') + data.chg + '%';
+    chgEl.style.color = data.up ? 'var(--green)' : 'var(--red)';
+  }
+
+  // 更新首頁熱門股清單
+  renderHotStocks();
+}
+
+// 首頁載入時抓前4支股票即時價
+async function loadHomePrices() {
+  const codes = ['2330','2317','2454','2303'];
+  for(const code of codes) {
+    const data = await fetchRealPrice(code);
+    if(data && stockDB[code]) {
+      stockDB[code].price = data.price;
+      stockDB[code].chg = data.chg;
+      stockDB[code].up = data.up;
+    }
+  }
+  renderHotStocks();
+}
 
 function setEl(id, prop, val) {
   const el = document.getElementById(id);
@@ -741,6 +831,7 @@ function showScreen(name) {
   if(navEl) navEl.classList.add('active');
   if(name==='detail') drawAllCharts();
   if(name==='a') updateAStockBadge();
+  if(name==='detail') updateStockPrice(currentStock);
   if(name==='b') updateBadge('b');
   if(name==='c') updateBadge('c');
   if(name==='d') updateBadge('d');
