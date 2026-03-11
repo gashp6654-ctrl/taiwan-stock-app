@@ -261,7 +261,7 @@
         <div onclick="cowTalk()" style="margin-top:10px;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:5px 20px;font-size:13px;font-weight:900;color:var(--accent);letter-spacing:1px;cursor:pointer;">AI牛牛</div>
       </div>
       <div class="section-title">🔥 熱門個股</div>
-      <div class="hot-stocks">
+      <div class="hot-stocks" id="hot-stocks-grid">
         <div class="hot-card" onclick="goStock('2330')"><div class="hc-top"><span class="hc-code">2330</span><span class="hc-chg up">+1.47%</span></div><div class="hc-name">台積電</div><div class="hc-price up">1,035</div></div>
         <div class="hot-card" onclick="goStock('2317')"><div class="hc-top"><span class="hc-code">2317</span><span class="hc-chg up">+1.12%</span></div><div class="hc-name">鴻海</div><div class="hc-price up">225.5</div></div>
         <div class="hot-card" onclick="goStock('2454')"><div class="hc-top"><span class="hc-code">2454</span><span class="hc-chg down">-2.72%</span></div><div class="hc-name">聯發科</div><div class="hc-price down">1,250</div></div>
@@ -693,9 +693,10 @@ async function fetchRealPrice(code) {
     const meta = data.chart.result[0].meta;
     const price = meta.regularMarketPrice;
     const prev = meta.chartPreviousClose;
-    const chg = ((price - prev) / prev * 100).toFixed(2);
+    const chgNum = ((price - prev) / prev * 100).toFixed(2);
     const up = price >= prev;
-    return { price, prev, chg: Math.abs(chg), up, name: stockDB[code]?.name || code };
+    const chg = (up ? '+' : '') + chgNum + '%';
+    return { price, prev, chg, up, name: stockDB[code]?.name || code };
   } catch(e) {
     return null;
   }
@@ -740,7 +741,7 @@ async function updateStockPrice(code) {
   const chgEl = document.getElementById('d-chg');
   if(priceEl) priceEl.textContent = data.price.toLocaleString();
   if(chgEl) {
-    chgEl.textContent = (data.up ? '▲ ' : '▼ ') + data.chg + '%';
+    chgEl.textContent = (data.up ? '▲ ' : '▼ ') + data.chg;
     chgEl.style.color = data.up ? 'var(--green)' : 'var(--red)';
   }
 
@@ -749,8 +750,32 @@ async function updateStockPrice(code) {
 }
 
 // 首頁載入時抓前4支股票即時價
+function renderHotStocks() {
+  const codes = ['2330','2317','2454','0050'];
+  const grid = document.getElementById('hot-stocks-grid');
+  if(!grid) return;
+  grid.innerHTML = codes.map(code => {
+    const s = stockDB[code];
+    if(!s) return '';
+    const up = s.up;
+    const cls = up ? 'up' : 'down';
+    // chg可能是 "+1.47%" 或 "+15 (+1.47%)" 格式，取括號內百分比或直接用
+    let chgTxt = typeof s.chg === 'string' ? s.chg : (up ? '+' : '') + s.chg + '%';
+    if(chgTxt.includes('(')) {
+      const m = chgTxt.match(/\(([^)]+)\)/);
+      chgTxt = m ? m[1] : chgTxt;
+    }
+    const priceStr = s.price >= 1000 ? Number(s.price).toLocaleString() : s.price;
+    return `<div class="hot-card" onclick="goStock('${code}')">
+      <div class="hc-top"><span class="hc-code">${code}</span><span class="hc-chg ${cls}">${chgTxt}</span></div>
+      <div class="hc-name">${s.name}</div>
+      <div class="hc-price ${cls}">${priceStr}</div>
+    </div>`;
+  }).join('');
+}
+
 async function loadHomePrices() {
-  const codes = ['2330','2317','2454','2303'];
+  const codes = ['2330','2317','2454','0050'];
   for(const code of codes) {
     const data = await fetchRealPrice(code);
     if(data && stockDB[code]) {
