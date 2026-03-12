@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.5</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.6</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.5</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.6</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -850,7 +850,7 @@ async function fetchHistory(code, days) {
     const timestamps = result.timestamp;
     const quotes = result.indicators.quote[0];
     return timestamps.map((t, i) => ({
-      date: new Date(t * 1000).toLocaleDateString('zh-TW', {month:'2-digit', day:'2-digit'}),
+      date: new Date(t * 1000).toISOString().slice(0, 10),
       open: quotes.open[i]?.toFixed(0),
       high: quotes.high[i]?.toFixed(0),
       low: quotes.low[i]?.toFixed(0),
@@ -1112,9 +1112,9 @@ async function fetchHistoryByPeriod(code, period) {
     return timestamps.map((t, i) => {
       const d = new Date(t * 1000);
       let label;
-      if(interval==='1d')      label = d.toLocaleDateString('zh-TW', {month:'2-digit',day:'2-digit'});
-      else if(interval==='1wk') label = d.toLocaleDateString('zh-TW', {month:'2-digit',day:'2-digit'});
-      else if(interval==='1mo') label = d.toLocaleDateString('zh-TW', {year:'2-digit',month:'2-digit'}).replace('/','年').replace('/','/');
+      if(interval==='1d')       label = d.toISOString().slice(0, 10);
+      else if(interval==='1wk') label = d.toISOString().slice(0, 10);
+      else if(interval==='1mo') label = d.toISOString().slice(0, 7);
       else                      label = d.getFullYear()+'Q'+(Math.floor(d.getMonth()/3)+1);
       return {
         date: label,
