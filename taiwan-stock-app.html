@@ -138,7 +138,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.3</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -231,7 +231,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.2</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.3</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -795,6 +795,23 @@ document.addEventListener('keydown', function(e) {
 
 
 // ===== 真實股價 API =====
+const PROXIES = [
+  'https://api.codetabs.com/v1/proxy?quest=',
+  'https://corsproxy.io/?',
+  'https://api.allorigins.win/raw?url=',
+];
+async function proxyFetch(url) {
+  for(const proxy of PROXIES) {
+    try {
+      const res = await fetch(proxy + encodeURIComponent(url));
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(text.includes('Too Many') || text.includes('Rate Limit') || text.length < 10) continue;
+      return { ok: true, text, json: async () => JSON.parse(text) };
+    } catch(e) { continue; }
+  }
+  return { ok: false, text: '', json: async () => ({}) };
+}
 const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
 const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 
@@ -806,10 +823,10 @@ const STOCK_SUFFIX = {
 
 async function fetchRealPrice(code) {
   const suffix = STOCK_SUFFIX[code] || 'TW';
-  const url = PROXY + encodeURIComponent(YF_BASE + code + '.' + suffix + '?interval=1d&range=1d');
+  const targetUrl = YF_BASE + code + '.' + suffix + '?interval=1d&range=1d';
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await proxyFetch(targetUrl);
+    const data = JSON.parse(res.text);
     const meta = data.chart.result[0].meta;
     const price = meta.regularMarketPrice;
     const prev = meta.chartPreviousClose;
@@ -824,10 +841,10 @@ async function fetchRealPrice(code) {
 
 async function fetchHistory(code, days) {
   const suffix = STOCK_SUFFIX[code] || 'TW';
-  const url = PROXY + encodeURIComponent(YF_BASE + code + '.' + suffix + '?interval=1d&range=' + days + 'd');
+  const targetUrl = YF_BASE + code + '.' + suffix + '?interval=1d&range=' + days + 'd';
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await proxyFetch(targetUrl);
+    const data = JSON.parse(res.text);
     const result = data.chart.result[0];
     const timestamps = result.timestamp;
     const quotes = result.indicators.quote[0];
@@ -1078,12 +1095,9 @@ function periodToRange(p) {
 async function fetchHistoryByPeriod(code, period) {
   const { range, interval } = periodToRange(period);
   const suffix = STOCK_SUFFIX[code] || 'TW';
-  const url = PROXY + encodeURIComponent(
-    `https://query1.finance.yahoo.com/v8/finance/chart/${code}.${suffix}?interval=${interval}&range=${range}`
-  );
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await proxyFetch(`https://query1.finance.yahoo.com/v8/finance/chart/${code}.${suffix}?interval=${interval}&range=${range}`);
+    const data = JSON.parse(res.text);
     const result = data.chart.result[0];
     const timestamps = result.timestamp;
     const quotes = result.indicators.quote[0];
@@ -1288,12 +1302,10 @@ function drawVolume(rows) {
 // TWSE T86：三大法人每日買賣超（取外資+投信+自營）
 // 回傳格式：[{ date, foreign, trust, dealer }] 近20筆，新→舊
 async function fetchInstitutional(code) {
-  const url = PROXY + encodeURIComponent(
-    `https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`
-  );
+  const _instUrl = `https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`;
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await proxyFetch(_instUrl);
+    const data = JSON.parse(res.text);
     if(!data.data) return null;
     // 找出對應股票代號的列，取近20筆
     const rows = data.data.filter(r => r[0] === code).slice(0, 20).reverse();
@@ -1308,12 +1320,10 @@ async function fetchInstitutional(code) {
 
 // TWSE MI_MARGN：融資餘額近15日
 async function fetchMargin(code) {
-  const url = PROXY + encodeURIComponent(
-    `https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`
-  );
+  const _marginUrl = `https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`;
   try {
-    const res = await fetch(url);
-    const data = await res.json();
+    const res = await proxyFetch(_marginUrl);
+    const data = JSON.parse(res.text);
     if(!data.data) return null;
     const rows = data.data.slice(-15);
     return rows.map(r => ({
@@ -1398,7 +1408,7 @@ function drawMain(instData, marginData) {
 
 async function fetchMopsRevenue(code) {
   // 取得近12個月的月營收，使用MOPS公開資訊觀測站
-  const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
+  // 使用全域 proxyFetch
   const now = new Date();
   const results = [];
 
@@ -1410,7 +1420,7 @@ async function fetchMopsRevenue(code) {
     const yearmonth = `${rocYear}${month}`;
     const url = `https://mopsov.twse.com.tw/mops/web/ajax_t05st10_ifrs?firstin=true&off=1&step=0&co_id=${code}&year=${rocYear}&month=${d.getMonth()+1}&yearmonth=${yearmonth}`;
     try {
-      const res = await fetch(PROXY + encodeURIComponent(url));
+      const res = await proxyFetch(url);
       const html = await res.text();
       // 解析HTML表格中的營收數字
       const parser = new DOMParser();
