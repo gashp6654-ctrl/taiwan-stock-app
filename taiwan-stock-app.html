@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.820</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.821</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.820</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.821</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1876,9 +1876,9 @@ function updateFinMindStatus() {
 
 // FinMind REST API 通用函式
 async function fetchFinMind(dataset, params) {
-  if(!finmindToken) return null;
-  const base = 'https://api.finmindtrade.com/api/v4/data';
-  const q = new URLSearchParams({ dataset, token: finmindToken, ...params });
+  // 透過 Worker proxy，token 藏在後端
+  const base = 'https://niuniu-proxy.gashp6654.workers.dev/finmind';
+  const q = new URLSearchParams({ dataset, ...params });
   try {
     const res = await fetch(`${base}?${q}`);
     const data = await res.json();
