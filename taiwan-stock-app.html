@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.822</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.823</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.822</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.823</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -292,9 +292,9 @@
       </div>
       <div class="chart-block"><div class="chart-label">K線走勢圖</div><div id="kline-plotly" style="width:100%;height:260px;"></div></div>
       <div class="chart-block"><div class="chart-label">成交量（張）</div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
-      <div class="chart-block"><div class="chart-label">外資買賣超（張）</div><div id="foreign-plotly" style="width:100%;height:160px;"></div></div>
-      <div class="chart-block"><div class="chart-label">投信買賣超（張）</div><div id="trust-plotly" style="width:100%;height:130px;"></div></div>
-      <div class="chart-block"><div class="chart-label">主力法人15日累計 vs 融資餘額</div><div id="main-plotly" style="width:100%;height:160px;"></div></div>
+      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">外資買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="foreign-plotly" style="width:100%;height:160px;"></div></div>
+      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">投信買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="trust-plotly" style="width:100%;height:130px;"></div></div>
+      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">主力法人15日累計 vs 融資餘額<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="main-plotly" style="width:100%;height:160px;"></div></div>
     </div>
 
     <!-- 營收頁 -->
@@ -1506,6 +1506,9 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
     return;
   }
+  // 有資料：先清除舊內容（含載入中文字），再畫圖
+  try { Plotly.purge(el); } catch(e){}
+  el.innerHTML = '';
   const dates = data.map(d => d.date);
   const vals  = data.map(d => d[field]);
   const colors = vals.map(v => v >= 0 ? color_pos : color_neg);
@@ -1524,7 +1527,8 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     dragmode: 'pan',
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false
+      fixedrange: false, rangeslider: { visible: false },
+      minallowed: dates[0], maxallowed: dates[dates.length - 1]
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
@@ -1534,8 +1538,7 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     bargap: 0.2, showlegend: false
   };
   const config = { responsive: true, displayModeBar: false, scrollZoom: true };
-  if(el._fullLayout) Plotly.react(el, [trace], layout, config);
-  else Plotly.newPlot(el, [trace], layout, config);
+  Plotly.newPlot(el, [trace], layout, config);
 }
 
 function drawForeign(data) { _instPlotly('foreign-plotly', data, 'foreign', '外資', '#ef5350', '#26a69a'); }
@@ -1550,6 +1553,9 @@ function drawMain(instData, marginData) {
     return;
   }
 
+  // 有資料：先清除舊內容，再畫圖
+  try { Plotly.purge(el); } catch(e){}
+  el.innerHTML = '';
   // 主力法人 = 外資+投信+自營 15日累計（滾動）
   const n = instData.length;
   const mainCum = instData.map((_, i) => {
@@ -1594,7 +1600,8 @@ function drawMain(instData, marginData) {
     dragmode: 'pan',
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false
+      fixedrange: false,
+      minallowed: instDates[0], maxallowed: instDates[instDates.length - 1]
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
@@ -1611,8 +1618,7 @@ function drawMain(instData, marginData) {
     showlegend: true
   };
   const config = { responsive: true, displayModeBar: false, scrollZoom: true };
-  if(el._fullLayout) Plotly.react(el, traces, layout, config);
-  else Plotly.newPlot(el, traces, layout, config);
+  Plotly.newPlot(el, traces, layout, config);
 }
 
 async function fetchMopsRevenue(code) {
