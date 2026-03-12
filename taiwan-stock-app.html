@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.6</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.8</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.6</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.8</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -565,7 +565,18 @@
         <button onclick="saveKeyFromModal()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 儲存 Key</button>
       </div>
 
-      <button onclick="closeKeyModal()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;">關閉</button>
+      <!-- FinMind Token 區塊 -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+        <div style="font-size:13px;font-weight:700;color:#58a6ff;margin-bottom:8px;">📊 FinMind Token 設定</div>
+        <div id="finmind-has-key" style="display:none;background:rgba(63,185,80,0.1);border:1.5px solid #3fb950;border-radius:12px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;">
+          <span>✅</span>
+          <div style="font-size:12px;font-weight:700;color:#3fb950;">FinMind 已啟用（真實市場資料）</div>
+        </div>
+        <input id="finmind-token-input" type="password" placeholder="請輸入 FinMind Token" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:10px;">
+        <button onclick="saveFinMindToken()" style="width:100%;background:linear-gradient(135deg,#26a69a,#00897b);color:#fff;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">💾 儲存 Token</button>
+      </div>
+
+      <button onclick="closeKeyModal()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px;">關閉</button>
     </div>
   </div>
 
@@ -758,6 +769,7 @@ function showKeyModal() {
     inputArea.style.display = 'block';
   }
   if(inp) inp.value = '';
+  updateFinMindStatus();
   modal.style.display = 'flex';
 }
 function closeKeyModal() {
@@ -1010,18 +1022,22 @@ function showScreen(name) {
   if(name==='my') renderWatchlist();
 }
 
+let _searchTimer = null;
 function doSearch(val) {
+  clearTimeout(_searchTimer);
   const r = document.getElementById('searchResults');
-  if(!val){ r.style.display='none'; return; }
-  val = val.trim().toUpperCase();
-  const matches = Object.entries(stockDB).filter(([code,s])=>code.includes(val)||s.name.includes(val));
-  if(!matches.length){ r.style.display='none'; return; }
-  r.style.display='block';
-  r.innerHTML = matches.map(([code,s])=>`
-    <div class="search-item" onclick="goStock('${code}')">
-      <div><div class="s-code">${code}</div><div class="s-name">${s.name}</div></div>
-      <div class="s-price ${s.up?'up':'down'}">${s.price}</div>
-    </div>`).join('');
+  if(!val){ r.style.display='none'; r.innerHTML=''; return; }
+  _searchTimer = setTimeout(() => {
+    val = val.trim().toUpperCase();
+    const matches = Object.entries(stockDB).filter(([code,s])=>code.includes(val)||s.name.includes(val));
+    if(!matches.length){ r.style.display='none'; r.innerHTML=''; return; }
+    r.style.display='block';
+    r.innerHTML = matches.map(([code,s])=>`
+      <div class="search-item" onclick="goStock('${code}')">
+        <div><div class="s-code">${code}</div><div class="s-name">${s.name}</div></div>
+        <div class="s-price ${s.up?'up':'down'}">${s.price}</div>
+      </div>`).join('');
+  }, 150);
 }
 
 function goStock(code) {
@@ -1035,8 +1051,22 @@ function goStock(code) {
     if(el && el._fullLayout) try { Plotly.purge(el); } catch(e){}
     if(el) el.innerHTML = '';
   });
+  // 清除三大法人 SVG
+  ['foreign-svg','trust-svg','main-svg'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '';
+  });
+  // 清除營收頁
+  setEl('rev-summary-monthly','html','');
+  setEl('rev-summary-quarterly','html','');
+  ['monthly-chart-svg','quarterly-chart-svg'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = '';
+  });
+  // 清除搜尋
   const si=document.getElementById('searchInput'); if(si) si.value='';
   setEl('searchResults','display','none');
+  const sr = document.getElementById('searchResults'); if(sr) sr.innerHTML = '';
   setEl('d-name','text',s.name);
   setEl('d-code','text',code+' · TW');
   setEl('d-price','text',s.price.toLocaleString());
@@ -1350,38 +1380,78 @@ function drawVolume(rows) {
 }
 // ===== 三大法人 & 融資 真實資料 =====
 
-// TWSE T86：三大法人每日買賣超（取外資+投信+自營）
-// 回傳格式：[{ date, foreign, trust, dealer }] 近20筆，新→舊
+// 三大法人：FinMind 優先，fallback TWSE
 async function fetchInstitutional(code) {
-  const _instUrl = `https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`;
+  // ===== FinMind =====
+  if(finmindToken) {
+    try {
+      const end = new Date();
+      const start = new Date(); start.setDate(start.getDate() - 60);
+      const fmt = d => d.toISOString().slice(0,10);
+      const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
+      });
+      if(rows && rows.length > 0) {
+        // 每天有三筆（外資/投信/自營），先按日期分組
+        const byDate = {};
+        rows.forEach(r => {
+          if(!byDate[r.date]) byDate[r.date] = { date: r.date, foreign: 0, trust: 0, dealer: 0 };
+          const v = (r.buy - r.sell) / 100000000; // 元→億
+          if(r.name === '外陸資買賣超股數(不含外資自營商)' || r.name.includes('外資')) byDate[r.date].foreign += v;
+          else if(r.name.includes('投信')) byDate[r.date].trust += v;
+          else if(r.name.includes('自營')) byDate[r.date].dealer += v;
+        });
+        return Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-20)
+          .map(d => ({ ...d, foreign: parseFloat(d.foreign.toFixed(2)), trust: parseFloat(d.trust.toFixed(2)), dealer: parseFloat(d.dealer.toFixed(2)) }));
+      }
+    } catch(e) {}
+  }
+  // ===== Fallback: TWSE =====
   try {
-    const res = await proxyFetch(_instUrl);
+    const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`);
     const data = JSON.parse(res.text);
     if(!data.data) return null;
-    // 找出對應股票代號的列，取近20筆
     const rows = data.data.filter(r => r[0] === code).slice(0, 20).reverse();
     return rows.map(r => ({
       date:    r[1],
-      foreign: parseFloat((r[4]||'0').replace(/,/g,'')/100000000), // 元→億
+      foreign: parseFloat((r[4]||'0').replace(/,/g,'')/100000000),
       trust:   parseFloat((r[10]||'0').replace(/,/g,'')/100000000),
       dealer:  parseFloat((r[7]||'0').replace(/,/g,'')/100000000),
     }));
   } catch(e) { return null; }
 }
 
-// TWSE MI_MARGN：融資餘額近15日
+// 融資融券：FinMind 優先，fallback TWSE
 async function fetchMargin(code) {
-  const _marginUrl = `https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`;
+  // ===== FinMind =====
+  if(finmindToken) {
+    try {
+      const end = new Date();
+      const start = new Date(); start.setDate(start.getDate() - 40);
+      const fmt = d => d.toISOString().slice(0,10);
+      const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
+      });
+      if(rows && rows.length > 0) {
+        return rows.slice(-15).map(r => ({
+          date:          r.date,
+          marginBuy:     r.MarginPurchaseBuy    || 0,
+          marginSell:    r.MarginPurchaseSell   || 0,
+          marginBalance: r.MarginPurchaseYesterday || 0,
+        }));
+      }
+    } catch(e) {}
+  }
+  // ===== Fallback: TWSE =====
   try {
-    const res = await proxyFetch(_marginUrl);
+    const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`);
     const data = JSON.parse(res.text);
     if(!data.data) return null;
-    const rows = data.data.slice(-15);
-    return rows.map(r => ({
-      date:        r[0],
-      marginBuy:   parseFloat((r[2]||'0').replace(/,/g,'')),  // 融資買進（張）
-      marginSell:  parseFloat((r[3]||'0').replace(/,/g,'')),  // 融資賣出（張）
-      marginBalance: parseFloat((r[4]||'0').replace(/,/g,'')),// 融資餘額（張）
+    return data.data.slice(-15).map(r => ({
+      date:          r[0],
+      marginBuy:     parseFloat((r[2]||'0').replace(/,/g,'')),
+      marginSell:    parseFloat((r[3]||'0').replace(/,/g,'')),
+      marginBalance: parseFloat((r[4]||'0').replace(/,/g,'')),
     }));
   } catch(e) { return null; }
 }
@@ -1458,12 +1528,42 @@ function drawMain(instData, marginData) {
 }
 
 async function fetchMopsRevenue(code) {
-  // 取得近12個月的月營收，使用MOPS公開資訊觀測站
-  // 使用全域 proxyFetch
+  // ===== FinMind 月營收（所有股票都能用）=====
+  if(finmindToken) {
+    try {
+      const end = new Date();
+      const start = new Date(); start.setFullYear(start.getFullYear() - 2);
+      const fmt = d => d.toISOString().slice(0,10);
+      const rows = await fetchFinMind('TaiwanStockMonthRevenue', {
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
+      });
+      if(rows && rows.length >= 2) {
+        // FinMind 欄位：date, stock_id, country, revenue, revenue_month, revenue_year
+        const sorted = rows.sort((a,b) => a.date.localeCompare(b.date));
+        // 計算年增率
+        const results = sorted.map((r, i) => {
+          const sameLastYear = sorted.find(x =>
+            x.revenue_year === r.revenue_year - 1 && x.revenue_month === r.revenue_month
+          );
+          const yoy = sameLastYear && sameLastYear.revenue > 0
+            ? parseFloat(((r.revenue - sameLastYear.revenue) / sameLastYear.revenue * 100).toFixed(1))
+            : null;
+          const rocYear = r.revenue_year - 1911;
+          const month = String(r.revenue_month).padStart(2, '0');
+          return {
+            label: `${rocYear}/${month}`,
+            value: parseFloat((r.revenue / 100000000).toFixed(1)), // 元→億
+            yoy,
+            rocYear, month: r.revenue_month
+          };
+        });
+        return results.slice(-14); // 近14個月
+      }
+    } catch(e) {}
+  }
+  // ===== Fallback: MOPS（原本邏輯）=====
   const now = new Date();
   const results = [];
-
-  // 抓近14個月資料（確保有12筆有效）
   for(let i = 0; i < 14; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const rocYear = d.getFullYear() - 1911;
@@ -1472,56 +1572,42 @@ async function fetchMopsRevenue(code) {
     const url = `https://mopsov.twse.com.tw/mops/web/ajax_t05st10_ifrs?firstin=true&off=1&step=0&co_id=${code}&year=${rocYear}&month=${d.getMonth()+1}&yearmonth=${yearmonth}`;
     try {
       const res = await proxyFetch(url);
-      const html = await res.text();
-      // 解析HTML表格中的營收數字
+      const html = res.text;
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
       const rows = doc.querySelectorAll('table tr');
       let found = false;
       for(const row of rows) {
         const cells = row.querySelectorAll('td');
-        // 找「當月營收」那列
         const text = Array.from(cells).map(c => c.innerText?.trim() || c.textContent?.trim());
         if(text.some(t => t.includes('當月營收') || t.includes('本月營收'))) {
-          // 找數字欄位（通常是第2或第3格）
           for(let j = 1; j < cells.length; j++) {
             const val = (cells[j].innerText || cells[j].textContent || '').replace(/,/g,'').trim();
             if(/^\d+$/.test(val) && parseInt(val) > 1000) {
-              results.push({
-                label: `${rocYear}/${month}`,
-                value: Math.round(parseInt(val) / 100000000 * 10) / 10, // 元→億，取1位小數
-                rocYear, month: d.getMonth() + 1
-              });
-              found = true;
-              break;
+              results.push({ label: `${rocYear}/${month}`, value: Math.round(parseInt(val)/100000000*10)/10, yoy: null, rocYear, month: d.getMonth()+1 });
+              found = true; break;
             }
           }
           if(found) break;
         }
       }
       if(!found) {
-        // 嘗試另一種格式：直接找表格第一個大數字
         const allCells = doc.querySelectorAll('td');
         for(const cell of allCells) {
           const val = (cell.innerText || cell.textContent || '').replace(/,/g,'').trim();
           if(/^\d{6,}$/.test(val)) {
             const num = parseInt(val);
-            if(num > 100000000) { // 至少1億
-              results.push({
-                label: `${rocYear}/${month}`,
-                value: Math.round(num / 100000000 * 10) / 10,
-                rocYear, month: d.getMonth() + 1
-              });
-              found = true;
+            if(num > 100000000) {
+              results.push({ label: `${rocYear}/${month}`, value: Math.round(num/100000000*10)/10, yoy: null, rocYear, month: d.getMonth()+1 });
               break;
             }
           }
         }
       }
-    } catch(e) { /* 跳過失敗月份 */ }
+    } catch(e) {}
     if(results.length >= 12) break;
   }
-  return results.reverse(); // 由舊到新
+  return results.reverse();
 }
 
 async function drawRevenueCharts() {
@@ -1531,49 +1617,47 @@ async function drawRevenueCharts() {
   setEl('rev-summary-monthly', 'html', '<div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>');
   setEl('rev-summary-quarterly', 'html', '');
 
-  // 只有2330先用真實API，其他用靜態資料
-  if(code === '2330') {
-    try {
-      const revData = await fetchMopsRevenue(code);
-      if(revData.length >= 2) {
-        const monthly = revData.map(d => d.value);
-        const labels = revData.map(d => d.label);
-        // 計算年增率（與12個月前比較）
-        const yoy = monthly.map((v, i) => {
-          if(i < 1) return 0;
-          const prev = monthly[i - 1];
-          return prev ? Math.round((v - prev) / prev * 1000) / 10 : 0;
-        });
-        const latest = revData[revData.length - 1];
-        const prev = revData[revData.length - 2];
-        const mom = prev ? Math.round((latest.value - prev.value) / prev.value * 1000) / 10 : 0;
-        const annual = Math.round(monthly.reduce((a,b)=>a+b,0) * 10) / 10;
-        const yoyLatest = yoy[yoy.length - 1];
-        const upColor = yoyLatest >= 0 ? 'var(--green)' : 'var(--red)';
-        const momColor = mom >= 0 ? 'var(--green)' : 'var(--red)';
+  // 所有股票都先嘗試真實 API（FinMind 優先，fallback MOPS）
+  try {
+    const revData = await fetchMopsRevenue(code);
+    if(revData && revData.length >= 2) {
+      const monthly = revData.map(d => d.value);
+      const labels = revData.map(d => d.label);
+      // 年增率：優先用 FinMind 提供的 yoy，否則自算
+      const yoy = revData.map((d, i) => {
+        if(d.yoy !== null && d.yoy !== undefined) return d.yoy;
+        if(i < 12) return 0;
+        const prev12 = monthly[i - 12];
+        return prev12 ? Math.round((d.value - prev12) / prev12 * 1000) / 10 : 0;
+      });
+      const latest = revData[revData.length - 1];
+      const prev = revData[revData.length - 2];
+      const mom = prev ? Math.round((latest.value - prev.value) / prev.value * 1000) / 10 : 0;
+      const annual = Math.round(monthly.reduce((a,b)=>a+b,0) * 10) / 10;
+      const yoyLatest = yoy[yoy.length - 1] || 0;
+      const upColor = yoyLatest >= 0 ? 'var(--green)' : 'var(--red)';
+      const momColor = mom >= 0 ? 'var(--green)' : 'var(--red)';
 
-        setEl('rev-summary-monthly', 'html', `
-          <div class="rev-card"><div class="rev-card-label">本月營收</div><div class="rev-card-val" style="color:var(--green)">${latest.value}億</div></div>
-          <div class="rev-card"><div class="rev-card-label">年增率</div><div class="rev-card-val" style="color:${upColor}">${yoyLatest >= 0 ? '+' : ''}${yoyLatest}%</div></div>
-          <div class="rev-card"><div class="rev-card-label">月增率</div><div class="rev-card-val" style="color:${momColor}">${mom >= 0 ? '+' : ''}${mom}%</div></div>
-          <div class="rev-card"><div class="rev-card-label">累計年營收</div><div class="rev-card-val">${annual}億</div></div>`);
+      setEl('rev-summary-monthly', 'html', `
+        <div class="rev-card"><div class="rev-card-label">本月營收</div><div class="rev-card-val" style="color:var(--green)">${latest.value}億</div></div>
+        <div class="rev-card"><div class="rev-card-label">年增率</div><div class="rev-card-val" style="color:${upColor}">${yoyLatest >= 0 ? '+' : ''}${yoyLatest}%</div></div>
+        <div class="rev-card"><div class="rev-card-label">月增率</div><div class="rev-card-val" style="color:${momColor}">${mom >= 0 ? '+' : ''}${mom}%</div></div>
+        <div class="rev-card"><div class="rev-card-label">累計年營收</div><div class="rev-card-val">${annual}億</div></div>`);
 
-        const mData = { monthly, yoy, labels };
-        drawMonthlyChart(mData);
+      drawMonthlyChart({ monthly, yoy, labels });
 
-        // 季營收用靜態資料
-        const qData = qRevenueDB[code] || qRevenueDB['default'];
-        const qs = qData.summary;
-        setEl('rev-summary-quarterly', 'html', `
-          <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val up">${qs.cur}</div></div>
-          <div class="rev-card"><div class="rev-card-label">季增率</div><div class="rev-card-val up">${qs.qoq}</div></div>
-          <div class="rev-card"><div class="rev-card-label">毛利率</div><div class="rev-card-val" style="color:var(--purple)">${qs.gm}</div></div>
-          <div class="rev-card"><div class="rev-card-label">毛利率趨勢</div><div class="rev-card-val up">${qs.trend}</div></div>`);
-        drawQuarterlyChart(qData);
-        return;
-      }
-    } catch(e) { console.warn('MOPS API失敗，使用靜態資料', e); }
-  }
+      // 季營收仍用靜態資料（待後續升級）
+      const qData = qRevenueDB[code] || qRevenueDB['default'];
+      const qs = qData.summary;
+      setEl('rev-summary-quarterly', 'html', `
+        <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val up">${qs.cur}</div></div>
+        <div class="rev-card"><div class="rev-card-label">季增率</div><div class="rev-card-val up">${qs.qoq}</div></div>
+        <div class="rev-card"><div class="rev-card-label">毛利率</div><div class="rev-card-val" style="color:var(--purple)">${qs.gm}</div></div>
+        <div class="rev-card"><div class="rev-card-label">毛利率趨勢</div><div class="rev-card-val up">${qs.trend}</div></div>`);
+      drawQuarterlyChart(qData);
+      return;
+    }
+  } catch(e) { console.warn('月營收 API 失敗，使用靜態資料', e); }
 
   // 其他股票或API失敗：使用靜態資料
   const mData = revenueDB[code] || revenueDB['default'];
@@ -1673,6 +1757,36 @@ function drawQuarterlyChart(data) {
 
 // ===== K線診斷 API =====
 let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
+let finmindToken = localStorage.getItem('finmindToken') || '';
+
+function saveFinMindToken() {
+  const inp = document.getElementById('finmind-token-input');
+  const key = inp ? inp.value.trim() : '';
+  if(!key) return;
+  finmindToken = key;
+  localStorage.setItem('finmindToken', key);
+  updateFinMindStatus();
+  inp.value = '';
+  alert('FinMind Token 已儲存！');
+}
+
+function updateFinMindStatus() {
+  const el = document.getElementById('finmind-has-key');
+  if(el) el.style.display = finmindToken ? 'flex' : 'none';
+}
+
+// FinMind REST API 通用函式
+async function fetchFinMind(dataset, params) {
+  if(!finmindToken) return null;
+  const base = 'https://api.finmindtrade.com/api/v4/data';
+  const q = new URLSearchParams({ dataset, token: finmindToken, ...params });
+  try {
+    const res = await fetch(`${base}?${q}`);
+    const data = await res.json();
+    if(data.status === 200 && data.data?.length > 0) return data.data;
+    return null;
+  } catch(e) { return null; }
+}
 
 // 通用：任一頁都可以儲存Key，儲存後隱藏該頁輸入區塊
 function saveApiKeyFrom(pageId) {
