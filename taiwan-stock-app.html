@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.813</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.814</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.813</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.814</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1184,9 +1184,9 @@ async function fetchHistoryByPeriod(code, period) {
 async function loadKlineAndDraw() {
   const elK = document.getElementById('kline-plotly');
   const elV = document.getElementById('vol-plotly');
-  // 顯示載入中
-  if(elK) elK.innerHTML = `<div style="color:#8b949e;text-align:center;padding:80px 0;font-size:13px;">載入中...</div>`;
-  if(elV) elV.innerHTML = '';
+  // purge 再設「載入中」，確保 _fullLayout 與 DOM 一致
+  if(elK) { try { Plotly.purge(elK); } catch(e){} elK.innerHTML = `<div style="color:#8b949e;text-align:center;padding:80px 0;font-size:13px;">載入中...</div>`; }
+  if(elV) { try { Plotly.purge(elV); } catch(e){} elV.innerHTML = ''; }
 
   const rows = await fetchHistoryByPeriod(currentStock, currentPeriod);
   if(rows && rows.length > 0) {
