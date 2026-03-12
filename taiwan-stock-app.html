@@ -138,7 +138,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.3</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.4</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -231,7 +231,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.3</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.4</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1027,6 +1027,7 @@ function goStock(code) {
   const s = stockDB[code]; if(!s) return;
   currentStock = code;
   klineData = null; // 清除舊資料
+  currentPeriod = '日'; // 重置週期為日K
   const si=document.getElementById('searchInput'); if(si) si.value='';
   setEl('searchResults','display','none');
   setEl('d-name','text',s.name);
@@ -1156,19 +1157,12 @@ function drawKline(rows) {
   if(!svg) return;
   const W=330,H=180,PL=46,PR=8,PT=10,PB=24,cw=W-PL-PR,ch=H-PT-PB;
 
-  // 若無資料用假資料fallback
-  let bars;
-  if(rows && rows.length > 0) {
-    bars = rows;
-  } else {
-    let price = currentStock==='2330'?980:currentStock==='2317'?210:100;
-    bars = [];
-    for(let i=0;i<30;i++){
-      const o=price+(Math.random()-0.5)*20, c=o+(Math.random()-0.48)*25;
-      const h=Math.max(o,c)+Math.random()*10, l=Math.min(o,c)-Math.random()*10;
-      bars.push({open:o,close:c,high:h,low:l,date:'--'}); price=c;
-    }
+  // 無資料直接返回，不用假資料
+  if(!rows || rows.length === 0) {
+    svg.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#f85149">資料載入失敗，請稍後再試</text>`;
+    return;
   }
+  let bars = rows;
 
   const n = bars.length;
   const maxP = Math.max(...bars.map(b=>b.high));
@@ -1294,7 +1288,8 @@ function drawVolume(rows) {
     const vols = rows.map(b => Math.round((b.volume||0)/1000)); // 轉換為張
     drawBarChart('vol-svg', vols, '#58a6ff', false, rows.map(b=>b.date));
   } else {
-    drawBarChart('vol-svg', Array.from({length:20},()=>Math.round(3000+Math.random()*8000)), '#58a6ff', false);
+    const svgV = document.getElementById('vol-svg');
+    if(svgV) svgV.innerHTML = `<text x="165" y="60" text-anchor="middle" font-size="12" fill="#8b949e">載入中...</text>`;
   }
 }
 // ===== 三大法人 & 融資 真實資料 =====
