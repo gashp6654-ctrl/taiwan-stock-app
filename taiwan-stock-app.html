@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.812</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.813</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.812</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.813</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1307,7 +1307,11 @@ function drawKline(rows) {
   };
 
   const config = { responsive: true, displayModeBar: false, scrollZoom: true };
-  Plotly.react(el, traces, layout, config);
+  if(el._fullLayout) {
+    Plotly.react(el, traces, layout, config);
+  } else {
+    Plotly.newPlot(el, traces, layout, config);
+  }
 }
 
 function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
@@ -1405,7 +1409,12 @@ function drawVolume(rows) {
     bargap: 0.2
   };
 
-  Plotly.react(el, [trace], layout, { responsive: true, displayModeBar: false, scrollZoom: true });
+  const volConfig = { responsive: true, displayModeBar: false, scrollZoom: true };
+  if(el._fullLayout) {
+    Plotly.react(el, [trace], layout, volConfig);
+  } else {
+    Plotly.newPlot(el, [trace], layout, volConfig);
+  }
 }
 // ===== 三大法人 & 融資 真實資料 =====
 
