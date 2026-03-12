@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.817</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.818</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.817</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.818</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -292,9 +292,9 @@
       </div>
       <div class="chart-block"><div class="chart-label">K線走勢圖</div><div id="kline-plotly" style="width:100%;height:260px;"></div></div>
       <div class="chart-block"><div class="chart-label">成交量（張）</div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
-      <div class="chart-block"><div class="chart-label">外資買賣超（億元）</div><svg id="foreign-svg" width="100%" height="80" viewBox="0 0 330 80"></svg></div>
-      <div class="chart-block"><div class="chart-label">投信買賣超 — 近10日</div><svg id="trust-svg" width="100%" height="80" viewBox="0 0 330 80"></svg></div>
-      <div class="chart-block"><div class="chart-label">主力法人15日累計 vs 融資</div><svg id="main-svg" width="100%" height="110" viewBox="0 0 330 110"></svg></div>
+      <div class="chart-block"><div class="chart-label">外資買賣超（張）</div><div id="foreign-plotly" style="width:100%;height:160px;"></div></div>
+      <div class="chart-block"><div class="chart-label">投信買賣超（張）</div><div id="trust-plotly" style="width:100%;height:130px;"></div></div>
+      <div class="chart-block"><div class="chart-label">主力法人15日累計 vs 融資餘額</div><div id="main-plotly" style="width:100%;height:160px;"></div></div>
     </div>
 
     <!-- 營收頁 -->
@@ -1072,9 +1072,10 @@ function goStock(code) {
     if(el) el.innerHTML = '';
   });
 
-  // 清除三大法人 SVG
-  ['foreign-svg','trust-svg','main-svg'].forEach(id => {
+  // 清除三大法人 Plotly 圖表
+  ['foreign-plotly','trust-plotly','main-plotly'].forEach(id => {
     const el = document.getElementById(id);
+    if(el && el._fullLayout) try { Plotly.purge(el); } catch(e){}
     if(el) el.innerHTML = '';
   });
 
@@ -1429,23 +1430,27 @@ async function fetchInstitutional(code) {
   if(finmindToken) {
     try {
       const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 60);
+      const start = new Date(); start.setDate(start.getDate() - 380); // 抓超過250天保險
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
         data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
       if(rows && rows.length > 0) {
-        // 每天有三筆（外資/投信/自營），先按日期分組
         const byDate = {};
         rows.forEach(r => {
           if(!byDate[r.date]) byDate[r.date] = { date: r.date, foreign: 0, trust: 0, dealer: 0 };
-          const v = (r.buy - r.sell) / 100000000; // 元→億
+          const v = (r.buy - r.sell); // 張數（原始單位已是股，除1000轉張）
           if(r.name === '外陸資買賣超股數(不含外資自營商)' || r.name.includes('外資')) byDate[r.date].foreign += v;
           else if(r.name.includes('投信')) byDate[r.date].trust += v;
           else if(r.name.includes('自營')) byDate[r.date].dealer += v;
         });
-        return Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-20)
-          .map(d => ({ ...d, foreign: parseFloat(d.foreign.toFixed(2)), trust: parseFloat(d.trust.toFixed(2)), dealer: parseFloat(d.dealer.toFixed(2)) }));
+        return Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-250)
+          .map(d => ({
+            date: d.date,
+            foreign: Math.round(d.foreign / 1000), // 股→張
+            trust:   Math.round(d.trust   / 1000),
+            dealer:  Math.round(d.dealer  / 1000),
+          }));
       }
     } catch(e) {}
   }
@@ -1470,17 +1475,15 @@ async function fetchMargin(code) {
   if(finmindToken) {
     try {
       const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 40);
+      const start = new Date(); start.setDate(start.getDate() - 380);
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
         data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
       if(rows && rows.length > 0) {
-        return rows.slice(-15).map(r => ({
+        return rows.slice(-250).map(r => ({
           date:          r.date,
-          marginBuy:     r.MarginPurchaseBuy    || 0,
-          marginSell:    r.MarginPurchaseSell   || 0,
-          marginBalance: r.MarginPurchaseYesterday || 0,
+          marginBalance: r.MarginPurchaseYesterday || 0, // 融資餘額（張）
         }));
       }
     } catch(e) {}
@@ -1490,84 +1493,128 @@ async function fetchMargin(code) {
     const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`);
     const data = JSON.parse(res.text);
     if(!data.data) return null;
-    return data.data.slice(-15).map(r => ({
+    return data.data.slice(-250).map(r => ({
       date:          r[0],
-      marginBuy:     parseFloat((r[2]||'0').replace(/,/g,'')),
-      marginSell:    parseFloat((r[3]||'0').replace(/,/g,'')),
       marginBalance: parseFloat((r[4]||'0').replace(/,/g,'')),
     }));
   } catch(e) { return null; }
 }
 
-function drawForeign(data) {
-  if(data && data.length > 0) {
-    const vals  = data.map(d => parseFloat(d.foreign.toFixed(2)));
-    const dates = data.map(d => d.date.slice(5)); // MM/DD
-    drawBarChart('foreign-svg', vals, ['#f85149','#3fb950'], true, dates);
-  } else {
-    const svg = document.getElementById('foreign-svg');
-    if(svg) svg.innerHTML = `<text x="165" y="45" text-anchor="middle" font-size="11" fill="#8b949e">資料載入中...</text>`;
+function _instPlotly(elId, data, field, label, color_pos, color_neg) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!data || data.length === 0) {
+    try { Plotly.purge(el); } catch(e){}
+    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
+    return;
   }
+  const dates = data.map(d => d.date);
+  const vals  = data.map(d => d[field]);
+  const colors = vals.map(v => v >= 0 ? color_pos : color_neg);
+  const trace = {
+    type: 'bar', x: dates, y: vals,
+    marker: { color: colors },
+    name: label,
+    hovertemplate: '%{x}<br>' + label + ': %{y:,}張<extra></extra>'
+  };
+  const layout = {
+    height: el.style.height ? parseInt(el.style.height) : 130,
+    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 10 },
+    margin: { l: 55, r: 8, t: 8, b: 30 },
+    hovermode: 'x unified',
+    dragmode: 'pan',
+    xaxis: {
+      type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
+      fixedrange: false, minallowed: dates[0], maxallowed: dates[dates.length-1]
+    },
+    yaxis: {
+      gridcolor: '#21262d', tickfont: { size: 9 },
+      fixedrange: true, tickformat: ',d',
+      zerolinecolor: '#555'
+    },
+    bargap: 0.2, showlegend: false
+  };
+  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  if(el._fullLayout) Plotly.react(el, [trace], layout, config);
+  else Plotly.newPlot(el, [trace], layout, config);
 }
 
-function drawTrust(data) {
-  if(data && data.length > 0) {
-    const recent = data.slice(-10);
-    const vals   = recent.map(d => parseFloat(d.trust.toFixed(2)));
-    const dates  = recent.map(d => d.date.slice(5));
-    drawBarChart('trust-svg', vals, ['#f85149','#3fb950'], true, dates);
-  } else {
-    const svg = document.getElementById('trust-svg');
-    if(svg) svg.innerHTML = `<text x="165" y="45" text-anchor="middle" font-size="11" fill="#8b949e">資料載入中...</text>`;
-  }
-}
+function drawForeign(data) { _instPlotly('foreign-plotly', data, 'foreign', '外資', '#ef5350', '#26a69a'); }
+function drawTrust(data)   { _instPlotly('trust-plotly',   data, 'trust',   '投信', '#ef5350', '#26a69a'); }
 
 function drawMain(instData, marginData) {
-  const svg = document.getElementById('main-svg');
-  if(!svg) return;
-  const W=330,H=110,PL=42,PR=8,PT=20,PB=18,cw=W-PL-PR,ch=H-PT-PB;
-
-  // 主力法人 = 外資+投信+自營（近15日）
-  let mainD, finD, dates;
-  if(instData && instData.length > 0 && marginData && marginData.length > 0) {
-    const n = Math.min(15, instData.length, marginData.length);
-    const inst   = instData.slice(-n);
-    const margin = marginData.slice(-n);
-    mainD = inst.map(d => parseFloat((d.foreign + d.trust + d.dealer).toFixed(2)));
-    // 融資淨買（買-賣）轉換為億
-    finD  = margin.map(d => parseFloat(((d.marginBuy - d.marginSell)/10000).toFixed(2)));
-    dates = inst.map(d => d.date.slice(5));
-  } else {
-    // fallback：顯示載入中
-    svg.innerHTML = `<text x="165" y="55" text-anchor="middle" font-size="11" fill="#8b949e">資料載入中...</text>`;
+  const el = document.getElementById('main-plotly');
+  if(!el) return;
+  if(!instData || instData.length === 0) {
+    try { Plotly.purge(el); } catch(e){}
+    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
     return;
   }
 
-  const n = mainD.length;
-  const maxV = Math.max(...[...mainD,...finD].map(Math.abs)) || 1;
-  const bsp=cw/n, bw=bsp*0.28, midY=PT+ch/2;
-  let html=`<line x1="${PL}" y1="${midY}" x2="${W-PR}" y2="${midY}" stroke="#30363d" stroke-width="1"/>`;
-  html+=`<rect x="${PL}" y="4" width="8" height="8" fill="#58a6ff" rx="1"/><text x="${PL+10}" y="12" font-size="9" fill="#8b949e">主力法人(億)</text>`;
-  html+=`<rect x="${PL+80}" y="4" width="8" height="8" fill="#d29922" rx="1"/><text x="${PL+90}" y="12" font-size="9" fill="#8b949e">融資淨買(億)</text>`;
-  mainD.forEach((v,i)=>{
-    const x=PL+i*bsp+bsp/2, h=Math.abs(v)/maxV*(ch/2), y=v>=0?midY-h:midY;
-    html+=`<rect x="${(x-bw-1).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" fill="#58a6ff" rx="1"/>`;
+  // 主力法人 = 外資+投信+自營 15日累計（滾動）
+  const n = instData.length;
+  const mainCum = instData.map((_, i) => {
+    const slice = instData.slice(Math.max(0, i - 14), i + 1);
+    return slice.reduce((s, d) => s + d.foreign + d.trust + d.dealer, 0);
   });
-  finD.forEach((v,i)=>{
-    const x=PL+i*bsp+bsp/2, h=Math.abs(v)/maxV*(ch/2), y=v>=0?midY-h:midY;
-    html+=`<rect x="${(x+1).toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,h).toFixed(1)}" fill="#d29922" rx="1"/>`;
-  });
-  html+=`<text x="${PL-3}" y="${PT+4}" text-anchor="end" font-size="8" fill="#8b949e">${maxV.toFixed(1)}</text>`;
-  html+=`<text x="${PL-3}" y="${midY+4}" text-anchor="end" font-size="8" fill="#8b949e">0</text>`;
-  html+=`<text x="${PL-3}" y="${H-PB+4}" text-anchor="end" font-size="8" fill="#8b949e">-${maxV.toFixed(1)}</text>`;
-  const step = Math.max(1, Math.floor(n/5));
-  dates.forEach((d,i) => {
-    if(i % step === 0 || i === n-1) {
-      const x = PL+i*bsp+bsp/2;
-      html+=`<text x="${x.toFixed(1)}" y="${H-2}" text-anchor="middle" font-size="8" fill="#8b949e">${d}</text>`;
-    }
-  });
-  svg.innerHTML=html;
+  const instDates = instData.map(d => d.date);
+  const mainColors = mainCum.map(v => v >= 0 ? '#ef5350' : '#26a69a');
+
+  const barTrace = {
+    type: 'bar', x: instDates, y: mainCum,
+    marker: { color: mainColors },
+    name: '主力法人15日累計(張)',
+    yaxis: 'y',
+    hovertemplate: '%{x}<br>主力累計: %{y:,}張<extra></extra>'
+  };
+
+  const traces = [barTrace];
+
+  // 融資餘額折線（右Y軸）
+  if(marginData && marginData.length > 0) {
+    const marDates = marginData.map(d => d.date);
+    const marVals  = marginData.map(d => d.marginBalance);
+    traces.push({
+      type: 'scatter', mode: 'lines',
+      x: marDates, y: marVals,
+      line: { color: '#FFA500', width: 1.5 },
+      name: '融資餘額(張)',
+      yaxis: 'y2',
+      hovertemplate: '%{x}<br>融資餘額: %{y:,}張<extra></extra>'
+    });
+  }
+
+  const allDates = instDates[0];
+  const lastDate = instDates[instDates.length - 1];
+  const layout = {
+    height: 160,
+    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 10 },
+    margin: { l: 55, r: 50, t: 8, b: 30 },
+    hovermode: 'x unified',
+    dragmode: 'pan',
+    xaxis: {
+      type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
+      fixedrange: false, minallowed: allDates, maxallowed: lastDate
+    },
+    yaxis: {
+      gridcolor: '#21262d', tickfont: { size: 9 },
+      fixedrange: true, tickformat: ',d', zerolinecolor: '#555',
+      title: { text: '張', font: { size: 9 }, standoff: 2 }
+    },
+    yaxis2: {
+      tickfont: { size: 9 }, fixedrange: true, tickformat: ',d',
+      overlaying: 'y', side: 'right',
+      title: { text: '融資(張)', font: { size: 9 }, standoff: 2 }
+    },
+    bargap: 0.2,
+    legend: { orientation: 'h', x: 0, y: 1.08, font: { size: 9 } },
+    showlegend: true
+  };
+  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  if(el._fullLayout) Plotly.react(el, traces, layout, config);
+  else Plotly.newPlot(el, traces, layout, config);
 }
 
 async function fetchMopsRevenue(code) {
