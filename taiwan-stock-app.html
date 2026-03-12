@@ -796,8 +796,8 @@ document.addEventListener('keydown', function(e) {
 
 // ===== 真實股價 API =====
 const PROXIES = [
+  'https://niuniu-proxy.gashp6654.workers.dev/?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
-  'https://corsproxy.io/?',
   'https://api.allorigins.win/raw?url=',
 ];
 async function proxyFetch(url) {
@@ -812,7 +812,7 @@ async function proxyFetch(url) {
   }
   return { ok: false, text: '', json: async () => ({}) };
 }
-const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
+const PROXY = 'https://niuniu-proxy.gashp6654.workers.dev/?url=';
 const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 
 // 股票代號對應（上市加.TW，上櫃加.TWO）
