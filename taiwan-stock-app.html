@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>牛牛診股</title>
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -138,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.4</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.5</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -231,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.4</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.5</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -290,8 +291,8 @@
         <button class="ptab" onclick="setPeriod(this)">月</button>
         <button class="ptab" onclick="setPeriod(this)">季</button>
       </div>
-      <div class="chart-block"><div class="chart-label">K線走勢圖</div><svg id="kline-svg" width="100%" height="180" viewBox="0 0 330 180"></svg></div>
-      <div class="chart-block"><div class="chart-label">成交量（張）</div><svg id="vol-svg" width="100%" height="80" viewBox="0 0 330 80"></svg></div>
+      <div class="chart-block"><div class="chart-label">K線走勢圖</div><div id="kline-plotly" style="width:100%;height:260px;"></div></div>
+      <div class="chart-block"><div class="chart-label">成交量（張）</div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
       <div class="chart-block"><div class="chart-label">外資買賣超（億元）</div><svg id="foreign-svg" width="100%" height="80" viewBox="0 0 330 80"></svg></div>
       <div class="chart-block"><div class="chart-label">投信買賣超 — 近10日</div><svg id="trust-svg" width="100%" height="80" viewBox="0 0 330 80"></svg></div>
       <div class="chart-block"><div class="chart-label">主力法人15日累計 vs 融資</div><svg id="main-svg" width="100%" height="110" viewBox="0 0 330 110"></svg></div>
@@ -1028,6 +1029,12 @@ function goStock(code) {
   currentStock = code;
   klineData = null; // 清除舊資料
   currentPeriod = '日'; // 重置週期為日K
+  // 清除 Plotly 圖表暫存（避免記憶體洩漏）
+  ['kline-plotly','vol-plotly'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el && el._fullLayout) try { Plotly.purge(el); } catch(e){}
+    if(el) el.innerHTML = '';
+  });
   const si=document.getElementById('searchInput'); if(si) si.value='';
   setEl('searchResults','display','none');
   setEl('d-name','text',s.name);
@@ -1124,18 +1131,18 @@ async function fetchHistoryByPeriod(code, period) {
 }
 
 async function loadKlineAndDraw() {
-  const svgK = document.getElementById('kline-svg');
-  const svgV = document.getElementById('vol-svg');
+  const elK = document.getElementById('kline-plotly');
+  const elV = document.getElementById('vol-plotly');
   // 顯示載入中
-  if(svgK) svgK.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#8b949e">載入中...</text>`;
-  if(svgV) svgV.innerHTML = '';
+  if(elK) elK.innerHTML = `<div style="color:#8b949e;text-align:center;padding:80px 0;font-size:13px;">載入中...</div>`;
+  if(elV) elV.innerHTML = '';
 
   const rows = await fetchHistoryByPeriod(currentStock, currentPeriod);
   if(rows && rows.length > 0) {
     klineData = rows;
   } else {
     klineData = null;
-    if(svgK) svgK.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#f85149">資料載入失敗，請稍後再試</text>`;
+    if(elK) elK.innerHTML = `<div style="color:#f85149;text-align:center;padding:80px 0;font-size:13px;">資料載入失敗，請稍後再試</div>`;
   }
   drawKline(klineData);
   drawVolume(klineData);
@@ -1152,101 +1159,100 @@ async function loadKlineAndDraw() {
   });
 }
 
-function drawKline(rows) {
-  const svg = document.getElementById('kline-svg');
-  if(!svg) return;
-  const W=330,H=180,PL=46,PR=8,PT=10,PB=24,cw=W-PL-PR,ch=H-PT-PB;
+function calcMA(closes, period) {
+  return closes.map((_, i) => i < period - 1 ? null : closes.slice(i - period + 1, i + 1).reduce((s, v) => s + v, 0) / period);
+}
 
-  // 無資料直接返回，不用假資料
-  if(!rows || rows.length === 0) {
-    svg.innerHTML = `<text x="165" y="90" text-anchor="middle" font-size="12" fill="#f85149">資料載入失敗，請稍後再試</text>`;
+function drawKline(rows) {
+  const el = document.getElementById('kline-plotly');
+  if (!el) return;
+
+  if (!rows || rows.length === 0) {
+    el.innerHTML = `<div style="color:#f85149;text-align:center;padding:60px 0;font-size:13px;">資料載入失敗，請稍後再試</div>`;
     return;
   }
-  let bars = rows;
 
-  const n = bars.length;
-  const maxP = Math.max(...bars.map(b=>b.high));
-  const minP = Math.min(...bars.map(b=>b.low));
-  const range = (maxP - minP) || 1;
-  const bsp = cw / n, bw = Math.max(1.5, bsp * 0.6);
+  const dates  = rows.map(b => b.date);
+  const opens  = rows.map(b => b.open);
+  const highs  = rows.map(b => b.high);
+  const lows   = rows.map(b => b.low);
+  const closes = rows.map(b => b.close);
 
-  // 計算MA5/MA20/MA100
-  const closes = bars.map(b=>b.close);
-  function calcMA(arr, period) {
-    return arr.map((_, i) => i < period-1 ? null : arr.slice(i-period+1,i+1).reduce((s,v)=>s+v,0)/period);
-  }
+  // 計算均線
   const ma5   = calcMA(closes, 5);
   const ma20  = calcMA(closes, 20);
   const ma100 = calcMA(closes, 100);
-  function priceY(p) { return PT + (maxP - p) / range * ch; }
 
-  let html = '';
+  // 跳過非交易日（週末 + 假日）
+  const allDates = [];
+  const d0 = new Date(dates[0]), d1 = new Date(dates[dates.length - 1]);
+  for (let d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) {
+    allDates.push(d.toISOString().slice(0, 10));
+  }
+  const tradingSet = new Set(dates);
+  const missingDays = allDates.filter(d => !tradingSet.has(d));
 
-  // 格線 + Y軸標籤
-  const steps = 4;
-  for(let i=0;i<=steps;i++){
-    const y = PT + ch/steps*i;
-    const val = maxP - range/steps*i;
-    html += `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#30363d" stroke-width="0.5"/>`;
-    html += `<text x="${PL-3}" y="${y+3.5}" text-anchor="end" font-size="8.5" fill="#8b949e">${val>=1000?val.toFixed(0):val.toFixed(1)}</text>`;
+  // 預設顯示最近 125 根K棒
+  const displayN = Math.min(125, rows.length);
+  const rangeStart = dates[dates.length - displayN];
+  const rangeEnd   = dates[dates.length - 1];
+
+  // K線
+  const candleTrace = {
+    type: 'candlestick',
+    x: dates, open: opens, high: highs, low: lows, close: closes,
+    name: 'K線',
+    increasing: { line: { color: '#ef5350' }, fillcolor: '#ef5350' },
+    decreasing: { line: { color: '#26a69a' }, fillcolor: '#26a69a' },
+    showlegend: false,
+    hoverinfo: 'x+text',
+    text: rows.map(b => `開:${b.open} 高:${b.high} 低:${b.low} 收:${b.close}`)
+  };
+
+  // 均線
+  function maTrace(values, name, color) {
+    const xs = [], ys = [];
+    values.forEach((v, i) => { if (v !== null) { xs.push(dates[i]); ys.push(+v.toFixed(2)); } });
+    return { type: 'scatter', mode: 'lines', x: xs, y: ys, name, line: { color, width: 1.5 }, hoverinfo: 'skip' };
   }
 
-  // K線本體
-  bars.forEach((b,i) => {
-    const x = PL + i*bsp + bsp/2;
-    const up = b.close >= b.open;
-    const col = up ? '#f85149' : '#3fb950';
-    const y1 = priceY(b.high), y2 = priceY(b.low);
-    const yo = priceY(Math.max(b.open,b.close)), yc = priceY(Math.min(b.open,b.close));
-    html += `<line x1="${x.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="1"/>`;
-    html += `<rect x="${(x-bw/2).toFixed(1)}" y="${yo.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,yc-yo).toFixed(1)}" fill="${col}"/>`;
-  });
+  const traces = [
+    candleTrace,
+    maTrace(ma5,   'MA5',   '#FFD700'),
+    maTrace(ma20,  'MA20',  '#FF69B4'),
+    maTrace(ma100, 'MA100', '#00CED1'),
+  ];
 
-  // X軸日期標籤（最多顯示6個）
-  const labelStep = Math.max(1, Math.floor(n/6));
-  bars.forEach((b,i) => {
-    if(i % labelStep === 0 || i === n-1) {
-      const x = PL + i*bsp + bsp/2;
-      html += `<text x="${x.toFixed(1)}" y="${H-4}" text-anchor="middle" font-size="7.5" fill="#8b949e">${b.date}</text>`;
-    }
-  });
+  const layout = {
+    height: 260,
+    plot_bgcolor: '#0d1117',
+    paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 11 },
+    margin: { l: 50, r: 10, t: 28, b: 30 },
+    hovermode: 'x unified',
+    dragmode: 'zoom',
+    xaxis: {
+      type: 'date',
+      range: [rangeStart, rangeEnd],
+      rangebreaks: [{ values: missingDays }],
+      rangeslider: { visible: true, thickness: 0.04, bgcolor: '#161b22', bordercolor: '#30363d', borderwidth: 1 },
+      gridcolor: '#21262d',
+      tickfont: { size: 10 },
+      fixedrange: false
+    },
+    yaxis: {
+      gridcolor: '#21262d',
+      tickfont: { size: 10 },
+      side: 'left',
+      fixedrange: false,
+      autorange: true
+    },
+    legend: { orientation: 'h', x: 0, y: 1.08, font: { size: 10 } },
+    showlegend: true
+  };
 
-  // MA5（橙色）
-  let ma5Path = '';
-  ma5.forEach((v,i) => {
-    if(v===null) return;
-    const x = PL + i*bsp + bsp/2, y = priceY(v);
-    ma5Path += ma5Path==='' ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  if(ma5Path) html += `<path d="${ma5Path}" stroke="#f0b429" stroke-width="1" fill="none" opacity="0.9"/>`;
-
-  // MA20（藍色）
-  let ma20Path = '';
-  ma20.forEach((v,i) => {
-    if(v===null) return;
-    const x = PL + i*bsp + bsp/2, y = priceY(v);
-    ma20Path += ma20Path==='' ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  if(ma20Path) html += `<path d="${ma20Path}" stroke="#58a6ff" stroke-width="1" fill="none" opacity="0.9"/>`;
-
-  // MA100（紫色）
-  let ma100Path = '';
-  ma100.forEach((v,i) => {
-    if(v===null) return;
-    const x = PL + i*bsp + bsp/2, y = priceY(v);
-    ma100Path += ma100Path==='' ? `M${x.toFixed(1)},${y.toFixed(1)}` : `L${x.toFixed(1)},${y.toFixed(1)}`;
-  });
-  if(ma100Path) html += `<path d="${ma100Path}" stroke="#3fb950" stroke-width="1" fill="none" opacity="0.9"/>`;
-
-  // 圖例
-  html += `<rect x="${PL}" y="2" width="6" height="6" fill="#f0b429"/>`;
-  html += `<text x="${PL+8}" y="9" font-size="8" fill="#f0b429">MA5</text>`;
-  html += `<rect x="${PL+30}" y="2" width="6" height="6" fill="#58a6ff"/>`;
-  html += `<text x="${PL+38}" y="9" font-size="8" fill="#58a6ff">MA20</text>`;
-  html += `<rect x="${PL+62}" y="2" width="6" height="6" fill="#3fb950"/>`;
-  html += `<text x="${PL+70}" y="9" font-size="8" fill="#3fb950">MA100</text>`;
-
-  svg.innerHTML = html;
+  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  Plotly.react(el, traces, layout, config);
 }
 
 function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
@@ -1284,13 +1290,63 @@ function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
 }
 
 function drawVolume(rows) {
-  if(rows && rows.length > 0) {
-    const vols = rows.map(b => Math.round((b.volume||0)/1000)); // 轉換為張
-    drawBarChart('vol-svg', vols, '#58a6ff', false, rows.map(b=>b.date));
-  } else {
-    const svgV = document.getElementById('vol-svg');
-    if(svgV) svgV.innerHTML = `<text x="165" y="60" text-anchor="middle" font-size="12" fill="#8b949e">載入中...</text>`;
+  const el = document.getElementById('vol-plotly');
+  if (!el) return;
+
+  if (!rows || rows.length === 0) {
+    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:30px 0;font-size:12px;">載入中...</div>`;
+    return;
   }
+
+  const dates  = rows.map(b => b.date);
+  const vols   = rows.map(b => Math.round((b.volume || 0) / 1000));
+  const colors = rows.map(b => b.close >= b.open ? '#ef5350' : '#26a69a');
+
+  const displayN   = Math.min(125, rows.length);
+  const rangeStart = dates[dates.length - displayN];
+  const rangeEnd   = dates[dates.length - 1];
+
+  const allDates = [];
+  const d0 = new Date(dates[0]), d1 = new Date(dates[dates.length - 1]);
+  for (let d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) {
+    allDates.push(d.toISOString().slice(0, 10));
+  }
+  const tradingSet = new Set(dates);
+  const missingDays = allDates.filter(d => !tradingSet.has(d));
+
+  const trace = {
+    type: 'bar', x: dates, y: vols,
+    name: '成交量',
+    marker: { color: colors },
+    hovertemplate: '%{x}<br>成交量: %{y:,}張<extra></extra>',
+    showlegend: false
+  };
+
+  const layout = {
+    height: 100,
+    plot_bgcolor: '#0d1117',
+    paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 10 },
+    margin: { l: 50, r: 10, t: 5, b: 30 },
+    hovermode: 'x unified',
+    xaxis: {
+      type: 'date',
+      range: [rangeStart, rangeEnd],
+      rangebreaks: [{ values: missingDays }],
+      gridcolor: '#21262d',
+      tickfont: { size: 9 },
+      fixedrange: false
+    },
+    yaxis: {
+      gridcolor: '#21262d',
+      tickfont: { size: 9 },
+      fixedrange: false,
+      tickformat: ',d'
+    },
+    bargap: 0.2
+  };
+
+  Plotly.react(el, [trace], layout, { responsive: true, displayModeBar: false, scrollZoom: true });
 }
 // ===== 三大法人 & 融資 真實資料 =====
 
