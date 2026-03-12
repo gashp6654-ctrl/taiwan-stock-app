@@ -795,7 +795,7 @@ document.addEventListener('keydown', function(e) {
 
 
 // ===== 真實股價 API =====
-const PROXY = 'https://corsproxy.io/?';
+const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
 const YF_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
 
 // 股票代號對應（上市加.TW，上櫃加.TWO）
@@ -1398,7 +1398,7 @@ function drawMain(instData, marginData) {
 
 async function fetchMopsRevenue(code) {
   // 取得近12個月的月營收，使用MOPS公開資訊觀測站
-  const PROXY = 'https://corsproxy.io/?';
+  const PROXY = 'https://api.codetabs.com/v1/proxy?quest=';
   const now = new Date();
   const results = [];
 
