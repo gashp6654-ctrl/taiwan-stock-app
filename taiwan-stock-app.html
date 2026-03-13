@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.832</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.833</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.832</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.833</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -934,6 +934,35 @@ async function loadHomePrices() {
     }
   }
   renderHotStocks();
+}
+
+// Markdown 轉 HTML（簡易版）
+function mdToHtml(text) {
+  if(!text) return '';
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // 標題
+    .replace(/^### (.+)$/gm,'<h4 style="font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 6px;">$1</h4>')
+    .replace(/^## (.+)$/gm,'<h3 style="font-size:14px;font-weight:700;color:var(--text);margin:14px 0 8px;">$1</h3>')
+    .replace(/^# (.+)$/gm,'<h2 style="font-size:15px;font-weight:700;color:var(--text);margin:14px 0 8px;">$1</h2>')
+    // 粗體
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    // 斜體
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    // 分隔線
+    .replace(/^---+$/gm,'<hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">')
+    // 條列（- 或 * 或 數字.）
+    .replace(/^\d+\.\s(.+)$/gm,'<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:var(--accent);">●</span>$1</div>')
+    .replace(/^[-*]\s(.+)$/gm,'<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:var(--muted);">·</span>$1</div>')
+    // 換行
+    .replace(/
+
+/g,'</p><p style="margin:8px 0;">')
+    .replace(/
+/g,'<br>')
+    // 包裝段落
+    .replace(/^(.)/,'<p style="margin:0 0 8px;">$1')
+    + '</p>';
 }
 
 function setEl(id, prop, val) {
@@ -2258,23 +2287,23 @@ ${fundamentalStr}
     hideLoading();
 
     // 填入A頁
-    setEl('a-trend','html',rA.trend); setEl('a-support','html',rA.support);
-    setEl('a-indicators','html',rA.indicators); setEl('a-risk','html',rA.risk);
+    setEl('a-trend','html',mdToHtml(rA.trend)); setEl('a-support','html',mdToHtml(rA.support));
+    setEl('a-indicators','html',mdToHtml(rA.indicators)); setEl('a-risk','html',mdToHtml(rA.risk));
     setEl('a-result','display','block');
 
     // 填入B頁
-    setEl('b-arrangement','html',rB.arrangement); setEl('b-signal','html',rB.signal);
-    setEl('b-cross','html',rB.cross); setEl('b-advice','html',rB.advice);
+    setEl('b-arrangement','html',mdToHtml(rB.arrangement)); setEl('b-signal','html',mdToHtml(rB.signal));
+    setEl('b-cross','html',mdToHtml(rB.cross)); setEl('b-advice','html',mdToHtml(rB.advice));
     setEl('b-result','display','block');
 
     // 填入C頁
-    setEl('c-bigplayer','html',rC.bigplayer); setEl('c-retail','html',rC.retail);
-    setEl('c-concentration','html',rC.concentration); setEl('c-warning','html',rC.warning);
+    setEl('c-bigplayer','html',mdToHtml(rC.bigplayer)); setEl('c-retail','html',mdToHtml(rC.retail));
+    setEl('c-concentration','html',mdToHtml(rC.concentration)); setEl('c-warning','html',mdToHtml(rC.warning));
     setEl('c-result','display','block');
 
     // 填入D頁
-    setEl('d-current','html',rD.current); setEl('d-growth','html',rD.growth);
-    setEl('d-trend','html',rD.trend); setEl('d-risk','html',rD.risk);
+    setEl('d-current','html',mdToHtml(rD.current)); setEl('d-growth','html',mdToHtml(rD.growth));
+    setEl('d-trend','html',mdToHtml(rD.trend)); setEl('d-risk','html',mdToHtml(rD.risk));
     setEl('d-result','display','block');
 
     // 填入操作建議
@@ -2286,7 +2315,7 @@ ${fundamentalStr}
     setEl('my-buy','text',rMy.buy);
     setEl('my-stop','text',rMy.stop);
     setEl('my-target','text',rMy.target);
-    setEl('my-thinking','text',rMy.thinking);
+    setEl('my-thinking','html',mdToHtml(rMy.thinking));
     setEl('my-pending','display','none');
     setEl('my-result','display','block');
 
