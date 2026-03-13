@@ -136,7 +136,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.852</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.853</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -229,7 +229,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.852</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.853</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -528,8 +528,10 @@
   </div>
 
 
-  <!-- 過場動畫：放在 screens 內，position:absolute 才能正確覆蓋 -->
-  <div id="loading-overlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;">
+  </div>
+
+  <!-- 過場動畫：放在 phone-wrap 內、screens 之後，只蓋住 screens 區域 -->
+  <div id="loading-overlay" style="display:none;position:absolute;top:44px;left:0;right:0;bottom:125px;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;">
     <div style="filter:drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988);animation:cowBob 2s ease-in-out infinite;">
       <img class="cow-img" style="width:160px;height:160px;object-fit:contain;"/>
     </div>
@@ -537,7 +539,6 @@
     <div style="margin-top:28px;width:70%;background:var(--border);border-radius:99px;height:4px;overflow:hidden;">
       <div id="loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f0b429,#d29922);border-radius:99px;transition:width 0.1s linear;"></div>
     </div>
-  </div>
   </div>
 
   <div class="bottom-nav">
@@ -969,11 +970,6 @@ function showLoading() {
   const overlay = document.getElementById('loading-overlay');
   const bar = document.getElementById('loading-bar');
   if(!overlay || !bar) return;
-  // 把 overlay 移到當前 active screen 內，只蓋住該頁
-  const activeScreen = document.querySelector('.screen.active');
-  if(activeScreen && !activeScreen.contains(overlay)) {
-    activeScreen.appendChild(overlay);
-  }
   overlay.style.display = 'flex';
   bar.style.width = '0%';
   let pct = 0;
@@ -1026,11 +1022,6 @@ function showScreen(name) {
   const isAiScreen = ['a','b','c','d','my'].includes(name);
   const overlay = document.getElementById('loading-overlay');
   if(isAnalyzing && isAiScreen) {
-    // 切換 AI 頁時，把 overlay 移到目標 screen 內
-    const targetScreen = document.getElementById('screen-' + name);
-    if(targetScreen && overlay && !targetScreen.contains(overlay)) {
-      targetScreen.appendChild(overlay);
-    }
     if(overlay) overlay.style.display = 'flex';
   } else {
     if(overlay) overlay.style.display = 'none';
