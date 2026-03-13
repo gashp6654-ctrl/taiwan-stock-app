@@ -136,7 +136,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.848</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.849</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -229,7 +229,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.848</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.849</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -579,14 +579,17 @@
     </div>
   </div>
 
-  <!-- 過場動畫 -->
-    <div id="loading-overlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:125px;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;">
-      <div style="filter:drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988);animation:cowBob 2s ease-in-out infinite;">
-        <img class="cow-img" style="width:160px;height:160px;object-fit:contain;"/>
-      </div>
-      <div style="margin-top:16px;font-size:17px;font-weight:900;color:var(--accent);text-align:center;line-height:1.6;padding:0 24px;">AI分析中<br><span style="font-size:13px;font-weight:600;color:var(--muted);">由於牛牛討厭馬虎，分析需約2分鐘</span></div>
-    </div>
 
+  <!-- 過場動畫：放在 screens 內，position:absolute 才能正確覆蓋 -->
+  <div id="loading-overlay" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="filter:drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988);animation:cowBob 2s ease-in-out infinite;">
+      <img class="cow-img" style="width:160px;height:160px;object-fit:contain;"/>
+    </div>
+    <div style="margin-top:16px;font-size:17px;font-weight:900;color:var(--accent);text-align:center;line-height:1.6;padding:0 24px;">AI分析中<br><span style="font-size:13px;font-weight:600;color:var(--muted);">由於牛牛討厭馬虎，分析需約2分鐘</span></div>
+    <div style="margin-top:28px;width:70%;background:var(--border);border-radius:99px;height:4px;overflow:hidden;">
+      <div id="loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f0b429,#d29922);border-radius:99px;transition:width 0.1s linear;"></div>
+    </div>
+  </div>
   </div>
 
   <div class="bottom-nav">
