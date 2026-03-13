@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.834</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.839</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.834</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.839</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -263,10 +263,7 @@
       </div>
       <div class="section-title">🔥 熱門個股</div>
       <div class="hot-stocks" id="hot-stocks-grid">
-        <div class="hot-card" onclick="goStock('2330')"><div class="hc-top"><span class="hc-code">2330</span><span class="hc-chg up">+1.47%</span></div><div class="hc-name">台積電</div><div class="hc-price up">1,035</div></div>
-        <div class="hot-card" onclick="goStock('2317')"><div class="hc-top"><span class="hc-code">2317</span><span class="hc-chg up">+1.12%</span></div><div class="hc-name">鴻海</div><div class="hc-price up">225.5</div></div>
-        <div class="hot-card" onclick="goStock('2454')"><div class="hc-top"><span class="hc-code">2454</span><span class="hc-chg down">-2.72%</span></div><div class="hc-name">聯發科</div><div class="hc-price down">1,250</div></div>
-        <div class="hot-card" onclick="goStock('0050')"><div class="hc-top"><span class="hc-code">0050</span><span class="hc-chg up">+0.61%</span></div><div class="hc-name">元大台灣50</div><div class="hc-price up">198.5</div></div>
+        <div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>
       </div>
       <div class="section-title">📊 市場概況</div>
       <div class="market-row">
@@ -282,7 +279,7 @@
       <div class="detail-header">
         <div class="dh-top">
           <div><div class="dh-name" id="d-name">台積電</div><div class="dh-code" id="d-code">2330 · TW</div></div>
-          <div><div class="dh-price up" id="d-price">1,035</div><div class="dh-chg up" id="d-chg">▲ +15 (+1.47%)</div></div>
+          <div><div class="dh-price up" id="d-price">--</div><div class="dh-chg up" id="d-chg">-- --</div></div>
         </div>
       </div>
       <div class="period-tabs">
@@ -924,16 +921,21 @@ function renderHotStocks() {
 }
 
 async function loadHomePrices() {
-  const codes = ['2330','2317','2454','0050'];
-  for(const code of codes) {
+  const hotCodes = ['2330','2317','2454','0050'];
+  const watchCodes = watchlist.map(w => w.code);
+  const allCodes = [...new Set([...hotCodes, ...watchCodes])];
+  for(const code of allCodes) {
     const data = await fetchRealPrice(code);
-    if(data && stockDB[code]) {
-      stockDB[code].price = data.price;
-      stockDB[code].chg = data.chg;
-      stockDB[code].up = data.up;
-    }
+    if(!data) continue;
+    if(!stockDB[code]) stockDB[code] = { name: code, price: 0, chg: '-', up: true };
+    stockDB[code].price = data.price;
+    stockDB[code].chg   = data.chg;
+    stockDB[code].up    = data.up;
+    const w = watchlist.find(x => x.code === code);
+    if(w) { w.price = data.price; w.chg = data.chg; w.up = data.up; }
   }
   renderHotStocks();
+  renderWatchlist();
 }
 
 // Markdown 轉 HTML
@@ -965,33 +967,22 @@ function setEl(id, prop, val) {
   else if(prop==='cssText') el.style.cssText = val;
 }
 const stockDB = {
-  '2330':{ name:'台積電',   price:1035,  chg:'+15 (+1.47%)',  up:true  },
-  '2317':{ name:'鴻海',     price:225.5, chg:'+2.5 (+1.12%)', up:true  },
-  '2454':{ name:'聯發科',   price:1250,  chg:'-35 (-2.72%)',  up:false },
-  '2303':{ name:'聯電',     price:48.5,  chg:'-0.5 (-1.02%)', up:false },
-  '2308':{ name:'台達電',   price:388,   chg:'+5 (+1.31%)',   up:true  },
-  '2882':{ name:'國泰金',   price:62.5,  chg:'+0.5 (+0.81%)', up:true  },
-  '0050':{ name:'元大台灣50',price:198.5, chg:'+1.2 (+0.61%)', up:true  },
-  '2412':{ name:'中華電',   price:125,   chg:'-0.5 (-0.40%)', up:false },
-  '2886':{ name:'兆豐金',   price:44.2,  chg:'+0.3 (+0.68%)', up:true  },
-  '3008':{ name:'大立光',   price:2150,  chg:'-25 (-1.15%)',  up:false },
+  '2330':{ name:'台積電',    price:0, chg:'-', up:true },
+  '2317':{ name:'鴻海',      price:0, chg:'-', up:true },
+  '2454':{ name:'聯發科',    price:0, chg:'-', up:true },
+  '2303':{ name:'聯電',      price:0, chg:'-', up:true },
+  '2308':{ name:'台達電',    price:0, chg:'-', up:true },
+  '2882':{ name:'國泰金',    price:0, chg:'-', up:true },
+  '0050':{ name:'元大台灣50',price:0, chg:'-', up:true },
+  '2412':{ name:'中華電',    price:0, chg:'-', up:true },
+  '2886':{ name:'兆豐金',    price:0, chg:'-', up:true },
+  '3008':{ name:'大立光',    price:0, chg:'-', up:true },
 };
-const revenueDB = {
-  '2330':{ monthly:[520,548,612,590,633,671,698,720,755,782,810,856], yoy:[15,18,22,19,24,28,30,25,32,35,38,42], labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], summary:{cur:'856億',yoy:'+42%',mom:'+5.7%',annual:'8,496億'} },
-  '2317':{ monthly:[180,195,210,225,240,255,265,280,290,305,315,330], yoy:[8,10,12,15,18,20,18,22,25,28,26,30], labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], summary:{cur:'330億',yoy:'+30%',mom:'+4.8%',annual:'3,090億'} },
-  'default':{ monthly:[120,135,118,142,155,163,170,158,175,182,190,205], yoy:[8,12,5,15,18,20,22,16,24,28,25,30], labels:['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'], summary:{cur:'205億',yoy:'+30%',mom:'+7.9%',annual:'1,913億'} }
-};
-const qRevenueDB = {
-  '2330':{ quarters:[1850,2100,2050,2200,2350,2580,2750,2900], grossMargin:[53,54,52,55,56,58,59,60], labels:["Q1'23","Q2'23","Q3'23","Q4'23","Q1'24","Q2'24","Q3'24","Q4'24"], summary:{cur:'2,900億',qoq:'+5.5%',gm:'60%',trend:'↑ 持續成長'} },
-  '2317':{ quarters:[680,720,710,750,780,820,850,890], grossMargin:[6,6.5,6.2,7,7.5,7.8,8,8.3], labels:["Q1'23","Q2'23","Q3'23","Q4'23","Q1'24","Q2'24","Q3'24","Q4'24"], summary:{cur:'890億',qoq:'+4.7%',gm:'8.3%',trend:'↑ 穩健成長'} },
-  'default':{ quarters:[380,420,405,445,460,490,510,540], grossMargin:[35,36,34,37,38,39,40,41], labels:["Q1'23","Q2'23","Q3'23","Q4'23","Q1'24","Q2'24","Q3'24","Q4'24"], summary:{cur:'540億',qoq:'+5.9%',gm:'41%',trend:'↑ 穩定成長'} }
-};
-
 let currentStock = '2330';
 let watchlist = [
-  { code:'2330', name:'台積電',     price:1035,  chg:'+1.47%', up:true  },
-  { code:'0050', name:'元大台灣50', price:198.5, chg:'+0.61%', up:true  },
-  { code:'2317', name:'鴻海',       price:225.5, chg:'+1.12%', up:true  },
+  { code:'2330', name:'台積電',     price:0, chg:'-', up:true },
+  { code:'0050', name:'元大台灣50', price:0, chg:'-', up:true },
+  { code:'2317', name:'鴻海',       price:0, chg:'-', up:true },
 ];
 
 
@@ -1778,36 +1769,84 @@ async function drawRevenueCharts() {
 
       drawMonthlyChart({ monthly, yoy, labels });
 
-      // 季營收仍用靜態資料（待後續升級）
-      const qData = qRevenueDB[code] || qRevenueDB['default'];
-      const qs = qData.summary;
-      setEl('rev-summary-quarterly', 'html', `
-        <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val up">${qs.cur}</div></div>
-        <div class="rev-card"><div class="rev-card-label">季增率</div><div class="rev-card-val up">${qs.qoq}</div></div>
-        <div class="rev-card"><div class="rev-card-label">毛利率</div><div class="rev-card-val" style="color:var(--purple)">${qs.gm}</div></div>
-        <div class="rev-card"><div class="rev-card-label">毛利率趨勢</div><div class="rev-card-val up">${qs.trend}</div></div>`);
-      drawQuarterlyChart(qData);
+      // ===== 月營收加總推算季營收 =====
+      // 每筆 revData 有 label（如 "115/02"）和 value（億）
+      // 先建立 年/月 → value 的 map
+      const revMap = {};
+      revData.forEach(d => {
+        // label 格式：民國年/月，例如 "115/02"
+        const m = d.label.match(/(\d+)\/(\d+)/);
+        if(m) revMap[`${m[1]}/${String(m[2]).padStart(2,'0')}`] = d.value;
+      });
+
+      // 取最新8季
+      const qLabels = [], qRevs = [], qYoY = [];
+      // 從最新月份往前算，找完整的季
+      const allKeys = Object.keys(revMap).sort();
+      if(allKeys.length >= 3) {
+        // 找最新完整季的結束月份
+        const lastKey = allKeys[allKeys.length - 1];
+        const [lyStr, lmStr] = lastKey.split('/');
+        let ly = parseInt(lyStr), lm = parseInt(lmStr);
+        // 往前推，找最多8季
+        for(let q = 0; q < 8; q++) {
+          // 當前季的結束月
+          const endM = lm - (lm % 3 === 0 ? 0 : lm % 3);
+          // 調整：找最近的季末月（3/6/9/12）
+          let qEndM = Math.floor((lm - 1) / 3) * 3 + 3 - q * 3;
+          let qY = ly;
+          while(qEndM <= 0) { qEndM += 12; qY--; }
+          const qStartM = qEndM - 2;
+          const m1 = revMap[`${qY}/${String(qStartM).padStart(2,'0')}`];
+          const m2 = revMap[`${qY}/${String(qStartM+1).padStart(2,'0')}`];
+          const m3 = revMap[`${qY}/${String(qEndM).padStart(2,'0')}`];
+          if(m1 !== undefined && m2 !== undefined && m3 !== undefined) {
+            const qRev = Math.round((m1 + m2 + m3) * 10) / 10;
+            // 民國年轉季標籤
+            const qNum = Math.ceil(qEndM / 3);
+            const qLabel = `${qY}Q${qNum}`;
+            qLabels.unshift(qLabel);
+            qRevs.unshift(qRev);
+            // YoY：與去年同季比
+            const pyY = qY - 1;
+            const py1 = revMap[`${pyY}/${String(qStartM).padStart(2,'0')}`];
+            const py2 = revMap[`${pyY}/${String(qStartM+1).padStart(2,'0')}`];
+            const py3 = revMap[`${pyY}/${String(qEndM).padStart(2,'0')}`];
+            if(py1 !== undefined && py2 !== undefined && py3 !== undefined) {
+              const pyRev = py1 + py2 + py3;
+              qYoY.unshift(Math.round((qRev - pyRev) / pyRev * 1000) / 10);
+            } else {
+              qYoY.unshift(null);
+            }
+          }
+          lm -= 3;
+          if(lm <= 0) { lm += 12; ly--; }
+        }
+      }
+
+      if(qRevs.length >= 2) {
+        const latestQ = qRevs[qRevs.length - 1];
+        const prevQ   = qRevs[qRevs.length - 2];
+        const qoq     = Math.round((latestQ - prevQ) / prevQ * 1000) / 10;
+        const latestYoY = qYoY[qYoY.length - 1];
+        const qoqColor  = qoq     >= 0 ? 'var(--green)' : 'var(--red)';
+        const yoyColor  = latestYoY !== null && latestYoY >= 0 ? 'var(--green)' : 'var(--red)';
+        setEl('rev-summary-quarterly', 'html', `
+          <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val" style="color:var(--green)">${latestQ}億</div></div>
+          <div class="rev-card"><div class="rev-card-label">季增率(QoQ)</div><div class="rev-card-val" style="color:${qoqColor}">${qoq >= 0 ? '+' : ''}${qoq}%</div></div>
+          <div class="rev-card"><div class="rev-card-label">年增率(YoY)</div><div class="rev-card-val" style="color:${yoyColor}">${latestYoY !== null ? (latestYoY >= 0 ? '+' : '') + latestYoY + '%' : '-'}</div></div>
+          <div class="rev-card"><div class="rev-card-label">資料來源</div><div class="rev-card-val" style="font-size:11px;color:var(--muted)">月營收加總</div></div>`);
+        drawQuarterlyChart({ quarters: qRevs, labels: qLabels, yoy: qYoY });
+      } else {
+        setEl('rev-summary-quarterly', 'html', '<div style="color:var(--muted);font-size:13px;padding:12px 0;">季營收資料不足，請稍後再試</div>');
+      }
       return;
     }
   } catch(e) { console.warn('月營收 API 失敗，使用靜態資料', e); }
 
-  // 其他股票或API失敗：使用靜態資料
-  const mData = revenueDB[code] || revenueDB['default'];
-  const qData = qRevenueDB[code] || qRevenueDB['default'];
-  const ms = mData.summary;
-  setEl('rev-summary-monthly', 'html', `
-    <div class="rev-card"><div class="rev-card-label">本月營收</div><div class="rev-card-val up">${ms.cur}</div></div>
-    <div class="rev-card"><div class="rev-card-label">年增率</div><div class="rev-card-val up">${ms.yoy}</div></div>
-    <div class="rev-card"><div class="rev-card-label">月增率</div><div class="rev-card-val up">${ms.mom}</div></div>
-    <div class="rev-card"><div class="rev-card-label">累計年營收</div><div class="rev-card-val">${ms.annual}</div></div>`);
-  const qs = qData.summary;
-  setEl('rev-summary-quarterly', 'html', `
-    <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val up">${qs.cur}</div></div>
-    <div class="rev-card"><div class="rev-card-label">季增率</div><div class="rev-card-val up">${qs.qoq}</div></div>
-    <div class="rev-card"><div class="rev-card-label">毛利率</div><div class="rev-card-val" style="color:var(--purple)">${qs.gm}</div></div>
-    <div class="rev-card"><div class="rev-card-label">毛利率趨勢</div><div class="rev-card-val up">${qs.trend}</div></div>`);
-  drawMonthlyChart(mData);
-  drawQuarterlyChart(qData);
+  // API 失敗：顯示提示
+  setEl('rev-summary-monthly', 'html', '<div style="color:var(--muted);font-size:13px;padding:12px 0;">月營收資料載入失敗，請稍後再試</div>');
+  setEl('rev-summary-quarterly', 'html', '<div style="color:var(--muted);font-size:13px;padding:12px 0;">季營收資料整合中，敬請期待</div>');
 }
 
 function drawComboChart(svgId, bars, line, barColor, lineColor, barLabel, lineLabel, barUnit, lineUnit) {
@@ -1896,12 +1935,12 @@ function drawQuarterlyChart(data) {
   };
   const lineTrace = {
     type: 'scatter', mode: 'lines+markers',
-    x: data.labels, y: data.grossMargin,
-    line: { color: '#f47fff', width: 2 },
-    marker: { color: '#f47fff', size: 5 },
-    name: '毛利率(%)',
+    x: data.labels, y: data.yoy || data.grossMargin,
+    line: { color: '#d29922', width: 2 },
+    marker: { color: '#d29922', size: 5 },
+    name: 'YoY年增率(%)',
     yaxis: 'y2',
-    hovertemplate: '%{x}<br>毛利率：%{y}%<extra></extra>'
+    hovertemplate: '%{x}<br>年增率：%{y}%<extra></extra>'
   };
   const layout = {
     height: 200,
@@ -1915,8 +1954,8 @@ function drawQuarterlyChart(data) {
     yaxis: { gridcolor: '#21262d', tickfont: { size: 9 }, fixedrange: true,
       title: { text: '億', font: { size: 9 }, standoff: 2 } },
     yaxis2: { tickfont: { size: 9 }, fixedrange: true, overlaying: 'y', side: 'right',
-      ticksuffix: '%', title: { text: '%', font: { size: 9, color: '#f47fff' }, standoff: 2 },
-      tickfont: { color: '#f47fff', size: 9 } },
+      ticksuffix: '%', title: { text: 'YoY%', font: { size: 9, color: '#d29922' }, standoff: 2 },
+      tickfont: { color: '#d29922', size: 9 } },
     showlegend: true,
     legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 9 } }
   };
@@ -1981,33 +2020,6 @@ function updateAStockBadge() {
   if(s) setEl('a-stock-badge','text',s.name + ' ' + currentStock);
 }
 
-  // 假資料庫（展示用）
-const mockDB = {
-    '2330': { trend:'📈 多頭趨勢明確，股價站穩5日、20日均線之上，短中期走勢偏多，動能仍強。', support:'🟢 支撐位：1,000 元（20MA）、980 元（月線）<br>🔴 壓力位：1,060 元（前高）、1,100 元（整數關卡）', indicators:'KD 值 72/68，黃金交叉後高檔鈍化，留意短線拉回修正。MACD 柱狀體縮短，多空動能略有消退。RSI 61，偏多但尚未過熱。', risk:'⚠️ 短線漲幅較大，建議分批佈局，避免追高。若跌破 1,000 元支撐，宜觀望等待再進場。' },
-    '2317': { trend:'📊 盤整格局，股價在 220–230 元區間震盪，尚未突破明確方向，等待變盤訊號。', support:'🟢 支撐位：218 元（週線）、210 元（強力支撐）<br>🔴 壓力位：232 元（近期高點）、240 元（半年線）', indicators:'KD 值 55/52，多空交界，方向不明。MACD 零軸附近游走，趨勢轉折待確認。RSI 50，中性偏弱。', risk:'⚠️ 盤整期間震盪大，不宜重押。等待成交量放大並突破壓力後再行動。' },
-    'default': { trend:'📊 中性偏多，股價位於均線之上，短線有支撐，但整體動能不強，觀望為宜。', support:'🟢 支撐位：參考近期低點<br>🔴 壓力位：參考近期高點及整數關卡', indicators:'KD、MACD 指標中性，無明顯買賣訊號。RSI 在 50 附近，多空均衡。', risk:'⚠️ 量能不足，建議等待明確訊號再進場，嚴守停損紀律。' }
-  };
-
-// ===== B頁：均線趨勢分析假資料 =====
-const mockB = {
-  '2330': { arrangement:'5日線 > 10日線 > 20日線 > 60日線，多頭完美排列，趨勢強勁向上。', signal:'🟢 多頭訊號明確，股價站穩所有均線之上，短中長期趨勢一致向好。', cross:'5日線與10日線形成黃金交叉，短線動能轉強；20日線持續上揚，中期趨勢健康。', advice:'均線多頭排列期間可持股不動，若股價回測20日線（約1,000元）可加碼，跌破60日線則需注意。' },
-  '2317': { arrangement:'5日線、10日線纏繞，20日線走平，均線盤整格局，方向尚未明確。', signal:'🟡 多空交戰，均線糾結中。短線5日線略低於10日線，短期偏弱。', cross:'近期無明顯交叉訊號，均線呈水平盤整，等待方向選擇。', advice:'均線盤整期間建議觀望，待5日線明確上穿10日線並同步放量，再考慮進場。' },
-  'default': { arrangement:'均線呈現中性排列，短中期均線糾結，長期趨勢待確認。', signal:'🟡 訊號不明，建議觀望為主，等待均線方向明確。', cross:'短期均線交叉頻繁，訊號雜訊較多，以週線均線方向為主。', advice:'在均線方向明確前，控制倉位，設好停損，避免重押。' }
-};
-
-// ===== C頁：大戶散戶動向假資料 =====
-const mockC = {
-  '2330': { bigplayer:'外資連續買超15日，累計買超逾500億，法人態度積極偏多。投信近10日買超42億，與外資同向。', retail:'散戶融資餘額持續下降，顯示散戶信心不足，籌碼逐漸轉移至法人手中，籌碼結構改善中。', concentration:'前10大股東持股比例上升至78%，籌碼高度集中，大戶控盤意味明顯。', warning:'⚠️ 雖法人持續買超，但股價已高，注意大戶是否逢高出貨。若外資由買轉賣需立即注意。' },
-  '2317': { bigplayer:'外資近期買賣超不穩定，單日金額波動大，顯示法人對後市看法分歧，尚未形成共識。', retail:'散戶融資餘額小幅增加，顯示散戶進場意願提升，需留意散戶進場追高的風險。', concentration:'籌碼較為分散，前10大股東持股比例約52%，未見明顯大戶控盤跡象。', warning:'⚠️ 籌碼分散、外資態度不明，散戶追高需謹慎，建議等待法人方向明確後再跟進。' },
-  'default': { bigplayer:'法人買賣超資料顯示中性，未有明顯偏多或偏空跡象，觀望氣氛濃厚。', retail:'散戶動向中性，融資變化幅度不大，市場參與度一般。', concentration:'籌碼集中度適中，無特殊異常狀況。', warning:'⚠️ 目前籌碼面無明顯方向，建議以基本面和技術面為主要參考依據。' }
-};
-
-// ===== D頁：產業未來展望假資料 =====
-const mockD = {
-  '2330': { current:'台積電所在的半導體代工產業，目前受惠於AI晶片需求爆發，先進製程（3nm、2nm）訂單能見度高，整體產業景氣回升明確。', growth:'AI伺服器、HPC（高效能運算）、CoWoS先進封裝需求強勁，帶動台積電營收持續創高。2025年CoWoS產能預估翻倍成長。', trend:'2nm製程2025年量產，未來三年資本支出維持高檔。AI應用持續擴張，半導體長期成長趨勢不變，台積電具護城河優勢。', risk:'⚠️ 地緣政治風險（台海局勢）、美中科技戰管制升級、客戶自建晶圓廠（英特爾、三星競爭）為主要風險。' },
-  '2317': { current:'鴻海所在的電子代工產業，面臨中國製造成本上升和供應鏈多元化挑戰，積極布局印度、越南等新興市場。', growth:'電動車（EV）業務是鴻海最大成長動能，MIH聯盟持續擴大，預計2025年電動車營收佔比將顯著提升。', trend:'AI伺服器代工訂單增加，輝達GB200伺服器組裝布局中。電動車+AI伺服器雙引擎驅動，長期轉型方向明確。', risk:'⚠️ 蘋果供應鏈依賴度高、中國市場政策風險、電動車市場競爭激烈為主要挑戰。' },
-  'default': { current:'所屬產業目前處於景氣復甦階段，庫存去化接近尾聲，下游需求逐步回溫，整體展望中性偏樂觀。', growth:'AI相關應用需求為主要成長動能，供應鏈重組帶來新機會，企業積極調整產品組合因應市場變化。', trend:'數位轉型、AI應用、綠能趨勢為長期成長主軸，具備相關布局的企業中長期展望較佳。', risk:'⚠️ 全球總體經濟不確定性、美元走強、利率環境為主要風險，需密切關注景氣領先指標變化。' }
-};
 
 function updateBadge(page) {
   if(page==='community') { const s=stockDB[currentStock]; if(s) { const el=document.getElementById('community-stock-badge'); if(el) el.textContent=s.name+' '+currentStock; const u=document.getElementById('community-username'); if(u) u.textContent=window._currentUser||'1111'; } return; }
@@ -2016,48 +2028,7 @@ function updateBadge(page) {
 }
 
 // ===== 通用 Gemini 呼叫函式 =====
-async function callGemini(prompt, signal) {
-  const models = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
-    'gemini-2.0-flash-lite',
-    'gemini-flash-latest'
-  ];
-  let lastErr = '';
-  for(const model of models) {
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents:[{ parts:[{ text: prompt }] }],
-          generationConfig: { temperature: 0.4, maxOutputTokens: 8192, topP: 0.95, topK: 40 },
-          safetySettings: [
-            { category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_NONE' },
-            { category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_NONE' },
-            { category:'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold:'BLOCK_NONE' },
-            { category:'HARM_CATEGORY_DANGEROUS_CONTENT', threshold:'BLOCK_NONE' }
-          ]
-        }),
-        signal
-      });
-      const data = await res.json();
-      if(data.error) { lastErr = `[${model}] ${data.error.message}`; continue; }
-      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      if(!raw) { lastErr = `[${model}] 空回傳`; continue; }
-      // 強化 JSON 解析：取出第一個 { } 區塊
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) { lastErr = `[${model}] 找不到JSON`; continue; }
-      return JSON.parse(jsonMatch[0]);
-    } catch(e) {
-      if(e.name === 'AbortError') throw e;
-      lastErr = `[${model}] ${e.message}`;
-    }
-  }
-  throw new Error('所有模型失敗：' + lastErr);
-}
-
-// K線型態判讀（16種）
+// ===== K線型態判讀（16種，同大師邏輯）=====
 function classifyKbar(o, h, l, c) {
   const body = Math.abs(c - o);
   const totalRange = h - l;
@@ -2082,55 +2053,105 @@ function classifyKbar(o, h, l, c) {
   return c >= o ? '紡錘紅K' : '紡錘黑K';
 }
 
-// ===== 過場動畫工具函式 =====
-let isAnalyzing = false;
-let _diagAbort = null;   // 中止進行中的 Gemini 請求
-let _diagStock = null;   // 記錄診斷當下的股票代碼，防止舊結果寫入新股票
-function showLoading() {
-  isAnalyzing = true;
-  document.getElementById('loading-overlay').style.display = 'flex';
-}
-function hideLoading() {
-  isAnalyzing = false;
-  document.getElementById('loading-overlay').style.display = 'none';
-}
-
-// ===== A頁：K線診斷（單獨執行） =====
-async function runKlineOnly() {
-  const s = stockDB[currentStock]; if(!s) return;
-  if(_diagAbort) { _diagAbort.abort(); _diagAbort = null; }
-  const controller = new AbortController();
-  _diagAbort = controller;
-  const signal = controller.signal;
-  const diagStock = currentStock;
-  showLoading();
-  setEl('a-result','display','none'); setEl('a-error','display','none');
-  try {
-    let r;
-    if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
-      await new Promise((res, rej) => {
-        const t = setTimeout(res, 1800);
-        signal.addEventListener('abort', () => { clearTimeout(t); rej(new DOMException('aborted','AbortError')); });
+// ===== Gemini API 呼叫（大師模型輪試邏輯）=====
+async function callGemini(prompt, signal) {
+  const models = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-flash-latest'
+  ];
+  let lastErr = '';
+  for(const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents:[{ parts:[{ text: prompt }] }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 16384, topP: 0.95, topK: 40 },
+          safetySettings: [
+            { category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_DANGEROUS_CONTENT', threshold:'BLOCK_NONE' }
+          ]
+        }),
+        signal
       });
-      r = mockDB[diagStock] || mockDB['default'];
-    } else {
-      r = await callGemini(`你是台股技術分析師，用繁體中文分析以下股票K線，以JSON格式回傳，欄位：trend、support、indicators、risk，每項1-3句話。\n股票：${s.name}（${diagStock}）股價：${s.price}元 漲跌：${s.chg}`, signal);
+      const data = await res.json();
+      if(data.error) { lastErr = `[${model}] ${data.error.message}`; continue; }
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if(!text) { lastErr = `[${model}] 回傳空白`; continue; }
+      return text; // 直接回傳 Markdown 純文字
+    } catch(e) {
+      if(e.name === 'AbortError') throw e;
+      lastErr = `[${model}] ${e.message}`;
     }
-    if(currentStock !== diagStock || signal.aborted) { hideLoading(); return; }
-    hideLoading();
-    setEl('a-trend','html',r.trend); setEl('a-support','html',r.support);
-    setEl('a-indicators','html',r.indicators); setEl('a-risk','html',r.risk);
-    setEl('a-result','display','block');
-    setEl('btn-a','display','none');
-  } catch(err) {
-    if(err.name === 'AbortError' || currentStock !== diagStock) { hideLoading(); return; }
-    hideLoading();
-    setEl('a-error','display','block');
-    setEl('a-error','text','❌ 發生錯誤：' + err.message);
   }
+  throw new Error('所有模型失敗：' + lastErr);
 }
 
-// ===== 主診斷：A/B/C/D + 操作建議 全部一次 =====
+// ===== Markdown 轉 HTML =====
+function mdToHtml(text) {
+  if(!text) return '';
+  // 先處理標題（避免被後續 replace 影響）
+  let html = text
+    .replace(/^#### (.+)$/gm, '<h5 style="font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px;">$1</h5>')
+    .replace(/^### (.+)$/gm,  '<h4 style="font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 6px;">$1</h4>')
+    .replace(/^## (.+)$/gm,   '<h3 style="font-size:14px;font-weight:700;color:var(--text);margin:14px 0 8px;border-bottom:1px solid var(--border);padding-bottom:4px;">$1</h3>')
+    .replace(/^# (.+)$/gm,    '<h2 style="font-size:15px;font-weight:700;color:var(--text);margin:14px 0 8px;">$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,    '<em>$1</em>')
+    .replace(/^---+$/gm,      '<hr style="border:none;border-top:1px solid var(--border);margin:12px 0;">')
+    .replace(/^\d+\.\s(.+)$/gm, '<div style="padding:3px 0 3px 18px;position:relative;line-height:1.7;"><span style="position:absolute;left:0;color:var(--accent);font-weight:700;">●</span>$1</div>')
+    .replace(/^[-*]\s(.+)$/gm,  '<div style="padding:3px 0 3px 14px;position:relative;line-height:1.7;"><span style="position:absolute;left:0;color:var(--muted);">·</span>$1</div>')
+    .split('\n\n').map(p => {
+      if(p.startsWith('<h') || p.startsWith('<hr') || p.startsWith('<div')) return p;
+      return `<p style="margin:6px 0;line-height:1.8;">${p.replace(/\n/g,'<br>')}</p>`;
+    }).join('\n');
+  return html;
+}
+
+// ===== 章節文字切割（Markdown → 各頁）=====
+function splitChapters(fullText) {
+  // 找第一章到第五章的位置
+  const chapterRegex = /第[一二三四五]章/g;
+  const chapters = { a:'', b:'', c:'', d:'', my:'' };
+  const keys = ['a','b','c','d','my'];
+
+  // 用章節標題切割
+  const parts = fullText.split(/(?=.*第[一二三四五]章)/m);
+
+  // 另一種切法：找所有 ### 第X章
+  const lines = fullText.split('\n');
+  let current = -1;
+  let buffers = ['','','','',''];
+
+  for(const line of lines) {
+    if(/第一章/.test(line)) { current = 0; buffers[0] += line + '\n'; continue; }
+    if(/第二章/.test(line)) { current = 1; buffers[1] += line + '\n'; continue; }
+    if(/第三章/.test(line)) { current = 2; buffers[2] += line + '\n'; continue; }
+    if(/第四章/.test(line)) { current = 3; buffers[3] += line + '\n'; continue; }
+    if(/第五章/.test(line)) { current = 4; buffers[4] += line + '\n'; continue; }
+    if(current >= 0) buffers[current] += line + '\n';
+  }
+
+  // 若切割成功（每章都有內容）
+  if(buffers.every(b => b.length > 10)) {
+    chapters.a  = buffers[0];
+    chapters.b  = buffers[1];
+    chapters.c  = buffers[2];
+    chapters.d  = buffers[3];
+    chapters.my = buffers[4];
+  } else {
+    // fallback：全文都放到 a 頁
+    chapters.a = fullText;
+  }
+  return chapters;
+}
+
+// ===== 主診斷函式 =====
 async function runAllDiagnosis() {
   ['a','b','c','d'].forEach(p => setEl(p+'-result','display','none'));
   const s = stockDB[currentStock]; if(!s) return;
@@ -2144,63 +2165,48 @@ async function runAllDiagnosis() {
   showLoading();
 
   try {
-    let rA, rB, rC, rD, rMy;
-
     if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
-      await new Promise((res, rej) => {
-        const t = setTimeout(res, 2000);
-        signal.addEventListener('abort', () => { clearTimeout(t); rej(new DOMException('aborted','AbortError')); });
-      });
-      rA  = mockDB[diagStock]  || mockDB['default'];
-      rB  = mockB[diagStock]   || mockB['default'];
-      rC  = mockC[diagStock]   || mockC['default'];
-      rD  = mockD[diagStock]   || mockD['default'];
-      rMy = mockMy[diagStock]  || mockMy['default'];
-    } else {
-      // ===== 整合近30日K線資料（含K線型態） =====
-      let recentDataStr = '（K線資料載入中，請稍後）';
-      if(klineData && klineData.length >= 2) {
-        const recent = klineData.slice(-30);
-        const rows = recent.map(r => {
-          const kbar = classifyKbar(r.open, r.high, r.low, r.close);
-          const ma20  = r.ma20  ? r.ma20.toFixed(2)  : '-';
-          const ma100 = r.ma100 ? r.ma100.toFixed(2) : '-';
-          return `${r.date} 開${r.open} 高${r.high} 低${r.low} 收${r.close} 量${r.volume} MA20:${ma20} MA100:${ma100} K線:${kbar}`;
-        });
-        recentDataStr = rows.join('\n');
+      // 未輸入 API Key
+      hideLoading();
+      const errEl = document.getElementById('a-error');
+      if(errEl) { errEl.style.display='block'; errEl.textContent='⚠️ 請先輸入 Gemini API Key 才能使用 AI 分析功能。'; }
+      return;
+    }
+
+    // ===== 整合近30日K線（含K線型態）=====
+    let recentDataStr = '（K線資料載入中）';
+    if(klineData && klineData.length >= 2) {
+      const recent = klineData.slice(-30);
+      recentDataStr = recent.map(r => {
+        const kbar = classifyKbar(r.open, r.high, r.low, r.close);
+        const ma20  = r.ma20  ? r.ma20.toFixed(2)  : '-';
+        const ma100 = r.ma100 ? r.ma100.toFixed(2) : '-';
+        return `${r.date} 開${r.open} 高${r.high} 低${r.low} 收${r.close} 量${r.volume} MA20:${ma20} MA100:${ma100} K線:${kbar}`;
+      }).join('\n');
+    }
+
+    // ===== 整合近30日法人+融資 =====
+    let chipDataStr = '（法人資料載入中）';
+    if(_lastInstData && _lastInstData.length >= 2) {
+      chipDataStr = _lastInstData.slice(-30).map(r => {
+        const m = _lastMarginData ? _lastMarginData.find(x => x.date === r.date) : null;
+        return `${r.date} 外資:${r.foreign}張 投信:${r.trust}張 自營:${r.dealer}張 融資餘額:${m ? m.marginBalance : '-'}張`;
+      }).join('\n');
+    }
+
+    // ===== 整合最新營收 =====
+    let fundamentalStr = '（暫無營收資料）';
+    try {
+      const revData = await fetchMopsRevenue(diagStock);
+      if(revData && revData.length >= 2) {
+        fundamentalStr = revData.slice(-6).map(d =>
+          `${d.label}: ${d.value}億元 YoY:${d.yoy !== null ? d.yoy+'%' : '-'}`
+        ).join('  ');
       }
+    } catch(e) {}
 
-      // ===== 整合近30日法人+融資資料 =====
-      let chipDataStr = '（法人資料載入中）';
-      if(_lastInstData && _lastInstData.length >= 2) {
-        const recent = _lastInstData.slice(-30);
-        const chipRows = recent.map(r => {
-          const margin = (() => {
-            if(!_lastMarginData) return '-';
-            const m = _lastMarginData.find(x => x.date === r.date);
-            return m ? m.marginBalance : '-';
-          })();
-          return `${r.date} 外資:${r.foreign}張 投信:${r.trust}張 自營:${r.dealer}張 融資餘額:${margin}張`;
-        });
-        chipDataStr = chipRows.join('\n');
-      }
-
-      // ===== 整合最新營收資料 =====
-      let fundamentalStr = '（暫無營收資料）';
-      try {
-        const revData = await fetchMopsRevenue(diagStock);
-        if(revData && revData.length >= 2) {
-          const latest = revData[revData.length - 1];
-          const prev   = revData[revData.length - 2];
-          const mom = prev ? ((latest.value - prev.value) / prev.value * 100).toFixed(1) : '-';
-          fundamentalStr = `最新月營收：${latest.label} 共 ${latest.value}億元，年增率 ${latest.yoy !== null ? latest.yoy + '%' : '-'}，月增率 ${mom}%\n`;
-          fundamentalStr += revData.slice(-6).map(d => `${d.label}: ${d.value}億 YoY:${d.yoy !== null ? d.yoy+'%' : '-'}`).join('  ');
-        }
-      } catch(e) {}
-
-      const stock_info = `股票：${s.name}（${diagStock}）目前股價：${s.price}元 今日漲跌：${s.chg}`;
-
-      const prompt = `你是股神等級的「台股首席參謀長」，負責針對「${diagStock} ${s.name}」進行極為嚴謹的技術、籌碼與基本面診斷。
+    // ===== 大師同款 Prompt（Markdown 輸出，非 JSON）=====
+    const prompt = `你是股神等級的「台股首席參謀長」，負責針對「${diagStock} ${s.name}」進行極為嚴謹的技術、籌碼與基本面診斷。
 
 【重要約束】
 1. 均線僅分析 MA20（月線，短期趨勢）與 MA100（百日線，中期趨勢），絕對不提其他均線
@@ -2209,10 +2215,10 @@ async function runAllDiagnosis() {
 4. 所有數字使用阿拉伯數字，禁用國字數字
 5. 禁止使用「建議」「應該」「必須」「買入」「賣出」「推薦」等投資指示用語，改用「若欲操作」「可考慮」「積極者可留意」「參考思路」
 6. 數據自然融入段落，禁止條列式列出數據
-7. 禁止使用雙星號(**)，副標題直接呈現文字
-8. 禁止在正文重複列出「最近三個交易日(20XX-XX-XX...)」等日期羅列
+7. 移除所有雙星號(**)，副標題直接呈現文字
+8. 禁止在正文重複列出日期羅列
 
-【分析對象】${stock_info}
+【分析對象】股票：${s.name}（${diagStock}）目前股價：${s.price}元 今日漲跌：${s.chg}
 
 【近30日K線資料（含K線型態、MA20、MA100）】
 ${recentDataStr}
@@ -2223,128 +2229,125 @@ ${chipDataStr}
 【最新營收資料】
 ${fundamentalStr}
 
-請回傳純JSON格式（不含markdown），包含以下所有欄位：
+嚴格要求：以下五大章節必須全部完整輸出，每個章節都要有充足內容，絕對不可以中途停止！
 
-第一章 K線診斷（至少400字）：
-- trend：【趨勢判斷】分析目前K線趨勢格局，強弱程度，短中期走向
-- support：【支撐壓力位】列出MA20、MA100以及其他關鍵支撐壓力，說明形成原因
-- indicators：【K線型態與技術訊號】使用「→」串連近1-3日K棒演變，用「」框起，結合型態意義分析多空力道。信心評分1-5分
-- risk：【風險提示】技術面風險，可能反轉訊號，止損參考思路
+---
 
-第二章 均線趨勢（至少400字）：
-- arrangement：【均線排列】MA20與MA100相對位置，多頭/空頭/多箱/空箱判斷，均線斜率與糾結發散
-- signal：【多空訊號】均線系統訊號，關鍵支撐壓力均線位置，訊號可靠度
-- cross：【乖離率分析】股價對MA20與MA100的乖離率，超買超賣判斷，趨勢持續性
-- advice：【操作參考思路】基於均線系統，若欲操作的時機參考，止損設置依據
+### 第一章：K線型態精密掃描（至少400字）
 
-第三章 大戶散戶（至少400字）：
-- bigplayer：【法人動向】外資、投信近30日累計買賣超張數，操作態度，戰略意圖解讀
-- retail：【散戶動態】融資餘額變化趨勢，散戶情緒，融資增減對股價影響
-- concentration：【籌碼結構】法人買超vs散戶，籌碼安定性分析
-- warning：【籌碼警示】法人出貨跡象，融資風險，需監控指標
+K棒組合型態描述使用「→」串連演變，用「」框起來。
+信心評分1-5分，說明評分理由。
+若欲操作的參考思路（避免直接說「建議」）。
 
-第四章 產業展望（至少800字）：
-- current：【產業現況】景氣循環位置，競爭格局，近期重大產業動態
-- growth：【成長動能】核心驅動力，新產品新市場，量化成長預期
-- dTrend：【長期趨勢】3-5年結構性趨勢，AI/半導體等宏觀影響，護城河評估
-- dRisk：【產業風險】各類風險條列（每條獨立編號），發生概率與衝擊評估
+---
 
-第五章 操作建議：
-- score：整數1-5（1=強力看空、5=強力看多）
-- label：評分標籤（如「強力看多⭐⭐⭐⭐⭐」）
-- direction：操作方向（看多「🟢 分批留意」，中性「🟡 持股觀望」，看空「🔴 謹慎觀察」）
-- dirBg：CSS樣式（看多："background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;" 中性："background:rgba(210,153,34,0.15);border:1.5px solid #d29922;" 看空："background:rgba(248,81,73,0.15);border:1.5px solid #f85149;"）
-- buy：參考留意價位（純數字字串）
-- stop：止損參考價位（純數字字串）
-- target：短中期參考目標（純數字字串）
-- thinking：【完整操作思維】至少400字，從技術面、籌碼面、產業面三維度綜合，說明評分理由，操作時機，倉位參考，以及改變看法的條件
+### 第二章：均線與趨勢結構（至少400字）
 
-所有文字欄位使用Markdown格式，語氣專業犀利，總字數2800字以上，分析具體深入。`;
+分析MA20與MA100排列，多頭/空頭/多箱/空箱判斷。
+乖離率分析，超買超賣判斷。
+MA20與MA100作為關鍵支撐壓力位。
 
-      const result = await callGemini(prompt, signal);
+---
 
-      // 從一個 JSON 拆分到五頁
-      rA  = { trend: result.trend, support: result.support, indicators: result.indicators, risk: result.risk };
-      rB  = { arrangement: result.arrangement, signal: result.signal, cross: result.cross, advice: result.advice };
-      rC  = { bigplayer: result.bigplayer, retail: result.retail, concentration: result.concentration, warning: result.warning };
-      rD  = { current: result.current, growth: result.growth, trend: result.dTrend || result.trend, risk: result.dRisk || result.risk };
-      rMy = { score: result.score, label: result.label, direction: result.direction, dirBg: result.dirBg,
-              buy: result.buy, stop: result.stop, target: result.target, thinking: result.thinking };
-    }
+### 第三章：大戶籌碼與散戶動向（至少400字）
 
-    // ★ 雙重保險：若此期間已換股票，丟棄結果不寫入
+外資、投信近30日累計買賣超。
+融資餘額變化趨勢，散戶情緒。
+籌碼安定性評估。
+
+---
+
+### 第四章：產業與基本面展望（至少800字）
+
+公司定位、產業趨勢、題材催化劑、財務體質。
+若有提供營收數據，必須直接引用具體數字分析。
+
+---
+
+### 第五章：最終操作策略（至少500字）
+
+明確多空方向，綜合評分（1-5分，5分最看多）。
+關鍵支撐壓力位，止損參考，進場時機參考。
+積極型與保守型參考思路。
+風險提示（條列式，每條獨立編號）。
+
+---
+
+輸出格式：繁體中文，Markdown，語氣專業犀利，總字數2800字以上。`;
+
+    const fullText = await callGemini(prompt, signal);
+
     if(currentStock !== diagStock || signal.aborted) { hideLoading(); return; }
-
     hideLoading();
 
-    // 填入A頁
-    setEl('a-trend','html',mdToHtml(rA.trend)); setEl('a-support','html',mdToHtml(rA.support));
-    setEl('a-indicators','html',mdToHtml(rA.indicators)); setEl('a-risk','html',mdToHtml(rA.risk));
+    // 切割5章到各頁
+    const chapters = splitChapters(fullText);
+
+    // A頁 - 第一章
+    setEl('a-trend','html', mdToHtml(chapters.a));
+    setEl('a-support','html',''); setEl('a-indicators','html',''); setEl('a-risk','html','');
     setEl('a-result','display','block');
 
-    // 填入B頁
-    setEl('b-arrangement','html',mdToHtml(rB.arrangement)); setEl('b-signal','html',mdToHtml(rB.signal));
-    setEl('b-cross','html',mdToHtml(rB.cross)); setEl('b-advice','html',mdToHtml(rB.advice));
+    // B頁 - 第二章
+    setEl('b-arrangement','html', mdToHtml(chapters.b));
+    setEl('b-signal','html',''); setEl('b-cross','html',''); setEl('b-advice','html','');
     setEl('b-result','display','block');
 
-    // 填入C頁
-    setEl('c-bigplayer','html',mdToHtml(rC.bigplayer)); setEl('c-retail','html',mdToHtml(rC.retail));
-    setEl('c-concentration','html',mdToHtml(rC.concentration)); setEl('c-warning','html',mdToHtml(rC.warning));
+    // C頁 - 第三章
+    setEl('c-bigplayer','html', mdToHtml(chapters.c));
+    setEl('c-retail','html',''); setEl('c-concentration','html',''); setEl('c-warning','html','');
     setEl('c-result','display','block');
 
-    // 填入D頁
-    setEl('d-current','html',mdToHtml(rD.current)); setEl('d-growth','html',mdToHtml(rD.growth));
-    setEl('d-trend','html',mdToHtml(rD.trend)); setEl('d-risk','html',mdToHtml(rD.risk));
+    // D頁 - 第四章
+    setEl('d-current','html', mdToHtml(chapters.d));
+    setEl('d-growth','html',''); setEl('d-trend','html',''); setEl('d-risk','html','');
     setEl('d-result','display','block');
 
-    // 填入操作建議
-    const stars = '★'.repeat(rMy.score) + '☆'.repeat(5 - rMy.score);
-    setEl('my-stars','text',stars);
-    setEl('my-score-label','text',rMy.label);
-    setEl('my-direction','text',rMy.direction);
-    setEl('my-direction-card','cssText',(rMy.dirBg||'')+'margin-bottom:12px;border-radius:16px;padding:16px;text-align:center;');
-    setEl('my-buy','text',rMy.buy);
-    setEl('my-stop','text',rMy.stop);
-    setEl('my-target','text',rMy.target);
-    setEl('my-thinking','html',mdToHtml(rMy.thinking));
+    // My頁 - 第五章（解析評分）
+    const myText = chapters.my;
+    const scoreMatch = myText.match(/綜合評分[：:]\s*(\d)/);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 3;
+    const stars = '★'.repeat(score) + '☆'.repeat(5 - score);
+    const labels = ['','強力看空⭐','偏空謹慎⭐⭐','中性觀望⭐⭐⭐','穩健偏多⭐⭐⭐⭐','強力看多⭐⭐⭐⭐⭐'];
+    const dirColors = ['','rgba(248,81,73,0.15)','rgba(248,81,73,0.15)','rgba(210,153,34,0.15)','rgba(63,185,80,0.15)','rgba(63,185,80,0.15)'];
+    const dirBorders = ['','#f85149','#f85149','#d29922','#3fb950','#3fb950'];
+    const dirTexts = ['','🔴 謹慎觀察','🔴 偏空觀察','🟡 中性觀望','🟢 偏多留意','🟢 積極留意'];
+
+    setEl('my-stars','text', stars);
+    setEl('my-score-label','text', labels[score] || '中性觀望⭐⭐⭐');
+    setEl('my-direction','text', dirTexts[score] || '🟡 中性觀望');
+    setEl('my-direction-card','cssText', `background:${dirColors[score]};border:1.5px solid ${dirBorders[score]};margin-bottom:12px;border-radius:16px;padding:16px;text-align:center;`);
+
+    // 從第五章文字抓關鍵價位
+    const buyMatch  = myText.match(/(?:進場|留意|參考)[^0-9]*?(\d[\d,.]+)/);
+    const stopMatch = myText.match(/止損[^0-9]*?(\d[\d,.]+)/);
+    const tgtMatch  = myText.match(/目標[^0-9]*?(\d[\d,.]+)/);
+    setEl('my-buy',   'text', buyMatch  ? buyMatch[1]  : s.price);
+    setEl('my-stop',  'text', stopMatch ? stopMatch[1] : '-');
+    setEl('my-target','text', tgtMatch  ? tgtMatch[1]  : '-');
+    setEl('my-thinking','html', mdToHtml(myText));
     setEl('my-pending','display','none');
     setEl('my-result','display','block');
 
-    // 隱藏所有診斷按鈕和API Key輸入框
+    // 隱藏診斷按鈕
     ['a','b','c','d','my'].forEach(p => {
       const btn = document.getElementById('btn-'+p);
       if(btn) btn.style.display = 'none';
-      const sec = document.getElementById(p+'-apikey-section');
-      if(sec) sec.style.display = 'none';
     });
 
   } catch(err) {
-    // 若是因為換股票被中止，靜默忽略
     if(err.name === 'AbortError' || currentStock !== diagStock) { hideLoading(); return; }
     hideLoading();
-    setEl('a-error','display','block');
-    setEl('a-error','text','❌ AI分析失敗：' + err.message + '\n請確認API Key是否正確，或稍後再試。');
+    const errEl = document.getElementById('a-error');
+    if(errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ AI分析失敗：' + err.message + '\n請確認API Key是否正確，或稍後再試。'; }
   }
 }
+
 
 function runBDiagnosis() { runAllDiagnosis(); }
 function runCDiagnosis() { runAllDiagnosis(); }
 function runDDiagnosis() { runAllDiagnosis(); }
 
-function fillMyResult() {
-  const m = mockMy[currentStock] || mockMy['default'];
-  const stars = '★'.repeat(m.score) + '☆'.repeat(5 - m.score);
-  setEl('my-stars','text',stars);
-  setEl('my-score-label','text',m.label);
-  setEl('my-direction','text',m.direction);
-  setEl('my-direction-card','cssText',m.dirBg+'margin-bottom:12px;border-radius:16px;padding:16px;text-align:center;');
-  setEl('my-buy','text',m.buy);
-  setEl('my-stop','text',m.stop);
-  setEl('my-target','text',m.target);
-  setEl('my-thinking','text',m.thinking);
-  setEl('my-pending','display','none');
-  setEl('my-result','display','block');
-}
 
 // ===== 同溫層系統 =====
 let communityData = {};
