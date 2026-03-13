@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.827</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.828</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.827</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.828</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1134,6 +1134,8 @@ function goStock(code) {
 
 let currentPeriod = '日'; // 目前選取週期
 let klineData = null;     // 目前顯示中的K線資料
+let _lastInstData = null;   // 最後一次法人資料（供 AI 分析用）
+let _lastMarginData = null; // 最後一次融資資料（供 AI 分析用）
 
 function setPeriod(el) {
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
@@ -1205,6 +1207,8 @@ async function loadKlineAndDraw() {
     fetchInstitutional(currentStock),
     fetchMargin(currentStock)
   ]).then(([instData, marginData]) => {
+    _lastInstData = instData;
+    _lastMarginData = marginData;
     drawForeign(instData);
     drawTrust(instData);
     drawMain(instData, marginData);
@@ -1993,16 +1997,65 @@ function updateBadge(page) {
 
 // ===== 通用 Gemini 呼叫函式 =====
 async function callGemini(prompt, signal) {
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents:[{ parts:[{ text: prompt }] }] }),
-    signal
-  });
-  const data = await res.json();
-  if(data.error) throw new Error(data.error.message);
-  const raw = data.candidates[0].content.parts[0].text;
-  return JSON.parse(raw.replace(/```json|```/g, '').trim());
+  const models = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-exp',
+    'gemini-1.5-flash-latest',
+    'gemini-1.5-pro-latest'
+  ];
+  let lastErr = '';
+  for(const model of models) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents:[{ parts:[{ text: prompt }] }],
+          generationConfig: { temperature: 0.4, maxOutputTokens: 16384, topP: 0.95, topK: 40 },
+          safetySettings: [
+            { category:'HARM_CATEGORY_HARASSMENT', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_HATE_SPEECH', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold:'BLOCK_NONE' },
+            { category:'HARM_CATEGORY_DANGEROUS_CONTENT', threshold:'BLOCK_NONE' }
+          ]
+        }),
+        signal
+      });
+      const data = await res.json();
+      if(data.error) { lastErr = data.error.message; continue; }
+      const raw = data.candidates[0].content.parts[0].text;
+      return JSON.parse(raw.replace(/```json[\s\S]*?```|```/g, '').trim());
+    } catch(e) {
+      if(e.name === 'AbortError') throw e;
+      lastErr = e.message;
+    }
+  }
+  throw new Error('所有模型失敗：' + lastErr);
+}
+
+// K線型態判讀（16種）
+function classifyKbar(o, h, l, c) {
+  const body = Math.abs(c - o);
+  const totalRange = h - l;
+  if(totalRange < 0.001) return '一字線';
+  const upperShadow = c >= o ? h - c : h - o;
+  const lowerShadow = c >= o ? o - l : c - l;
+  const bodyRatio = body / totalRange;
+  const chgPct = Math.abs(c - o) / o * 100;
+  if(bodyRatio < 0.05) {
+    if(totalRange / o < 0.003) return '一字線';
+    if(upperShadow < totalRange * 0.1 && lowerShadow > body * 2) return 'T字線';
+    if(lowerShadow < totalRange * 0.1 && upperShadow > body * 2) return '倒T線';
+    return '十字線';
+  }
+  const shadowRatio = (upperShadow + lowerShadow) / totalRange;
+  if(shadowRatio <= 0.2) {
+    if(c > o) return bodyRatio > 0.7 && chgPct >= 7 ? '大紅K' : bodyRatio > 0.4 && chgPct >= 3 ? '中紅K' : '小紅K';
+    else       return bodyRatio > 0.7 && chgPct >= 7 ? '大黑K' : bodyRatio > 0.4 && chgPct >= 3 ? '中黑K' : '小黑K';
+  }
+  if(upperShadow > body * 2 && lowerShadow < body * 0.3) return c >= o ? '倒鎚紅K(墓碑線-上漲)' : '倒鎚黑K(墓碑線-下跌)';
+  if(lowerShadow > body * 2 && upperShadow < body * 0.3) return c >= o ? '紅K鎚子(吊人線-上漲)' : '黑K鎚子(吊人線-下跌)';
+  return c >= o ? '紡錘紅K' : '紡錘黑K';
 }
 
 // ===== 過場動畫工具函式 =====
@@ -2058,12 +2111,10 @@ async function runAllDiagnosis() {
   ['a','b','c','d'].forEach(p => setEl(p+'-result','display','none'));
   const s = stockDB[currentStock]; if(!s) return;
 
-  // 中止上一次還在跑的請求
   if(_diagAbort) { _diagAbort.abort(); _diagAbort = null; }
   const controller = new AbortController();
   _diagAbort = controller;
   const signal = controller.signal;
-  // 記錄本次診斷的股票，結果回來時比對，防止舊資料寫入新股票
   const diagStock = currentStock;
 
   showLoading();
@@ -2072,7 +2123,6 @@ async function runAllDiagnosis() {
     let rA, rB, rC, rD, rMy;
 
     if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
-      // 展示模式：假資料（支援中止）
       await new Promise((res, rej) => {
         const t = setTimeout(res, 2000);
         signal.addEventListener('abort', () => { clearTimeout(t); rej(new DOMException('aborted','AbortError')); });
@@ -2083,20 +2133,119 @@ async function runAllDiagnosis() {
       rD  = mockD[diagStock]   || mockD['default'];
       rMy = mockMy[diagStock]  || mockMy['default'];
     } else {
-      // 真實 Gemini：5組平行呼叫，全部帶入 signal
+      // ===== 整合近30日K線資料（含K線型態） =====
+      let recentDataStr = '（K線資料載入中，請稍後）';
+      if(klineData && klineData.length >= 2) {
+        const recent = klineData.slice(-30);
+        const rows = recent.map(r => {
+          const kbar = classifyKbar(r.open, r.high, r.low, r.close);
+          const ma20  = r.ma20  ? r.ma20.toFixed(2)  : '-';
+          const ma100 = r.ma100 ? r.ma100.toFixed(2) : '-';
+          return `${r.date} 開${r.open} 高${r.high} 低${r.low} 收${r.close} 量${r.volume} MA20:${ma20} MA100:${ma100} K線:${kbar}`;
+        });
+        recentDataStr = rows.join('\n');
+      }
+
+      // ===== 整合近30日法人+融資資料 =====
+      let chipDataStr = '（法人資料載入中）';
+      if(_lastInstData && _lastInstData.length >= 2) {
+        const recent = _lastInstData.slice(-30);
+        const chipRows = recent.map(r => {
+          const margin = (() => {
+            if(!_lastMarginData) return '-';
+            const m = _lastMarginData.find(x => x.date === r.date);
+            return m ? m.marginBalance : '-';
+          })();
+          return `${r.date} 外資:${r.foreign}張 投信:${r.trust}張 自營:${r.dealer}張 融資餘額:${margin}張`;
+        });
+        chipDataStr = chipRows.join('\n');
+      }
+
+      // ===== 整合最新營收資料 =====
+      let fundamentalStr = '（暫無營收資料）';
+      try {
+        const revData = await fetchMopsRevenue(diagStock);
+        if(revData && revData.length >= 2) {
+          const latest = revData[revData.length - 1];
+          const prev   = revData[revData.length - 2];
+          const mom = prev ? ((latest.value - prev.value) / prev.value * 100).toFixed(1) : '-';
+          fundamentalStr = `最新月營收：${latest.label} 共 ${latest.value}億元，年增率 ${latest.yoy !== null ? latest.yoy + '%' : '-'}，月增率 ${mom}%\n`;
+          fundamentalStr += revData.slice(-6).map(d => `${d.label}: ${d.value}億 YoY:${d.yoy !== null ? d.yoy+'%' : '-'}`).join('  ');
+        }
+      } catch(e) {}
+
       const stock_info = `股票：${s.name}（${diagStock}）目前股價：${s.price}元 今日漲跌：${s.chg}`;
 
-      [rA, rB, rC, rD, rMy] = await Promise.all([
-        callGemini(`你是一位資深台股技術分析師，擁有20年以上的K線分析經驗。請針對以下股票進行深入的K線技術分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體、專業、有深度，不能只是泛泛而談。\n\n【分析對象】${stock_info}\n\n請回傳純JSON格式（不含markdown），欄位如下：\n- trend：【趨勢判斷】詳細分析目前股價處於多頭、空頭或盤整格局，說明趨勢的強弱程度、持續時間、突破或跌破關鍵位置的意義，以及短中長期趨勢的一致性，並預測未來可能的走向。\n- support：【支撐壓力位】詳細列出近期主要支撐價位（至少2個）和壓力價位（至少2個），說明每個價位形成的原因（如前高前低、均線、整數關卡、斐波那契回調位等），以及突破或跌破這些位置後的意義與後續目標。\n- indicators：【技術指標解讀】詳細解讀KD、MACD、RSI、布林通道等技術指標的現況，說明各指標發出的訊號是否一致，是否有背離現象，指標之間的共鳴或分歧代表什麼意義，以及如何搭配使用這些指標做出判斷。\n- risk：【風險提示】詳細說明目前技術面存在的風險，包含短線、中線可能的反轉訊號，需要注意的型態破壞，以及建議的停損設置方式和風控思路。`, signal),
+      const prompt = `你是股神等級的「台股首席參謀長」，負責針對「${diagStock} ${s.name}」進行極為嚴謹的技術、籌碼與基本面診斷。
 
-        callGemini(`你是一位專精均線分析的台股操盤手，精通葛蘭碧八大法則與均線系統理論。請針對以下股票進行深入的均線趨勢分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業。\n\n【分析對象】${stock_info}\n\n請回傳純JSON格式（不含markdown），欄位如下：\n- arrangement：【均線排列狀態】詳細描述5日、10日、20日、60日、120日、240日均線的排列狀況，說明是多頭排列、空頭排列或糾結盤整，各均線的斜率變化、距離遠近，股價與均線的相對位置，以及這種排列狀態在歷史上通常意味著什麼。\n- signal：【多空訊號判讀】詳細說明目前均線系統發出的多空訊號，包含葛蘭碧法則中買進或賣出訊號的對應，哪條均線是目前最關鍵的支撐或壓力，均線扇形的收斂或發散代表什麼趨勢動能，以及整體訊號的可靠程度評估。\n- cross：【均線交叉分析】詳細分析近期均線交叉的情況，包含黃金交叉或死亡交叉的形成過程、交叉的角度與力道、成交量配合情況，以及這次交叉在更大時間框架下的意義，歷史上類似的交叉形態後續走勢如何。\n- advice：【操作建議】根據均線系統給出具體的操作建議，包含建議的買進或減碼時機（以哪條均線作為參考）、停損設置（以哪條均線或價位為依據）、倉位管理建議，以及需要特別留意的均線變化警訊。`, signal),
+【重要約束】
+1. 均線僅分析 MA20（月線，短期趨勢）與 MA100（百日線，中期趨勢），絕對不提其他均線
+2. 趨勢定義：多頭=股價同時在MA20與MA100之上；空頭=同時在兩線之下；多箱=股價在MA20之下但MA100之上；空箱=股價在MA20之上但MA100之下
+3. 禁止寫死任何年份，使用「最新」「近期」「當前」等動態描述
+4. 所有數字使用阿拉伯數字，禁用國字數字
+5. 禁止使用「建議」「應該」「必須」「買入」「賣出」「推薦」等投資指示用語，改用「若欲操作」「可考慮」「積極者可留意」「參考思路」
+6. 數據自然融入段落，禁止條列式列出數據
+7. 禁止使用雙星號(**)，副標題直接呈現文字
+8. 禁止在正文重複列出「最近三個交易日(20XX-XX-XX...)」等日期羅列
 
-        callGemini(`你是一位專精台股籌碼分析的法人研究員，深入了解外資、投信、自營商及大戶的操作習慣。請針對以下股票進行深入的籌碼分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業。\n\n【分析對象】${stock_info}\n\n請回傳純JSON格式（不含markdown），欄位如下：\n- bigplayer：【大戶法人動向】詳細分析外資、投信、自營商三大法人的操作動態，說明各法人的買賣超方向與累計金額意義，三大法人是否同向操作，法人的持倉成本估算，以及法人買超或賣超背後可能的戰略意圖（如建倉、出貨、避險等）。\n- retail：【散戶籌碼動態】詳細分析散戶的融資餘額變化、融券餘額、券資比，說明散戶的情緒與信心，融資增減對股價的影響，是否有軋空條件，借貸比例是否健康，以及散戶與法人之間籌碼消長的意涵。\n- concentration：【籌碼集中度分析】詳細分析大股東持股比例的變化、董監持股、庫藏股執行狀況，說明籌碼是否在向特定機構或大戶集中，浮動籌碼的多寡對股價波動的影響，集中度的變化趨勢，以及高度集中或分散各自代表的投資意義。\n- warning：【籌碼面警示】詳細說明目前籌碼面存在的風險與警示訊號，包含法人是否有逐步出貨的跡象、融資斷頭風險、大股東減持動態，以及建議投資人在籌碼面需要特別監控的指標和閾值。`, signal),
+【分析對象】${stock_info}
 
-        callGemini(`你是一位頂尖的台股產業研究分析師，深入追蹤各大產業的發展趨勢與競爭格局。請針對以下股票所在產業進行深入分析，用繁體中文撰寫，每個欄位必須至少100字，分析要具體專業有深度。\n\n【分析對象】${stock_info}\n\n請回傳純JSON格式（不含markdown），欄位如下：\n- current：【產業現況】詳細說明該公司所在產業目前的景氣循環位置、市場規模、主要玩家競爭格局、供需關係、庫存水位，以及近期影響產業的重大事件（如政策、技術突破、客戶需求變化等），並說明該公司在產業中的定位與市占率。\n- growth：【成長動能】詳細分析推動該公司未來成長的核心驅動力，包含新產品或新技術的商業化進度、新客戶或新市場的拓展、產能擴張計畫與時程，以及量化的成長預期（如營收成長率、訂單能見度、市場擴大空間等），說明成長的可持續性。\n- trend：【長期趨勢】詳細分析未來3-5年影響該產業的長期結構性趨勢，包含AI、電動車、綠能、地緣政治重組等宏觀趨勢對該公司的影響，技術演進路線圖，以及該公司是否具備長期競爭優勢（護城河），在趨勢中是受益者還是被挑戰者。\n- risk：【潛在風險】詳細說明該公司面臨的主要風險，包含產業週期風險、客戶集中度風險、技術被取代風險、地緣政治風險（如美中貿易戰、台海局勢）、匯率風險、原物料成本風險，以及每項風險的發生概率和潛在衝擊程度評估。`, signal),
+【近30日K線資料（含K線型態、MA20、MA100）】
+${recentDataStr}
 
-        callGemini(`你是一位頂尖的台股投資顧問，擅長整合技術面、籌碼面、產業面給出完整的投資建議。請針對以下股票給出專業的操作建議，用繁體中文撰寫。\n\n【分析對象】${stock_info}\n\n請回傳純JSON格式（不含markdown），欄位如下：\n- score：整數1-5（1=強力看空、2=偏空、3=中性觀望、4=偏多、5=強力看多）\n- label：評分標籤文字（如「強力看多⭐⭐⭐⭐⭐」「穩健偏多⭐⭐⭐⭐」「中性觀望⭐⭐⭐」「偏空謹慎⭐⭐」「強力看空⭐」）\n- direction：操作方向（看多用「🟢 積極買進」或「🟢 分批買進」，中性用「🟡 持股觀望」或「🟡 空手觀望」，看空用「🔴 建議減碼」或「🔴 建議出場」）\n- dirBg：對應CSS樣式字串（看多：\"background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;\" 中性:\"background:rgba(210,153,34,0.15);border:1.5px solid #d29922;\" 看空:\"background:rgba(248,81,73,0.15);border:1.5px solid #f85149;\"）\n- buy：建議買進或加碼價位（純數字字串，如\"980\"或\"1000-1020\"）\n- stop：建議停損價位（純數字字串）\n- target：短中期目標價（純數字字串）\n- thinking：【完整操作思維】至少200字，從技術面（趨勢、支撐壓力、指標訊號）、籌碼面（法人動向、散戶情緒）、產業面（景氣、成長動能）三個維度綜合分析，說明給出此評分的理由，操作的時機選擇，倉位管理建議，以及需要改變看法的條件（如什麼情況下會轉多/轉空）。`, signal)
-      ]);
+【近30日三大法人與融資資料】
+${chipDataStr}
+
+【最新營收資料】
+${fundamentalStr}
+
+請回傳純JSON格式（不含markdown），包含以下所有欄位：
+
+第一章 K線診斷（至少400字）：
+- trend：【趨勢判斷】分析目前K線趨勢格局，強弱程度，短中期走向
+- support：【支撐壓力位】列出MA20、MA100以及其他關鍵支撐壓力，說明形成原因
+- indicators：【K線型態與技術訊號】使用「→」串連近1-3日K棒演變，用「」框起，結合型態意義分析多空力道。信心評分1-5分
+- risk：【風險提示】技術面風險，可能反轉訊號，止損參考思路
+
+第二章 均線趨勢（至少400字）：
+- arrangement：【均線排列】MA20與MA100相對位置，多頭/空頭/多箱/空箱判斷，均線斜率與糾結發散
+- signal：【多空訊號】均線系統訊號，關鍵支撐壓力均線位置，訊號可靠度
+- cross：【乖離率分析】股價對MA20與MA100的乖離率，超買超賣判斷，趨勢持續性
+- advice：【操作參考思路】基於均線系統，若欲操作的時機參考，止損設置依據
+
+第三章 大戶散戶（至少400字）：
+- bigplayer：【法人動向】外資、投信近30日累計買賣超張數，操作態度，戰略意圖解讀
+- retail：【散戶動態】融資餘額變化趨勢，散戶情緒，融資增減對股價影響
+- concentration：【籌碼結構】法人買超vs散戶，籌碼安定性分析
+- warning：【籌碼警示】法人出貨跡象，融資風險，需監控指標
+
+第四章 產業展望（至少800字）：
+- current：【產業現況】景氣循環位置，競爭格局，近期重大產業動態
+- growth：【成長動能】核心驅動力，新產品新市場，量化成長預期
+- dTrend：【長期趨勢】3-5年結構性趨勢，AI/半導體等宏觀影響，護城河評估
+- dRisk：【產業風險】各類風險條列（每條獨立編號），發生概率與衝擊評估
+
+第五章 操作建議：
+- score：整數1-5（1=強力看空、5=強力看多）
+- label：評分標籤（如「強力看多⭐⭐⭐⭐⭐」）
+- direction：操作方向（看多「🟢 分批留意」，中性「🟡 持股觀望」，看空「🔴 謹慎觀察」）
+- dirBg：CSS樣式（看多："background:rgba(63,185,80,0.15);border:1.5px solid #3fb950;" 中性："background:rgba(210,153,34,0.15);border:1.5px solid #d29922;" 看空："background:rgba(248,81,73,0.15);border:1.5px solid #f85149;"）
+- buy：參考留意價位（純數字字串）
+- stop：止損參考價位（純數字字串）
+- target：短中期參考目標（純數字字串）
+- thinking：【完整操作思維】至少400字，從技術面、籌碼面、產業面三維度綜合，說明評分理由，操作時機，倉位參考，以及改變看法的條件
+
+所有文字欄位使用Markdown格式，語氣專業犀利，總字數2800字以上，分析具體深入。`;
+
+      const result = await callGemini(prompt, signal);
+
+      // 從一個 JSON 拆分到五頁
+      rA  = { trend: result.trend, support: result.support, indicators: result.indicators, risk: result.risk };
+      rB  = { arrangement: result.arrangement, signal: result.signal, cross: result.cross, advice: result.advice };
+      rC  = { bigplayer: result.bigplayer, retail: result.retail, concentration: result.concentration, warning: result.warning };
+      rD  = { current: result.current, growth: result.growth, trend: result.dTrend || result.trend, risk: result.dRisk || result.risk };
+      rMy = { score: result.score, label: result.label, direction: result.direction, dirBg: result.dirBg,
+              buy: result.buy, stop: result.stop, target: result.target, thinking: result.thinking };
     }
 
     // ★ 雙重保險：若此期間已換股票，丟棄結果不寫入
