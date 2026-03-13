@@ -139,7 +139,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.826</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.827</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +232,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.826</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.827</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -315,9 +315,9 @@
         <div class="rev-sub">資料來源：公開資訊觀測站</div>
       </div>
       <div class="rev-summary" id="rev-summary-monthly"></div>
-      <div class="chart-block"><div class="chart-label">月營收 + 年增率</div><svg id="monthly-svg" width="100%" height="200" viewBox="0 0 330 200"></svg></div>
+      <div class="chart-block"><div class="chart-label">月營收 + 年增率</div><div id="monthly-svg" style="width:100%;height:200px;"></div></div>
       <div class="rev-summary" id="rev-summary-quarterly"></div>
-      <div class="chart-block"><div class="chart-label">季營收 + 毛利率</div><svg id="quarterly-svg" width="100%" height="200" viewBox="0 0 330 200"></svg></div>
+      <div class="chart-block"><div class="chart-label">季營收 + 毛利率</div><div id="quarterly-svg" style="width:100%;height:200px;"></div></div>
     </div>
 
     <!-- 我的頁 -->
@@ -1082,7 +1082,7 @@ function goStock(code) {
   // 清除營收頁
   setEl('rev-summary-monthly','html','');
   setEl('rev-summary-quarterly','html','');
-  ['monthly-svg','quarterly-svg'].forEach(id => {
+  ['monthly-svg','quarterly-svg'].forEach(id => { try { Plotly.purge(document.getElementById(id)); } catch(e){}
     const el = document.getElementById(id);
     if(el) el.innerHTML = '';
   });
@@ -1813,53 +1813,91 @@ function drawComboChart(svgId, bars, line, barColor, lineColor, barLabel, lineLa
 }
 
 function drawMonthlyChart(data) {
-  const svg=document.getElementById('monthly-svg');
-  const W=330,H=200,PL=46,PR=38,PT=16,PB=24,cw=W-PL-PR,ch=H-PT-PB,n=data.monthly.length;
-  const maxB=Math.max(...data.monthly)*1.1, minL=Math.min(...data.yoy)-5, maxL=Math.max(...data.yoy)+5, rangeL=maxL-minL||1;
-  const bsp=cw/n, bw=bsp*0.6;
-  let html='';
-  for(let i=0;i<=4;i++){
-    const y=PT+ch/4*i;
-    html+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#30363d" stroke-width="0.5"/>`;
-    html+=`<text x="${PL-3}" y="${y+4}" text-anchor="end" font-size="9" fill="#8b949e">${Math.round(maxB*(1-i/4))}</text>`;
-    html+=`<text x="${W-PR+3}" y="${y+4}" font-size="9" fill="#d29922">${Math.round(maxL-(maxL-minL)/4*i)}%</text>`;
-  }
-  data.monthly.forEach((v,i)=>{
-    const x=PL+i*bsp, h=v/maxB*ch, y=PT+ch-h, isLast=i===n-1;
-    html+=`<rect x="${x+bsp/2-bw/2}" y="${y}" width="${bw}" height="${h}" fill="${isLast?'#58a6ff':'#3fb950'}" rx="2" opacity="${isLast?1:0.78}"/>`;
-    if(i%2===0||i===n-1) html+=`<text x="${x+bsp/2}" y="${H-4}" text-anchor="middle" font-size="8" fill="#8b949e">${data.labels[i]}</text>`;
-  });
-  const pts=data.yoy.map((v,i)=>{const x=PL+i*bsp+bsp/2; const y=PT+(1-(v-minL)/rangeL)*ch; return `${x},${y}`;}).join(' ');
-  html+=`<polyline points="${pts}" fill="none" stroke="#d29922" stroke-width="2"/>`;
-  data.yoy.forEach((v,i)=>{const x=PL+i*bsp+bsp/2; const y=PT+(1-(v-minL)/rangeL)*ch; html+=`<circle cx="${x}" cy="${y}" r="3" fill="#d29922"/>`;});
-  html+=`<rect x="${PL}" y="2" width="8" height="8" fill="#3fb950" rx="1"/><text x="${PL+10}" y="10" font-size="9" fill="#8b949e">月營收(億)</text>`;
-  html+=`<rect x="${PL+80}" y="2" width="8" height="8" fill="#d29922" rx="1"/><text x="${PL+90}" y="10" font-size="9" fill="#8b949e">年增率(%)</text>`;
-  svg.innerHTML=html;
+  const el = document.getElementById('monthly-svg');
+  if(!el) return;
+  try { Plotly.purge(el); } catch(e){}
+  el.innerHTML = '';
+  const n = data.monthly.length;
+  const colors = data.monthly.map((v, i) => i === n-1 ? '#58a6ff' : '#3fb950');
+  const barTrace = {
+    type: 'bar', x: data.labels, y: data.monthly,
+    marker: { color: colors },
+    name: '月營收(億)',
+    yaxis: 'y',
+    hovertemplate: '%{x}<br>月營收：%{y}億<extra></extra>'
+  };
+  const lineTrace = {
+    type: 'scatter', mode: 'lines+markers',
+    x: data.labels, y: data.yoy,
+    line: { color: '#d29922', width: 2 },
+    marker: { color: '#d29922', size: 5 },
+    name: '年增率(%)',
+    yaxis: 'y2',
+    hovertemplate: '%{x}<br>年增率：%{y}%<extra></extra>'
+  };
+  const layout = {
+    height: 200,
+    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 10 },
+    margin: { l: 46, r: 38, t: 8, b: 30 },
+    hovermode: 'x unified',
+    dragmode: 'pan',
+    bargap: 0.25,
+    xaxis: { gridcolor: '#21262d', tickfont: { size: 8 }, fixedrange: false },
+    yaxis: { gridcolor: '#21262d', tickfont: { size: 9 }, fixedrange: true,
+      title: { text: '億', font: { size: 9 }, standoff: 2 } },
+    yaxis2: { tickfont: { size: 9 }, fixedrange: true, overlaying: 'y', side: 'right',
+      ticksuffix: '%', title: { text: '%', font: { size: 9, color: '#d29922' }, standoff: 2 },
+      tickfont: { color: '#d29922', size: 9 } },
+    showlegend: true,
+    legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 9 } }
+  };
+  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
+  Plotly.newPlot(el, [barTrace, lineTrace], layout, config);
 }
 
 function drawQuarterlyChart(data) {
-  const svg=document.getElementById('quarterly-svg');
-  const W=330,H=200,PL=46,PR=38,PT=16,PB=24,cw=W-PL-PR,ch=H-PT-PB,n=data.quarters.length;
-  const maxB=Math.max(...data.quarters)*1.1, minL=Math.min(...data.grossMargin)-3, maxL=Math.max(...data.grossMargin)+3, rangeL=maxL-minL||1;
-  const bsp=cw/n, bw=bsp*0.6;
-  let html='';
-  for(let i=0;i<=4;i++){
-    const y=PT+ch/4*i;
-    html+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#30363d" stroke-width="0.5"/>`;
-    html+=`<text x="${PL-3}" y="${y+4}" text-anchor="end" font-size="9" fill="#8b949e">${Math.round(maxB*(1-i/4))}</text>`;
-    html+=`<text x="${W-PR+3}" y="${y+4}" font-size="9" fill="#f47fff">${Math.round(maxL-(maxL-minL)/4*i)}%</text>`;
-  }
-  data.quarters.forEach((v,i)=>{
-    const x=PL+i*bsp, h=v/maxB*ch, y=PT+ch-h, isLast=i===n-1;
-    html+=`<rect x="${x+bsp/2-bw/2}" y="${y}" width="${bw}" height="${h}" fill="${isLast?'#3fb950':'#58a6ff'}" rx="2" opacity="${isLast?1:0.78}"/>`;
-    html+=`<text x="${x+bsp/2}" y="${H-4}" text-anchor="middle" font-size="8" fill="#8b949e">${data.labels[i]}</text>`;
-  });
-  const pts=data.grossMargin.map((v,i)=>{const x=PL+i*bsp+bsp/2; const y=PT+(1-(v-minL)/rangeL)*ch; return `${x},${y}`;}).join(' ');
-  html+=`<polyline points="${pts}" fill="none" stroke="#f47fff" stroke-width="2"/>`;
-  data.grossMargin.forEach((v,i)=>{const x=PL+i*bsp+bsp/2; const y=PT+(1-(v-minL)/rangeL)*ch; html+=`<circle cx="${x}" cy="${y}" r="3" fill="#f47fff"/>`;});
-  html+=`<rect x="${PL}" y="2" width="8" height="8" fill="#58a6ff" rx="1"/><text x="${PL+10}" y="10" font-size="9" fill="#8b949e">季營收(億)</text>`;
-  html+=`<rect x="${PL+80}" y="2" width="8" height="8" fill="#f47fff" rx="1"/><text x="${PL+90}" y="10" font-size="9" fill="#8b949e">毛利率(%)</text>`;
-  svg.innerHTML=html;
+  const el = document.getElementById('quarterly-svg');
+  if(!el) return;
+  try { Plotly.purge(el); } catch(e){}
+  el.innerHTML = '';
+  const n = data.quarters.length;
+  const colors = data.quarters.map((v, i) => i === n-1 ? '#3fb950' : '#58a6ff');
+  const barTrace = {
+    type: 'bar', x: data.labels, y: data.quarters,
+    marker: { color: colors },
+    name: '季營收(億)',
+    yaxis: 'y',
+    hovertemplate: '%{x}<br>季營收：%{y}億<extra></extra>'
+  };
+  const lineTrace = {
+    type: 'scatter', mode: 'lines+markers',
+    x: data.labels, y: data.grossMargin,
+    line: { color: '#f47fff', width: 2 },
+    marker: { color: '#f47fff', size: 5 },
+    name: '毛利率(%)',
+    yaxis: 'y2',
+    hovertemplate: '%{x}<br>毛利率：%{y}%<extra></extra>'
+  };
+  const layout = {
+    height: 200,
+    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
+    font: { color: '#c9d1d9', size: 10 },
+    margin: { l: 46, r: 38, t: 8, b: 30 },
+    hovermode: 'x unified',
+    dragmode: 'pan',
+    bargap: 0.25,
+    xaxis: { gridcolor: '#21262d', tickfont: { size: 8 }, fixedrange: false },
+    yaxis: { gridcolor: '#21262d', tickfont: { size: 9 }, fixedrange: true,
+      title: { text: '億', font: { size: 9 }, standoff: 2 } },
+    yaxis2: { tickfont: { size: 9 }, fixedrange: true, overlaying: 'y', side: 'right',
+      ticksuffix: '%', title: { text: '%', font: { size: 9, color: '#f47fff' }, standoff: 2 },
+      tickfont: { color: '#f47fff', size: 9 } },
+    showlegend: true,
+    legend: { orientation: 'h', x: 0, y: 1.12, font: { size: 9 } }
+  };
+  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
+  Plotly.newPlot(el, [barTrace, lineTrace], layout, config);
 }
 
 
