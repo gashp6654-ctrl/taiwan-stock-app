@@ -61,10 +61,7 @@
   .hot-card .hc-price { font-size:18px; font-weight:900; }
   .up { color:var(--red); } .down { color:var(--green); }
   .market-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 16px 16px; }
-  .mkt-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; }
-  .mkt-label { font-size:11px; color:var(--muted); margin-bottom:4px; }
-  .mkt-val { font-size:16px; font-weight:700; }
-  .mkt-sub { font-size:11px; margin-top:2px; }
+
 
   /* K線頁 */
   .detail-header { padding:14px 20px; border-bottom:1px solid var(--border); }
@@ -139,7 +136,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.839</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.845</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -232,7 +229,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.839</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.845</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -247,8 +244,8 @@
         </div>
         <div style="font-size:12px;color:var(--muted);text-align:right;">
           <div>加權指數</div>
-          <div style="font-size:16px;font-weight:900;color:var(--red);">22,456</div>
-          <div style="color:var(--red);font-size:11px;">▲ 123 (+0.55%)</div>
+          <div id="taiex-price" style="font-size:16px;font-weight:900;">--</div>
+          <div id="taiex-chg" style="font-size:11px;">--</div>
         </div>
       </div>
       <div class="search-box">
@@ -265,13 +262,7 @@
       <div class="hot-stocks" id="hot-stocks-grid">
         <div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>
       </div>
-      <div class="section-title">📊 市場概況</div>
-      <div class="market-row">
-        <div class="mkt-card"><div class="mkt-label">成交量</div><div class="mkt-val">3,856億</div><div class="mkt-sub" style="color:var(--green)">▲ 昨量+12%</div></div>
-        <div class="mkt-card"><div class="mkt-label">外資買賣超</div><div class="mkt-val up">+285億</div><div class="mkt-sub" style="color:var(--red)">連買3日</div></div>
-        <div class="mkt-card"><div class="mkt-label">投信買賣超</div><div class="mkt-val up">+42億</div><div class="mkt-sub" style="color:var(--red)">連買7日</div></div>
-        <div class="mkt-card"><div class="mkt-label">融資餘額</div><div class="mkt-val">2,456億</div><div class="mkt-sub" style="color:var(--muted)">較昨▲8億</div></div>
-      </div>
+
     </div>
 
     <!-- K線頁 -->
@@ -896,8 +887,8 @@ async function updateStockPrice(code) {
 }
 
 // 首頁載入時抓前4支股票即時價
-function renderHotStocks() {
-  const codes = ['2330','2317','2454','0050'];
+function renderHotStocks(codes) {
+  if(!codes) codes = ['2330','2317','2454','0050'];
   const grid = document.getElementById('hot-stocks-grid');
   if(!grid) return;
   grid.innerHTML = codes.map(code => {
@@ -921,10 +912,58 @@ function renderHotStocks() {
 }
 
 async function loadHomePrices() {
-  const hotCodes = ['2330','2317','2454','0050'];
+  // 抓加權指數
+  fetchRealPrice('^TWII').then(data => {
+    if(!data) return;
+    const priceEl = document.getElementById('taiex-price');
+    const chgEl   = document.getElementById('taiex-chg');
+    if(!priceEl || !chgEl) return;
+    const color = data.up ? 'var(--green)' : 'var(--red)';
+    priceEl.style.color = color;
+    priceEl.textContent = Number(data.price).toLocaleString();
+    chgEl.style.color = color;
+    let chgTxt = data.chg || '';
+    if(chgTxt.includes('(')) { const m = chgTxt.match(/\(([^)]+)\)/); chgTxt = m ? m[1] : chgTxt; }
+    chgEl.textContent = (data.up ? '▲ ' : '▼ ') + chgTxt;
+  });
+
+  // 從 TWSE 抓當日成交量排行，動態產生熱門股（每天不同）
+  let hotCodes = ['2330','2317','2454','0050'];
+  try {
+    const res = await proxyFetch('https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json');
+    if(res.ok) {
+      const d = await res.json();
+      const ranked = (d.data || [])
+        .filter(r => /^\d{4}$/.test(r[0]) && parseFloat(r[7].replace(/,/g,'')) > 0)
+        .map(r => ({
+          code: r[0], name: r[1],
+          price: parseFloat(r[7].replace(/,/g,'')),
+          chg:   parseFloat(r[8].replace(/,/g,'')),
+          vol:   parseInt(r[3].replace(/,/g,''))
+        }))
+        .filter(r => !isNaN(r.price) && !isNaN(r.vol))
+        .sort((a,b) => b.vol - a.vol)
+        .slice(0, 4);
+      if(ranked.length === 4) {
+        hotCodes = ranked.map(r => r.code);
+        ranked.forEach(r => {
+          if(!stockDB[r.code]) stockDB[r.code] = { name: r.name, price: 0, chg: '-', up: true };
+          stockDB[r.code].name  = r.name;
+          stockDB[r.code].price = r.price;
+          const base = r.price - r.chg;
+          const pct  = base ? Math.round(r.chg / base * 1000) / 10 : 0;
+          stockDB[r.code].chg = (r.chg >= 0 ? '+' : '') + r.chg + ' (' + (pct >= 0 ? '+' : '') + pct + '%)';
+          stockDB[r.code].up  = r.chg >= 0;
+        });
+      }
+    }
+  } catch(e) { console.warn('熱門股排行失敗', e); }
+
+  renderHotStocks(hotCodes);
+
+  // 自選股更新（用 Yahoo 抓即時價）
   const watchCodes = watchlist.map(w => w.code);
-  const allCodes = [...new Set([...hotCodes, ...watchCodes])];
-  for(const code of allCodes) {
+  for(const code of watchCodes) {
     const data = await fetchRealPrice(code);
     if(!data) continue;
     if(!stockDB[code]) stockDB[code] = { name: code, price: 0, chg: '-', up: true };
@@ -934,9 +973,9 @@ async function loadHomePrices() {
     const w = watchlist.find(x => x.code === code);
     if(w) { w.price = data.price; w.chg = data.chg; w.up = data.up; }
   }
-  renderHotStocks();
   renderWatchlist();
 }
+
 
 // Markdown 轉 HTML
 function mdToHtml(text) {
@@ -1147,6 +1186,8 @@ let currentPeriod = '日'; // 目前選取週期
 let klineData = null;     // 目前顯示中的K線資料
 let _lastInstData = null;   // 最後一次法人資料（供 AI 分析用）
 let _lastMarginData = null; // 最後一次融資資料（供 AI 分析用）
+let isAnalyzing = false;    // AI 分析進行中旗標
+let _diagAbort = null;      // 中止進行中的 Gemini 請求
 
 function setPeriod(el) {
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
