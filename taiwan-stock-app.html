@@ -136,7 +136,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.847</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.848</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -229,7 +229,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.847</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.848</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1017,6 +1017,8 @@ const stockDB = {
   '2886':{ name:'兆豐金',    price:0, chg:'-', up:true },
   '3008':{ name:'大立光',    price:0, chg:'-', up:true },
 };
+let isAnalyzing = false;    // AI 分析進行中旗標
+let _diagAbort = null;      // 中止進行中的 Gemini 請求
 let currentStock = '2330';
 let watchlist = [
   { code:'2330', name:'台積電',     price:0, chg:'-', up:true },
@@ -1219,8 +1221,7 @@ let currentPeriod = '日'; // 目前選取週期
 let klineData = null;     // 目前顯示中的K線資料
 let _lastInstData = null;   // 最後一次法人資料（供 AI 分析用）
 let _lastMarginData = null; // 最後一次融資資料（供 AI 分析用）
-let isAnalyzing = false;    // AI 分析進行中旗標
-let _diagAbort = null;      // 中止進行中的 Gemini 請求
+
 
 function setPeriod(el) {
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));
@@ -1522,7 +1523,7 @@ async function fetchInstitutional(code) {
       const start = new Date(); start.setDate(start.getDate() - 380);
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
-        stock_id: code, start_date: fmt(start), end_date: fmt(end)
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
       if(rows && rows.length > 0) {
         const byDate = {};
@@ -1576,7 +1577,7 @@ async function fetchMargin(code) {
       const start = new Date(); start.setDate(start.getDate() - 380);
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
-        stock_id: code, start_date: fmt(start), end_date: fmt(end)
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
       if(rows && rows.length > 0) {
         return rows.slice(-250).map(r => ({
@@ -1729,10 +1730,10 @@ async function fetchMopsRevenue(code) {
   {
     try {
       const end = new Date();
-      const start = new Date(); start.setFullYear(start.getFullYear() - 4); // 4年：12季+YoY比較
+      const start = new Date(); start.setFullYear(start.getFullYear() - 5); // 5年：確保12季+YoY比較
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockMonthRevenue', {
-        stock_id: code, start_date: fmt(start), end_date: fmt(end)
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
       if(rows && rows.length >= 2) {
         // FinMind 欄位：date, stock_id, country, revenue, revenue_month, revenue_year
@@ -1754,7 +1755,7 @@ async function fetchMopsRevenue(code) {
             rocYear, month: r.revenue_month
           };
         });
-        return results.slice(-14); // 近14個月
+        return results; // 回傳全部（月營收圖取後14個月，季營收推算需要更多）
       }
     } catch(e) {}
   }
@@ -1818,10 +1819,11 @@ async function drawRevenueCharts() {
   try {
     const revData = await fetchMopsRevenue(code);
     if(revData && revData.length >= 2) {
-      const monthly = revData.map(d => d.value);
-      const labels = revData.map(d => d.label);
+      const revDisplay = revData.slice(-14); // 月營收圖只顯示最近14個月
+      const monthly = revDisplay.map(d => d.value);
+      const labels = revDisplay.map(d => d.label);
       // 年增率：優先用 FinMind 提供的 yoy，否則自算
-      const yoy = revData.map((d, i) => {
+      const yoy = revDisplay.map((d, i) => {
         if(d.yoy !== null && d.yoy !== undefined) return d.yoy;
         if(i < 12) return 0;
         const prev12 = monthly[i - 12];
@@ -1844,44 +1846,41 @@ async function drawRevenueCharts() {
       drawMonthlyChart({ monthly, yoy, labels });
 
       // ===== 月營收加總推算季營收 =====
-      // 每筆 revData 有 label（如 "115/02"）和 value（億）
-      // 先建立 年/月 → value 的 map
       const revMap = {};
       revData.forEach(d => {
-        // label 格式：民國年/月，例如 "115/02"
         const m = d.label.match(/(\d+)\/(\d+)/);
         if(m) revMap[`${m[1]}/${String(m[2]).padStart(2,'0')}`] = d.value;
       });
 
-      // 取最新8季
       const qLabels = [], qRevs = [], qYoY = [];
-      // 從最新月份往前算，找完整的季
       const allKeys = Object.keys(revMap).sort();
       if(allKeys.length >= 3) {
-        // 找最新完整季的結束月份
+        // 從最新月份往前，找出所有完整的季（最多12季）
         const lastKey = allKeys[allKeys.length - 1];
         const [lyStr, lmStr] = lastKey.split('/');
         let ly = parseInt(lyStr), lm = parseInt(lmStr);
-        // 往前推，找最多8季
+
+        // 調整到最近的季末月（3/6/9/12）
+        lm = Math.floor((lm - 1) / 3) * 3 + 3;
+
         for(let q = 0; q < 12; q++) {
-          // 當前季的結束月
-          const endM = lm - (lm % 3 === 0 ? 0 : lm % 3);
-          // 調整：找最近的季末月（3/6/9/12）
-          let qEndM = Math.floor((lm - 1) / 3) * 3 + 3 - q * 3;
+          let qEndM = lm - q * 3;
           let qY = ly;
           while(qEndM <= 0) { qEndM += 12; qY--; }
           const qStartM = qEndM - 2;
-          const m1 = revMap[`${qY}/${String(qStartM).padStart(2,'0')}`];
-          const m2 = revMap[`${qY}/${String(qStartM+1).padStart(2,'0')}`];
-          const m3 = revMap[`${qY}/${String(qEndM).padStart(2,'0')}`];
+
+          const k1 = `${qY}/${String(qStartM).padStart(2,'0')}`;
+          const k2 = `${qY}/${String(qStartM+1).padStart(2,'0')}`;
+          const k3 = `${qY}/${String(qEndM).padStart(2,'0')}`;
+          const m1 = revMap[k1], m2 = revMap[k2], m3 = revMap[k3];
+
           if(m1 !== undefined && m2 !== undefined && m3 !== undefined) {
             const qRev = Math.round((m1 + m2 + m3) * 10) / 10;
-            // 民國年轉季標籤
             const qNum = Math.ceil(qEndM / 3);
-            const qLabel = `${qY}Q${qNum}`;
-            qLabels.unshift(qLabel);
+            qLabels.unshift(`${qY}Q${qNum}`);
             qRevs.unshift(qRev);
-            // YoY：與去年同季比
+
+            // YoY：去年同季
             const pyY = qY - 1;
             const py1 = revMap[`${pyY}/${String(qStartM).padStart(2,'0')}`];
             const py2 = revMap[`${pyY}/${String(qStartM+1).padStart(2,'0')}`];
@@ -1893,8 +1892,6 @@ async function drawRevenueCharts() {
               qYoY.unshift(null);
             }
           }
-          lm -= 3;
-          if(lm <= 0) { lm += 12; ly--; }
         }
       }
 
@@ -2228,7 +2225,8 @@ function splitChapters(fullText) {
 // ===== 主診斷函式 =====
 async function runAllDiagnosis() {
   ['a','b','c','d'].forEach(p => setEl(p+'-result','display','none'));
-  const s = stockDB[currentStock]; if(!s) return;
+  if(!stockDB[currentStock]) stockDB[currentStock] = { name: currentStock, price: 0, chg: '-', up: true };
+  const s = stockDB[currentStock];
 
   if(_diagAbort) { _diagAbort.abort(); _diagAbort = null; }
   const controller = new AbortController();
