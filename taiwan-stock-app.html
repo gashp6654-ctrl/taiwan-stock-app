@@ -135,14 +135,14 @@
   <canvas id="ai-star-canvas" width="390" height="844" style="position:absolute;top:0;left:0;z-index:1;pointer-events:none;"></canvas>
 
   <!-- 登入頁 -->
-  <div id="page-login" class="login-screen" style="position:relative;overflow:hidden;">
-    <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.18;pointer-events:none;z-index:0;"></canvas>
+  <div id="page-login" class="login-screen">
+    <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.45;pointer-events:none;z-index:0;"></canvas>
     <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;">
     <div style="filter:drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 20px #f0b42966);animation:cowBob 2s ease-in-out infinite;margin-bottom:8px;">
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.872</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.875</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -236,7 +236,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.872</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.875</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1158,8 +1158,12 @@ function renderHotStocks(codes) {
   const grid = document.getElementById('hot-stocks-grid');
   if(!grid) return;
   grid.innerHTML = codes.map(code => {
+    // 若 stockDB 沒有，先用代號顯示，等股價載入後會更新
+    if(!stockDB[code]) {
+      const found = _allStocks.find(s => s.code === code);
+      stockDB[code] = { name: found?.name || code, price: 0, chg: '-', up: true };
+    }
     const s = stockDB[code];
-    if(!s) return '';
     const up = s.up;
     const cls = up ? 'up' : 'down';
     // chg可能是 "+1.47%" 或 "+15 (+1.47%)" 格式，取括號內百分比或直接用
@@ -1252,6 +1256,9 @@ async function loadHomePrices() {
   });
 
   renderHotStocks(homeWatchList);
+
+  // 逐支抓即時股價並更新卡片
+  homeWatchList.forEach(code => updateStockPrice(code));
 
   // 自選股更新（用 Yahoo 抓即時價）
   const watchCodes = watchlist.map(w => w.code);
@@ -3199,12 +3206,14 @@ if(document.getElementById('watchlistEl')) renderWatchlist();
   const ctx = canvas.getContext('2d');
 
   function resize() {
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
+    // 用 phone-wrap 的尺寸，或 fallback 390x844
+    const pw = canvas.closest('.phone-wrap') || canvas.parentElement;
+    canvas.width = pw ? pw.offsetWidth : 390;
+    canvas.height = pw ? pw.offsetHeight : 844;
   }
   resize();
 
-  const fontSize = 13;
+  const fontSize = 16;
   const chars = '01';
   let columns, drops;
 
@@ -3215,7 +3224,7 @@ if(document.getElementById('watchlistEl')) renderWatchlist();
   init();
 
   function draw() {
-    ctx.fillStyle = 'rgba(6,2,15,0.05)';
+    ctx.fillStyle = 'rgba(6,2,15,0.08)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = fontSize + 'px monospace';
@@ -3224,9 +3233,11 @@ if(document.getElementById('watchlistEl')) renderWatchlist();
       // 頭部亮白，身體琥珀漸淡
       const brightness = drops[i] < 3 ? 1 : Math.max(0.2, 1 - drops[i] * 0.04);
       if(drops[i] < 2) {
-        ctx.fillStyle = 'rgba(255,255,255,' + brightness + ')';
+        ctx.fillStyle = 'rgba(255,255,255,1)';
+      } else if(drops[i] < 5) {
+        ctx.fillStyle = 'rgba(255,220,80,' + brightness + ')';
       } else {
-        ctx.fillStyle = 'rgba(240,180,41,' + brightness + ')';
+        ctx.fillStyle = 'rgba(240,180,41,' + (brightness * 0.85) + ')';
       }
       ctx.fillText(char, i * fontSize, drops[i] * fontSize);
 
