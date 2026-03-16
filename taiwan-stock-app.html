@@ -140,7 +140,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.867</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.869</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -233,7 +233,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.867</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.869</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -258,9 +258,24 @@
         <div class="cow-container" style="filter: drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988) drop-shadow(0 0 40px #f0b42944);"><img class="cow-img" style="width:180px;height:180px;object-fit:contain;"/></div>
         <div onclick="cowTalk()" style="margin-top:10px;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:5px 20px;font-size:13px;font-weight:900;color:var(--accent);letter-spacing:1px;cursor:pointer;">AI牛牛</div>
       </div>
-      <div class="section-title">🔥 熱門個股</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;margin-bottom:10px;">
+        <div class="section-title" style="margin:0;">📌 我的首頁自選</div>
+        <div onclick="openHomeWatchEditor()" style="font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;">＋ 編輯</div>
+      </div>
       <div class="hot-stocks" id="hot-stocks-grid">
         <div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>
+      </div>
+      <!-- 首頁自選編輯 Modal -->
+      <div id="home-watch-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:none;align-items:center;justify-content:center;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;width:300px;max-height:80vh;overflow-y:auto;">
+          <div style="font-size:15px;font-weight:900;color:var(--text);margin-bottom:14px;">📌 編輯首頁自選（最多20檔）</div>
+          <div id="home-watch-list" style="margin-bottom:12px;"></div>
+          <div style="display:flex;gap:8px;margin-bottom:14px;">
+            <input id="home-watch-input" placeholder="輸入股票代號" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:var(--text);font-size:13px;outline:none;" maxlength="6">
+            <button onclick="addHomeWatch()" style="background:var(--accent);color:#000;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;">新增</button>
+          </div>
+          <button onclick="closeHomeWatchEditor()" style="width:100%;background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:10px;color:var(--muted);font-size:13px;cursor:pointer;">關閉</button>
+        </div>
       </div>
 
     </div>
@@ -1159,41 +1174,81 @@ function renderHotStocks(codes) {
   }).join('');
 }
 
-async function loadHomePrices() {
+// 首頁自選股清單（最多10支，存 localStorage）
+let homeWatchList = JSON.parse(localStorage.getItem('homeWatchList') || '["2330","2317","2454","0050"]');
 
-  // 從 TWSE 抓當日成交量排行，動態產生熱門股（每天不同）
-  let hotCodes = ['2330','2317','2454','0050'];
-  try {
-    const res = await proxyFetch('https://www.twse.com.tw/rwd/zh/afterTrading/STOCK_DAY_ALL?response=json');
-    if(res.ok) {
-      const d = await res.json();
-      const ranked = (d.data || [])
-        .filter(r => /^\d{4}$/.test(r[0]) && parseFloat(r[7].replace(/,/g,'')) > 0)
-        .map(r => ({
-          code: r[0], name: r[1],
-          price: parseFloat(r[7].replace(/,/g,'')),
-          chg:   parseFloat(r[8].replace(/,/g,'')),
-          vol:   parseInt(r[3].replace(/,/g,''))
-        }))
-        .filter(r => !isNaN(r.price) && !isNaN(r.vol))
-        .sort((a,b) => b.vol - a.vol)
-        .slice(0, 4);
-      if(ranked.length === 4) {
-        hotCodes = ranked.map(r => r.code);
-        ranked.forEach(r => {
-          if(!stockDB[r.code]) stockDB[r.code] = { name: r.name, price: 0, chg: '-', up: true };
-          stockDB[r.code].name  = r.name;
-          stockDB[r.code].price = r.price;
-          const base = r.price - r.chg;
-          const pct  = base ? Math.round(r.chg / base * 1000) / 10 : 0;
-          stockDB[r.code].chg = (r.chg >= 0 ? '+' : '') + r.chg + ' (' + (pct >= 0 ? '+' : '') + pct + '%)';
-          stockDB[r.code].up  = r.chg >= 0;
-        });
+function saveHomeWatchList() {
+  localStorage.setItem('homeWatchList', JSON.stringify(homeWatchList));
+}
+
+function openHomeWatchEditor() {
+  renderHomeWatchList();
+  document.getElementById('home-watch-modal').style.display = 'flex';
+}
+
+function closeHomeWatchEditor() {
+  document.getElementById('home-watch-modal').style.display = 'none';
+  renderHotStocks(homeWatchList);
+  // 重新抓價格
+  homeWatchList.forEach(code => updateStockPrice(code));
+}
+
+function renderHomeWatchList() {
+  const el = document.getElementById('home-watch-list');
+  if(!el) return;
+  if(homeWatchList.length === 0) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:12px;text-align:center;padding:10px;">尚未加入任何股票</div>';
+    return;
+  }
+  el.innerHTML = homeWatchList.map((code, i) => {
+    const name = stockDB[code]?.name || _allStocks.find(s => s.code === code)?.name || code;
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">' +
+      '<span style="font-size:13px;color:var(--text);"><b style="color:var(--accent);">' + code + '</b>　' + name + '</span>' +
+      '<span onclick="removeHomeWatch(' + i + ')" style="color:var(--red);font-size:18px;cursor:pointer;padding:0 4px;">×</span>' +
+      '</div>';
+  }).join('');
+}
+
+async function addHomeWatch() {
+  const input = document.getElementById('home-watch-input');
+  const code = input.value.trim().toUpperCase();
+  if(!code) return;
+  if(homeWatchList.length >= 20) { alert('最多只能加入20檔！'); return; }
+  if(homeWatchList.includes(code)) { alert('已在清單中！'); return; }
+  // 確認股票存在
+  if(!stockDB[code]) {
+    const found = _allStocks.find(s => s.code === code);
+    if(!found) { alert('找不到股票代號 ' + code); return; }
+    stockDB[code] = { name: found.name, price: 0, chg: '-', up: true };
+    if(!STOCK_SUFFIX[code]) STOCK_SUFFIX[code] = (found.type === 'tpex') ? 'TWO' : 'TW';
+  }
+  homeWatchList.push(code);
+  saveHomeWatchList();
+  input.value = '';
+  renderHomeWatchList();
+}
+
+function removeHomeWatch(idx) {
+  homeWatchList.splice(idx, 1);
+  saveHomeWatchList();
+  renderHomeWatchList();
+}
+
+async function loadHomePrices() {
+  // 確保 homeWatchList 補充到 stockDB
+  homeWatchList.forEach(code => {
+    if(!stockDB[code]) {
+      const found = _allStocks.find(s => s.code === code);
+      if(found) {
+        stockDB[code] = { name: found.name, price: 0, chg: '-', up: true };
+        if(!STOCK_SUFFIX[code]) STOCK_SUFFIX[code] = (found.type === 'tpex') ? 'TWO' : 'TW';
+      } else {
+        stockDB[code] = { name: code, price: 0, chg: '-', up: true };
       }
     }
-  } catch(e) { console.warn('熱門股排行失敗', e); }
+  });
 
-  renderHotStocks(hotCodes);
+  renderHotStocks(homeWatchList);
 
   // 自選股更新（用 Yahoo 抓即時價）
   const watchCodes = watchlist.map(w => w.code);
