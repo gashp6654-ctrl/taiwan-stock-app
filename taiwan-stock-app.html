@@ -140,7 +140,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.860</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.861</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -233,7 +233,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.860</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.861</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -294,7 +294,6 @@
     <span style="color:var(--muted);">每日</span>
   </span>
 </div><div id="main-plotly" style="width:100%;height:160px;"></div></div>
-    </div>
 
     <!-- 牛牛小知識 -->
     <div style="margin:16px 16px 8px;font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;">🐮 牛牛小知識</div>
@@ -389,6 +388,44 @@
       <div class="chart-block"><div class="chart-label">月營收 + 年增率</div><div id="monthly-svg" style="width:100%;height:200px;"></div></div>
       <div class="rev-summary" id="rev-summary-quarterly"></div>
       <div class="chart-block"><div class="chart-label">季營收 + 毛利率</div><div id="quarterly-svg" style="width:100%;height:200px;"></div></div>
+
+    <!-- 營收頁牛牛小知識 -->
+    <div style="margin:16px 16px 8px;font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;">🐮 牛牛小知識</div>
+
+    <!-- 年增率 YoY -->
+    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+      <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📊 年增率（YoY）</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">將<b style="color:var(--text)">當月營收與去年同月</b>比較，直接觀察公司是否有實質成長。<br><br>
+        <span style="color:var(--green)">▲ 正值</span>：業務擴張，較去年同期更具競爭力。<br>
+        <span style="color:var(--red)">▼ 負值</span>：營收可能衰退，需警惕需求下滑或產業下行。
+      </div>
+    </div>
+
+    <!-- 季營收 + 毛利率 -->
+    <div style="margin:0 16px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+      <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">📈 季營收 + 季毛利率｜質與量同步分析</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:10px;">你觀察過「<b style="color:var(--text)">營收創新高、股價卻不漲</b>」的情況嗎？這通常是毛利率出問題的警訊。毛利率越高，代表公司扣除直接成本後能留下的錢越多，幫你判斷公司是「表面訂單接不完根本沒賺錢」還是「質與量同步成長」。</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;">四種情境綜合分析</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="background:rgba(63,185,80,0.1);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
+          <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 營收升 + 毛利升（最理想）</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產品供不應求，公司甚至有漲價能力，或新產品毛利更高。</div>
+        </div>
+        <div style="background:rgba(248,81,73,0.08);border-left:3px solid #f0b429;padding:8px 10px;border-radius:0 8px 8px 0;">
+          <div style="font-size:11px;font-weight:700;color:#f0b429;">⚠️ 營收升 + 毛利降（需警戒）</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">可能採「降價競爭」搶市佔率，或原物料成本大幅上升無法轉嫁。</div>
+        </div>
+        <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;">
+          <div style="font-size:11px;font-weight:700;color:var(--blue);">🔄 營收降 + 毛利升（轉型期）</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">公司可能精簡產品線，放棄低毛利訂單，專注高價值產品。</div>
+        </div>
+        <div style="background:rgba(248,81,73,0.1);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
+          <div style="font-size:11px;font-weight:700;color:var(--red);">🚨 營收降 + 毛利降（衰退中）</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產業可能進入寒冬或競爭力喪失，產品賣不動且必須降價出清。</div>
+        </div>
+      </div>
+    </div>
+
     </div>
 
     <!-- 我的頁 -->
