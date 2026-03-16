@@ -142,7 +142,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.876</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.877</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -236,7 +236,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.876</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.877</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1276,73 +1276,7 @@ async function loadHomePrices() {
 }
 
 
-// Markdown 轉 HTML
-function mdToHtml(text) {
-  if(!text) return '';
-  // 顏色對應表
-  const colorMap = [
-    // 深紅：多頭K線型態 + 多頭訊號詞（注意長詞先比對）
-    { words: ['大紅K','中紅K','小紅K','倒鎚紅K','紅K鎚子','紡錘紅K','T字線','T 字線',
-              '帶量突破','向上突破','黃金交叉','多頭排列','多頭',
-              '突破','起漲','止跌','反彈','買進','加碼','進場'], color: '#c0392b', bold: true },
-    // 綠色：空頭K線型態 + 空頭訊號詞
-    { words: ['大黑K','中黑K','小黑K','倒鎚黑K','黑K鎚子','紡錘黑K','倒T線','倒 T 線',
-              '大綠K','中綠K','小綠K','倒鎚綠K','綠K鎚子','紡錘綠K',
-              '帶量跌破','向下跌破','死亡交叉','空頭排列','空頭',
-              '跌破','見頂','崩跌','賣出','減碼','出場'], color: '#3fb950', bold: true },
-    // 淺藍：中性變盤型態
-    { words: ['一字線','十字線'], color: '#79c0ff', bold: true },
-    // 黃/琥珀：注意觀察詞 + MA5
-    { words: ['MA5','盤整','震盪','觀望','壓力','支撐','背離','乖離','警訊','注意','風險'], color: '#d29922', bold: true },
-    // 橘色：MA20
-    { words: ['MA20'], color: '#f0883e', bold: true },
-    // 深藍：MA100 + 數據指標
-    { words: ['MA100','RSI','MACD','KD指標','成交量','爆量','縮量','外資','投信','自營商','融資','融券'], color: '#58a6ff', bold: true },
-    // 淺紫：籌碼面
-    { words: ['主力','法人','大戶','籌碼','鎖碼','洗盤','買超','賣超'], color: '#afa9ec', bold: true },
-  ];
 
-  let html = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/^### (.+)$/gm,'<h4 style="font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 6px;">$1</h4>')
-    .replace(/^## (.+)$/gm,'<h3 style="font-size:14px;font-weight:700;color:var(--text);margin:14px 0 8px;">$1</h3>')
-    .replace(/^# (.+)$/gm,'<h2 style="font-size:15px;font-weight:700;color:var(--text);margin:14px 0 8px;">$1</h2>')
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/^---+$/gm,'<hr style="border:none;border-top:1px solid var(--border);margin:10px 0;">')
-    .replace(/^\d+\.\s(.+)$/gm,'<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:var(--accent);">●</span>$1</div>')
-    .replace(/^[-*]\s(.+)$/gm,'<div style="padding:3px 0 3px 16px;position:relative;"><span style="position:absolute;left:0;color:var(--muted);">·</span>$1</div>')
-    .replace(/\n\n/g,'</p><p style="margin:8px 0;">')
-    .replace(/\n/g,'<br>')
-    .replace(/^(.)/,'<p style="margin:0 0 8px;">$1')
-    + '</p>';
-
-  // 套用關鍵字顏色（避免替換到 HTML 標籤內的文字）
-  // 先把所有 HTML 標籤換成 placeholder，上色後再還原
-  const tagPlaceholders = [];
-  html = html.replace(/<[^>]+>/g, function(tag) {
-    tagPlaceholders.push(tag);
-    return '\x00' + (tagPlaceholders.length - 1) + '\x00';
-  });
-
-  colorMap.forEach(({ words, color, bold }) => {
-    words.forEach(word => {
-      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const re = new RegExp(escaped, 'g');
-      const styled = bold
-        ? '<span style="color:' + color + ';font-weight:700;">' + word + '</span>'
-        : '<span style="color:' + color + ';">' + word + '</span>';
-      html = html.replace(re, styled);
-    });
-  });
-
-  // 還原 HTML 標籤
-  html = html.replace(/\x00(\d+)\x00/g, function(_, idx) {
-    return tagPlaceholders[parseInt(idx)];
-  });
-
-  return html;
-}
 
 
 function setEl(id, prop, val) {
@@ -2564,7 +2498,21 @@ async function callGemini(prompt, signal) {
 // ===== Markdown 轉 HTML =====
 function mdToHtml(text) {
   if(!text) return '';
-  // 先處理標題（避免被後續 replace 影響）
+  const colorMap = [
+    { words: ['大紅K','中紅K','小紅K','倒鎚紅K','紅K鎚子','紡錘紅K','T字線','T 字線',
+              '帶量突破','向上突破','黃金交叉','多頭排列','多頭',
+              '突破','起漲','止跌','反彈','買進','加碼','進場'], color: '#c0392b', bold: true },
+    { words: ['大黑K','中黑K','小黑K','倒鎚黑K','黑K鎚子','紡錘黑K','倒T線','倒 T 線',
+              '大綠K','中綠K','小綠K','倒鎚綠K','綠K鎚子','紡錘綠K',
+              '帶量跌破','向下跌破','死亡交叉','空頭排列','空頭',
+              '跌破','見頂','崩跌','賣出','減碼','出場'], color: '#3fb950', bold: true },
+    { words: ['一字線','十字線'], color: '#79c0ff', bold: true },
+    { words: ['MA5','盤整','震盪','觀望','壓力','支撐','背離','乖離','警訊','注意','風險'], color: '#d29922', bold: true },
+    { words: ['MA20'], color: '#f0883e', bold: true },
+    { words: ['MA100','RSI','MACD','KD指標','成交量','爆量','縮量','外資','投信','自營商','融資','融券'], color: '#58a6ff', bold: true },
+    { words: ['主力','法人','大戶','籌碼','鎖碼','洗盤','買超','賣超'], color: '#afa9ec', bold: true },
+  ];
+
   let html = text
     .replace(/^#### (.+)$/gm, '<h5 style="font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px;">$1</h5>')
     .replace(/^### (.+)$/gm,  '<h4 style="font-size:13px;font-weight:700;color:var(--accent);margin:12px 0 6px;">$1</h4>')
@@ -2579,6 +2527,27 @@ function mdToHtml(text) {
       if(p.startsWith('<h') || p.startsWith('<hr') || p.startsWith('<div')) return p;
       return `<p style="margin:6px 0;line-height:1.8;">${p.replace(/\n/g,'<br>')}</p>`;
     }).join('\n');
+
+  // 關鍵字上色：先把 HTML 標籤暫存，對純文字上色，再還原
+  const tagPlaceholders = [];
+  html = html.replace(/<[^>]+>/g, function(tag) {
+    tagPlaceholders.push(tag);
+    return '\x00' + (tagPlaceholders.length - 1) + '\x00';
+  });
+  colorMap.forEach(({ words, color, bold }) => {
+    words.forEach(word => {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(escaped, 'g');
+      const styled = bold
+        ? '<span style="color:' + color + ';font-weight:700;">' + word + '</span>'
+        : '<span style="color:' + color + ';">' + word + '</span>';
+      html = html.replace(re, styled);
+    });
+  });
+  html = html.replace(/\x00(\d+)\x00/g, function(_, idx) {
+    return tagPlaceholders[parseInt(idx)];
+  });
+
   return html;
 }
 
