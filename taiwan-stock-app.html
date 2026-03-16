@@ -140,7 +140,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.857</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.858</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -233,7 +233,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.857</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.858</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -973,8 +973,14 @@ async function loadStockList() {
       // 只取4碼以內的一般股票，排除受益證券等
       _allStocks = data
         .filter(s => /^\d{4}[A-Z]?$/.test(s.stock_id) && s.stock_name)
-        .map(s => ({ code: s.stock_id, name: s.stock_name }));
+        .map(s => ({ code: s.stock_id, name: s.stock_name, type: s.type }));
       _stockListLoaded = true;
+      // 同步建立 suffix 對應表（上櫃用 TWO）
+      _allStocks.forEach(s => {
+        if(!STOCK_SUFFIX[s.code]) {
+          STOCK_SUFFIX[s.code] = (s.type === 'otc') ? 'TWO' : 'TW';
+        }
+      });
     }
   } catch(e) { console.warn('股票清單載入失敗', e); }
 }
@@ -1111,7 +1117,13 @@ function goStock(code) {
   // 若 stockDB 沒有此股票，從全清單補充
   if(!stockDB[code]) {
     const found = _allStocks.find(s => s.code === code);
-    if(found) stockDB[code] = { name: found.name, price: 0, chg: '-', up: true };
+    if(found) {
+      stockDB[code] = { name: found.name, price: 0, chg: '-', up: true };
+      // 根據 type 設定 suffix（上櫃用 TWO，其他用 TW）
+      if(!STOCK_SUFFIX[code]) {
+        STOCK_SUFFIX[code] = (found.type === 'otc') ? 'TWO' : 'TW';
+      }
+    }
     else return;
   }
   const s = stockDB[code];
