@@ -143,7 +143,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.897</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.900</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -237,7 +237,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.897</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.900</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1789,7 +1789,7 @@ function drawKline(rows) {
     paper_bgcolor: '#0d1117',
     font: { color: '#c9d1d9', size: 11 },
     margin: { l: 50, r: 10, t: 28, b: 30 },
-    hovermode: 'x unified',
+    hovermode: 'closest',
     dragmode: 'pan',
     xaxis: {
       type: 'date',
@@ -1797,7 +1797,7 @@ function drawKline(rows) {
       minallowed: rangeStartAll, // 最小縮放到全部K線起點
       maxallowed: rangeEnd,      // 不能超出最新日期
       rangebreaks: rangebreaks,
-      rangeslider: { visible: true, thickness: 0.04, bgcolor: '#161b22', bordercolor: '#30363d', borderwidth: 1 },
+      rangeslider: { visible: false },
       gridcolor: '#21262d',
       tickfont: { size: 10 },
       fixedrange: false
@@ -1828,31 +1828,63 @@ function attachKlineLongPress(el, dates) {
   if(el._longPressAttached) return;
   el._longPressAttached = true;
 
-  let isSwiping = false;
-  let startY = 0;
+  let touchStartY = 0;
+  let touchStartX = 0;
   let startRange = null;
+  let centerDate = null;   // 觸碰點對應的日期（縮放中心）
+  let isZooming = false;   // 確認是垂直滑動才縮放
+  let directionLocked = false;
 
   el.addEventListener('touchstart', function(e) {
     if(e.touches.length !== 1) return;
-    startY = e.touches[0].clientY;
-    isSwiping = true;
+    touchStartY = e.touches[0].clientY;
+    touchStartX = e.touches[0].clientX;
+    isZooming = false;
+    directionLocked = false;
+    centerDate = null;
+
     const layout = el._fullLayout;
     if(layout && layout.xaxis) {
       startRange = [layout.xaxis.range[0], layout.xaxis.range[1]];
+
+      // 計算觸碰點對應的日期
+      const r0 = new Date(startRange[0]).getTime();
+      const r1 = new Date(startRange[1]).getTime();
+      const rect = el.getBoundingClientRect();
+      const xFrac = (e.touches[0].clientX - rect.left) / rect.width;
+      // 考慮 margin left（約50px）
+      const plotWidth = rect.width - 60;
+      const plotLeft = rect.left + 50;
+      const plotFrac = Math.max(0, Math.min(1, (e.touches[0].clientX - plotLeft) / plotWidth));
+      centerDate = r0 + plotFrac * (r1 - r0);
     }
   }, { passive: true });
 
   el.addEventListener('touchmove', function(e) {
-    if(!isSwiping || !startRange) return;
-    e.preventDefault();
-    const dy = startY - e.touches[0].clientY; // 向上為正（放大）
+    if(!startRange || !centerDate) return;
 
+    const dx = Math.abs(e.touches[0].clientX - touchStartX);
+    const dy = e.touches[0].clientY - touchStartY;
+    const absDy = Math.abs(dy);
+
+    // 方向鎖定：移動超過8px才決定方向
+    if(!directionLocked) {
+      if(dx < 8 && absDy < 8) return;
+      directionLocked = true;
+      // 水平滑動 → 不縮放（讓 Plotly 預設 pan 處理）
+      if(dx > absDy) { isZooming = false; return; }
+      isZooming = true;
+    }
+    if(!isZooming) return;
+
+    e.preventDefault();
+
+    const zoomDelta = touchStartY - e.touches[0].clientY; // 向上為正（放大）
     const r0 = new Date(startRange[0]).getTime();
     const r1 = new Date(startRange[1]).getTime();
-    const center = (r0 + r1) / 2;
     const half = (r1 - r0) / 2;
 
-    const scale = Math.pow(0.993, dy);
+    const scale = Math.pow(0.992, zoomDelta);
     let newHalf = half * scale;
 
     const minDate = new Date(dates[0]).getTime();
@@ -1861,24 +1893,26 @@ function attachKlineLongPress(el, dates) {
     newHalf = Math.min(newHalf, totalHalf);
 
     const msPerDay = 86400000;
-    const minHalf = 0.75 * msPerDay;
-    newHalf = Math.max(newHalf, minHalf);
+    newHalf = Math.max(newHalf, 0.75 * msPerDay);
 
-    let newR0 = center - newHalf;
-    let newR1 = center + newHalf;
+    // 以觸碰點日期為中心縮放
+    let newR0 = centerDate - newHalf;
+    let newR1 = centerDate + newHalf;
 
-    if(newR0 < minDate) { newR0 = minDate; newR1 = newR0 + newHalf*2; }
-    if(newR1 > maxDate) { newR1 = maxDate; newR0 = newR1 - newHalf*2; }
+    if(newR0 < minDate) { newR0 = minDate; newR1 = newR0 + newHalf * 2; }
+    if(newR1 > maxDate) { newR1 = maxDate; newR0 = newR1 - newHalf * 2; }
 
     Plotly.relayout(el, {
-      'xaxis.range[0]': new Date(newR0).toISOString().slice(0,10),
-      'xaxis.range[1]': new Date(newR1).toISOString().slice(0,10)
+      'xaxis.range[0]': new Date(newR0).toISOString().slice(0, 10),
+      'xaxis.range[1]': new Date(newR1).toISOString().slice(0, 10)
     });
   }, { passive: false });
 
   el.addEventListener('touchend', function() {
-    isSwiping = false;
+    isZooming = false;
+    directionLocked = false;
     startRange = null;
+    centerDate = null;
   }, { passive: true });
 }
 
