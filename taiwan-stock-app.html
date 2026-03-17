@@ -9,6 +9,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAeg6OgsAZ9U0AgOlGoFDcj4FAanfXXA2Q",
@@ -23,6 +24,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
+    const db = getFirestore(app);
+    window._db = db;
+    window._collection = collection;
+    window._addDoc = addDoc;
+    window._query = query;
+    window._where = where;
+    window._orderBy = orderBy;
+    window._onSnapshot = onSnapshot;
+    window._serverTimestamp = serverTimestamp;
 
     // Google 登入
     window.googleLogin = async function() {
@@ -197,7 +207,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.911</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.912</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -298,7 +308,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.911</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.912</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -1593,7 +1603,7 @@ function showScreen(name) {
   if(name==='c') updateBadge('c');
   if(name==='d') updateBadge('d');
   if(name==='my') updateBadge('my');
-  if(name==='community') { updateBadge('community'); renderCommunity(); }
+  if(name==='community') { updateBadge('community'); listenCommunity(); }
   if(name==='revenue') drawRevenueCharts();
   if(name==='my') renderWatchlist();
 }
@@ -3079,26 +3089,32 @@ function getDateLabel(dateStr) {
   return dateStr === today ? '📅 今天 · '+label : '📅 '+label;
 }
 
-function postComment() {
+async function postComment() {
   const input = document.getElementById('community-input');
   const text = input.value.trim();
   if(!text) return;
-  const today = getTodayStr();
-  const key = getCommunityKey(currentStock, today);
-  if(!communityData[key]) communityData[key] = [];
+  if(!window._db) { alert('請先登入再發言！'); return; }
+  const user = window._currentUser || '匿名';
+  const userPhoto = window._userPhoto || '';
   const now = new Date();
   const timeStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  communityData[key].push({
-    id: Date.now(),
-    user: window._currentUser || '1111',
-    text,
-    time: timeStr,
-    likes: 0,
-    likedBy: [],
-    replies: []
-  });
-  input.value = '';
-  renderCommunity();
+  try {
+    await window._addDoc(window._collection(window._db, 'comments'), {
+      stock: currentStock,
+      user,
+      userPhoto,
+      text,
+      time: timeStr,
+      date: getTodayStr(),
+      likes: 0,
+      likedBy: [],
+      createdAt: window._serverTimestamp()
+    });
+    input.value = '';
+  } catch(e) {
+    console.error(e);
+    alert('發布失敗，請再試一次');
+  }
 }
 
 function toggleLike(key, commentId) {
@@ -3140,6 +3156,50 @@ function toggleReplyBox(commentId) {
   const box = document.getElementById('reply-box-'+commentId);
   box.style.display = box.style.display === 'none' ? 'block' : 'none';
   if(box.style.display === 'block') document.getElementById('reply-input-'+commentId).focus();
+}
+
+// Firestore 即時監聽留言
+let _communityUnsubscribe = null;
+function listenCommunity() {
+  if(!window._db) { renderCommunity(); return; }
+  // 取消舊的監聽
+  if(_communityUnsubscribe) { _communityUnsubscribe(); _communityUnsubscribe = null; }
+  const q = window._query(
+    window._collection(window._db, 'comments'),
+    window._where('stock', '==', currentStock),
+    window._orderBy('createdAt', 'desc')
+  );
+  _communityUnsubscribe = window._onSnapshot(q, (snapshot) => {
+    const list = document.getElementById('community-list');
+    if(!list) return;
+    if(snapshot.empty) {
+      list.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px 0;">還沒有留言，成為第一個分享的牛友！🐮</div>';
+      return;
+    }
+    const user = window._currentUser || '';
+    let html = '';
+    snapshot.forEach(doc => {
+      const c = doc.data();
+      const liked = c.likedBy && c.likedBy.includes(user);
+      const avatar = c.userPhoto
+        ? `<img src="${c.userPhoto}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"/>`
+        : `<div style="width:26px;height:26px;background:linear-gradient(135deg,#f0b429,#d29922);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;">${(c.user||'?').charAt(0).toUpperCase()}</div>`;
+      html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${avatar}
+            <span style="font-size:12px;font-weight:700;color:var(--text);">${c.user || '匿名'}</span>
+          </div>
+          <span style="font-size:11px;color:var(--muted);">${c.date || ''} ${c.time || ''}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px;">${c.text}</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="" style="background:none;border:none;color:${liked?'var(--red)':'var(--muted)'};font-size:12px;cursor:pointer;padding:0;">❤️ ${c.likes||0}</button>
+        </div>
+      </div>`;
+    });
+    list.innerHTML = html;
+  });
 }
 
 function renderCommunity() {
