@@ -143,7 +143,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.894</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.896</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -237,7 +237,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.894</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.896</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -1750,10 +1750,12 @@ function drawKline(rows) {
     if(missingDays.length > 0) rangebreaks = [{ values: missingDays }];
   }
 
-  // 預設顯示最近 250 根K棒
-  const displayN = Math.min(250, rows.length);
-  const rangeStart = dates[dates.length - displayN];
-  const rangeEnd   = dates[dates.length - 1];
+  // 預設顯示最近 30 根K棒
+  const totalN = rows.length;
+  const displayN = Math.min(30, totalN);
+  const rangeStart30 = dates[dates.length - displayN];
+  const rangeEnd     = dates[dates.length - 1];
+  const rangeStartAll = dates[0]; // 最小縮放邊界（全部K線）
 
   // K線
   const candleTrace = {
@@ -1791,9 +1793,9 @@ function drawKline(rows) {
     dragmode: 'pan',
     xaxis: {
       type: 'date',
-      range: [rangeStart, rangeEnd],
-      minallowed: rangeStart,   // 縮小最多只能看到 250 天起點
-      maxallowed: rangeEnd,     // 不能平移超出最新日期
+      range: [rangeStart30, rangeEnd],
+      minallowed: rangeStartAll, // 最小縮放到全部K線起點
+      maxallowed: rangeEnd,      // 不能超出最新日期
       rangebreaks: rangebreaks,
       rangeslider: { visible: true, thickness: 0.04, bgcolor: '#161b22', bordercolor: '#30363d', borderwidth: 1 },
       gridcolor: '#21262d',
@@ -1811,12 +1813,86 @@ function drawKline(rows) {
     showlegend: true
   };
 
-  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
   if(el._fullLayout) {
     Plotly.react(el, traces, layout, config);
   } else {
-    Plotly.newPlot(el, traces, layout, config);
+    Plotly.newPlot(el, traces, layout, config).then(() => {
+      attachKlineLongPress(el, dates);
+    });
   }
+}
+
+// ===== K線長壓縮放 =====
+function attachKlineLongPress(el, dates) {
+  if(el._longPressAttached) return;
+  el._longPressAttached = true;
+
+  let pressTimer = null;
+  let isLongPress = false;
+  let startY = 0;
+  let startRange = null;
+
+  el.addEventListener('touchstart', function(e) {
+    if(e.touches.length !== 1) return;
+    startY = e.touches[0].clientY;
+    isLongPress = false;
+    pressTimer = setTimeout(() => {
+      isLongPress = true;
+      // 記錄長壓時目前的 x range
+      const layout = el._fullLayout;
+      if(layout && layout.xaxis) {
+        startRange = [layout.xaxis.range[0], layout.xaxis.range[1]];
+      }
+      el.style.cursor = 'ns-resize';
+    }, 400);
+  }, { passive: true });
+
+  el.addEventListener('touchmove', function(e) {
+    if(!isLongPress || !startRange) return;
+    e.preventDefault();
+    const dy = startY - e.touches[0].clientY; // 向上為正（放大）
+
+    // 計算目前範圍的中心點
+    const r0 = new Date(startRange[0]).getTime();
+    const r1 = new Date(startRange[1]).getTime();
+    const center = (r0 + r1) / 2;
+    const half = (r1 - r0) / 2;
+
+    // 縮放比例：向上移 100px = 縮小50%視窗（放大）
+    const scale = Math.pow(0.993, dy);
+    let newHalf = half * scale;
+
+    // 最小不小於全部K線範圍
+    const minDate = new Date(dates[0]).getTime();
+    const maxDate = new Date(dates[dates.length-1]).getTime();
+    const totalHalf = (maxDate - minDate) / 2;
+    newHalf = Math.min(newHalf, totalHalf);
+
+    // 最大放大到只剩1根（約1.5天範圍）
+    const msPerDay = 86400000;
+    const minHalf = 0.75 * msPerDay;
+    newHalf = Math.max(newHalf, minHalf);
+
+    let newR0 = center - newHalf;
+    let newR1 = center + newHalf;
+
+    // 邊界修正
+    if(newR0 < minDate) { newR0 = minDate; newR1 = newR0 + newHalf*2; }
+    if(newR1 > maxDate) { newR1 = maxDate; newR0 = newR1 - newHalf*2; }
+
+    Plotly.relayout(el, {
+      'xaxis.range[0]': new Date(newR0).toISOString().slice(0,10),
+      'xaxis.range[1]': new Date(newR1).toISOString().slice(0,10)
+    });
+  }, { passive: false });
+
+  el.addEventListener('touchend', function() {
+    clearTimeout(pressTimer);
+    isLongPress = false;
+    startRange = null;
+    el.style.cursor = '';
+  }, { passive: true });
 }
 
 function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
