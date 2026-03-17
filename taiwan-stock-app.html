@@ -5,6 +5,61 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>牛牛診股</title>
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeg6OgsAZ9U0AgOlGoFDcj4FAanfXXA2Q",
+      authDomain: "niuniu-stock.firebaseapp.com",
+      projectId: "niuniu-stock",
+      storageBucket: "niuniu-stock.firebasestorage.app",
+      messagingSenderId: "136471386834",
+      appId: "1:136471386834:web:593f0014a7d3686d792b0b",
+      measurementId: "G-93P8EVLD7C"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    // Google 登入
+    window.googleLogin = async function() {
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        window._currentUser = user.displayName || user.email;
+        window._userPhoto = user.photoURL;
+        document.getElementById('page-login').style.display = 'none';
+        // 檢查是否已完成問答
+        const key = 'quiz_done_' + user.uid;
+        if(localStorage.getItem(key) === 'true') {
+          enterApp();
+        } else {
+          window._userUid = user.uid;
+          startQuiz(user.uid);
+        }
+      } catch(e) {
+        console.error(e);
+        alert('登入失敗，請再試一次');
+      }
+    };
+
+    // 登出
+    window.firebaseSignOut = async function() {
+      await signOut(auth);
+    };
+
+    // 監聽登入狀態
+    onAuthStateChanged(auth, (user) => {
+      if(user) {
+        window._currentUser = user.displayName || user.email;
+        window._userPhoto = user.photoURL;
+        window._userUid = user.uid;
+      }
+    });
+  </script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -15,8 +70,7 @@
   }
   body { font-family:'Noto Sans TC',sans-serif; background:var(--bg); color:var(--text); display:flex; justify-content:center; align-items:center; min-height:100vh; overflow:hidden; }
   .phone-wrap { width:390px; height:844px; background:var(--bg); border-radius:44px; border:2px solid #2a1060; overflow:hidden; position:relative; box-shadow:0 0 60px rgba(93,202,165,0.12),0 30px 80px rgba(0,0,0,0.6); }
-  .status-bar { height:44px; background:var(--bg); display:flex; align-items:center; justify-content:space-between; padding:0 20px; font-size:12px; font-weight:700; position:relative; z-index:10; }
-  .status-bar .notch { width:120px; height:30px; background:#000; border-radius:20px; position:absolute; left:50%; transform:translateX(-50%); top:6px; }
+
   .screens { height:701px; overflow:hidden; position:relative; }
   .screen { position:absolute; width:100%; height:100%; overflow-y:auto; overflow-x:hidden; display:none; padding-bottom:70px; scrollbar-width:none; }
   .screen::-webkit-scrollbar { display:none; }
@@ -143,11 +197,12 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.904</span></div>
-    <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
-    <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
-    <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
-    <button class="login-btn" onclick="doLogin()">登入</button>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.908</span></div>
+    <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      使用 Google 帳號登入
+    </button>
+    <div style="font-size:11px;color:var(--muted);margin-top:16px;text-align:center;line-height:1.8;">登入即代表您同意牛牛診股的服務條款<br>您的資料由 Google 安全保護</div>
     
     </div>
   </div>
@@ -206,19 +261,19 @@
         <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px;">本人已閱讀並同意以下事項：</div>
         <div style="display:flex;flex-direction:column;gap:7px;">
           <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
+            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>此軟體目的AI彙整股票資料，讓初中期投資者可以減少失判風險。
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
+            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>此軟體只有基本重要指標與數據，若進階指標(如：KD值、布林通道)沒有提供喔。
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
             <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>牛牛不會報明牌，不構成投資建議，投資人自行判斷，盈虧自負。
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
             <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>AI內容有可能出錯，投資人應自行判斷並查證。
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
-            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>短期投資反應情緒，長期投資反應公司價值，讓時間複利。
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
-            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>市場短期難以預測，AI無法保證每次都對，保持紀律才是長勝關鍵。
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
-            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>分批進場、控制投資比例，切勿一次全押單一股票。
+            <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>此軟體著重分析公司未來發展，比較不適於短線投資使用。
           </div>
           <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);">
             <span style="color:var(--green);font-size:14px;flex-shrink:0;">✅</span>AI分析僅供參考，量力而為，切勿借貸投資。
@@ -236,18 +291,14 @@
     </div>
   </div>
 
-  <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.904</span></span>
-    <div class="notch"></div>
-    <span>📶 🔋</span>
-  </div>
+
   <div class="screens">
 
     <!-- 首頁 -->
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股</div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.908</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
         </div>
 
@@ -952,12 +1003,12 @@
 const USERS = { '1111': '1111' }; // 測試帳號，正式上線由後端驗證
 
 const QUIZ = [
-  { q:'牛牛不會報明牌，不構成任何形式之投資建議，投資人要自行判斷並查證。投資有風險，盈虧自負喔！', options:['不了解','我了解'], answer:'我了解' },
-  { q:'AI 內容也有可能出錯，投資人應自行判斷並查證喔！', options:['不了解','我了解'], answer:'我了解' },
-  { q:'對牛牛來說，短期投資，反應股票情緒，跟大戶博心理戰；長期投資，反應公司價值，讓時間滾動複利。', options:['不認同','認同'], answer:'認同' },
-  { q:'市場短期難以預測，就算AI也無法保證每次都對，保持紀律才是長勝關鍵！', options:['不了解','我了解'], answer:'我了解' },
-  { q:'一次全押單一股票風險極高，建議分批進場、控制每筆投資比例！', options:['不了解','我了解'], answer:'我了解' },
-  { q:'牛牛的AI分析僅供參考，進場前請務必做好功課，量力而為，切勿借貸投資！', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ 此軟體目的AI彙整股票資料，讓初中期投資者可以減少失判風險。', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ 此軟體只有基本重要指標與數據，若進階指標(如：KD值、布林通道)沒有提供喔。', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ 牛牛不會報明牌，不構成投資建議，投資人自行判斷，盈虧自負。', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ AI內容有可能出錯，投資人應自行判斷並查證。', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ 此軟體著重分析公司未來發展，比較不適於短線投資使用。', options:['不了解','我了解'], answer:'我了解' },
+  { q:'✅ AI分析僅供參考，量力而為，切勿借貸投資。', options:['不了解','我了解'], answer:'我了解' },
 ];
 
 let quizIndex = 0;
@@ -1067,11 +1118,11 @@ function showCertModal() {
   document.getElementById('modal-cert-content').innerHTML = `
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">帳號：<span style="color:var(--accent);font-weight:700;">${acc}</span>　簽署日期：<span id="modal-date" style="color:var(--accent);font-weight:700;">${dateStr}</span></div>
     <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>此軟體目的AI彙整股票資料，讓初中期投資者可以減少失判風險。</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>此軟體只有基本重要指標與數據，若進階指標(如：KD值、布林通道)沒有提供喔。</div>
       <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>牛牛不會報明牌，不構成投資建議，投資人自行判斷，盈虧自負。</div>
       <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>AI內容有可能出錯，投資人應自行判斷並查證。</div>
-      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>短期投資反應情緒，長期投資反應公司價值，讓時間複利。</div>
-      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>市場短期難以預測，AI無法保證每次都對，保持紀律才是長勝關鍵。</div>
-      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>分批進場、控制投資比例，切勿一次全押單一股票。</div>
+      <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>此軟體著重分析公司未來發展，比較不適於短線投資使用。</div>
       <div style="display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.6;color:var(--text);"><span style="color:var(--green);flex-shrink:0;">✅</span>AI分析僅供參考，量力而為，切勿借貸投資。</div>
     </div>
     <div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:10px;text-align:center;font-size:11px;color:var(--muted);">本人已完整閱讀上述條款並回答確認題目，本約定於登入時自動生效</div>
