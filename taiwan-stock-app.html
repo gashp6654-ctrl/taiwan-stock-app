@@ -208,7 +208,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.927</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.928</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -309,7 +309,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.927</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.928</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -2243,7 +2243,6 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
     return;
   }
-  // 有資料：先清除舊內容（含載入中文字），再畫圖
   try { Plotly.purge(el); } catch(e){}
   el.innerHTML = '';
   const dates = data.map(d => d.date);
@@ -2255,29 +2254,36 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     name: label,
     hovertemplate: '%{x}<br>' + label + ': %{y:,}張<extra></extra>'
   };
+  // 預設顯示最近30筆，左邊界=全部起點，右邊界=最新
+  const displayN = Math.min(30, dates.length);
+  const rangeStart30 = dates[dates.length - displayN];
+  const rangeEnd     = dates[dates.length - 1];
   const layout = {
     height: el.style.height ? parseInt(el.style.height) : 130,
     plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
     font: { color: '#c9d1d9', size: 10 },
     margin: { l: 55, r: 8, t: 8, b: 30 },
     hovermode: 'x unified',
-    dragmode: 'pan',
+    dragmode: 'pan',                          // 預設平移
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false, rangeslider: { visible: false },
-      range: [dates[0], dates[dates.length - 1]],
-      minallowed: dates[0],
-      maxallowed: dates[dates.length - 1]
+      fixedrange: false,                      // X軸可動
+      rangeslider: { visible: false },        // 隱藏底部滑桿
+      range: [rangeStart30, rangeEnd],        // 預設最近30筆
+      minallowed: dates[0],                   // 左邊界
+      maxallowed: rangeEnd,                   // 右邊界
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: true, tickformat: ',d',
-      zerolinecolor: '#555'
+      fixedrange: true,                       // Y軸鎖死
+      tickformat: ',d', zerolinecolor: '#555'
     },
     bargap: 0.2, showlegend: false
   };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
-  Plotly.newPlot(el, [trace], layout, config);
+  const config = { responsive: true, displayModeBar: false, scrollZoom: false }; // 關閉滾輪縮放
+  Plotly.newPlot(el, [trace], layout, config).then(() => {
+    attachKlineLongPress(el, dates);          // 垂直縮放＋十字線
+  });
 }
 
 function drawForeign(data) { _instPlotly('foreign-plotly', data, 'foreign', '外資', '#ef5350', '#26a69a'); }
@@ -2291,17 +2297,15 @@ function drawMain(instData, marginData) {
     el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
     return;
   }
-
-  // 有資料：先清除舊內容，再畫圖
   try { Plotly.purge(el); } catch(e){}
   el.innerHTML = '';
-  // 主力法人 = 外資+投信+自營 15日累計（滾動）
-  const n = instData.length;
+
+  // 主力法人 = 外資+投信+自營 15日滾動累計
   const mainCum = instData.map((_, i) => {
     const slice = instData.slice(Math.max(0, i - 14), i + 1);
     return slice.reduce((s, d) => s + d.foreign + d.trust + d.dealer, 0);
   });
-  const instDates = instData.map(d => d.date);
+  const instDates  = instData.map(d => d.date);
   const mainColors = mainCum.map(v => v >= 0 ? '#ef5350' : '#26a69a');
 
   const barTrace = {
@@ -2311,16 +2315,14 @@ function drawMain(instData, marginData) {
     yaxis: 'y',
     hovertemplate: '%{x}<br>主力累計: %{y:,}張<extra></extra>'
   };
-
   const traces = [barTrace];
 
   // 融資餘額折線（右Y軸）
   if(marginData && marginData.length > 0) {
-    const marDates = marginData.map(d => d.date);
-    const marVals  = marginData.map(d => d.marginBalance);
     traces.push({
       type: 'scatter', mode: 'lines',
-      x: marDates, y: marVals,
+      x: marginData.map(d => d.date),
+      y: marginData.map(d => d.marginBalance),
       line: { color: '#FFA500', width: 1.5 },
       name: '融資餘額(張)',
       yaxis: 'y2',
@@ -2328,25 +2330,29 @@ function drawMain(instData, marginData) {
     });
   }
 
-  const allDates = instDates[0];
-  const lastDate = instDates[instDates.length - 1];
+  // 預設顯示最近30筆，左邊界=全部起點，右邊界=最新
+  const displayN   = Math.min(30, instDates.length);
+  const rangeStart30 = instDates[instDates.length - displayN];
+  const rangeEnd     = instDates[instDates.length - 1];
   const layout = {
     height: 160,
     plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
     font: { color: '#c9d1d9', size: 10 },
     margin: { l: 55, r: 50, t: 4, b: 30 },
     hovermode: 'x unified',
-    dragmode: 'pan',
+    dragmode: 'pan',                          // 預設平移
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false,
-      range: [instDates[0], instDates[instDates.length - 1]],
-      minallowed: instDates[0],
-      maxallowed: instDates[instDates.length - 1]
+      fixedrange: false,                      // X軸可動
+      rangeslider: { visible: false },        // 隱藏底部滑桿
+      range: [rangeStart30, rangeEnd],        // 預設最近30筆
+      minallowed: instDates[0],              // 左邊界
+      maxallowed: rangeEnd,                  // 右邊界
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: true, tickformat: ',d', zerolinecolor: '#555',
+      fixedrange: true,                       // Y軸鎖死
+      tickformat: ',d', zerolinecolor: '#555',
       title: { text: '張', font: { size: 9 }, standoff: 2 }
     },
     yaxis2: {
@@ -2354,11 +2360,12 @@ function drawMain(instData, marginData) {
       overlaying: 'y', side: 'right',
       title: { text: '融資(張)', font: { size: 9 }, standoff: 2 }
     },
-    bargap: 0.2,
-    showlegend: false
+    bargap: 0.2, showlegend: false
   };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
-  Plotly.newPlot(el, traces, layout, config);
+  const config = { responsive: true, displayModeBar: false, scrollZoom: false }; // 關閉滾輪縮放
+  Plotly.newPlot(el, traces, layout, config).then(() => {
+    attachKlineLongPress(el, instDates);      // 垂直縮放＋十字線
+  });
 }
 
 async function fetchMopsRevenue(code) {
