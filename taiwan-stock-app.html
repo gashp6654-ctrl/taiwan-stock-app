@@ -208,7 +208,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.921</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.922</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -309,7 +309,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.921</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.922</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -3765,42 +3765,48 @@ function checkAdLock() {
 function resetAdLock() {
   _adUnlocked = false;
   _adStock = null;
-}
-
-// 關閉廣告 overlay（維持模糊，等用戶自己決定）
-function closeAdOverlay() {
-  document.getElementById('ad-overlay').style.display = 'none';
-  clearInterval(_adTimer);
-  // 模糊維持，但在各頁加上「點此解鎖」提示
   ['a-result','b-result','c-result','d-result','my-result'].forEach(id => {
     const el = document.getElementById(id);
-    if(el && el.style.filter === 'blur(8px)') {
-      // 若還沒有解鎖提示就加上
-      if(!document.getElementById('ad-hint-'+id)) {
-        const hint = document.createElement('div');
-        hint.id = 'ad-hint-'+id;
-        hint.onclick = showAdOverlay;
-        hint.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(6,2,15,0.85);border:1.5px solid var(--accent);border-radius:14px;padding:12px 20px;text-align:center;cursor:pointer;z-index:10;white-space:nowrap;';
-        hint.innerHTML = '<div style="font-size:13px;font-weight:900;color:var(--accent);">🔓 點此觀看廣告解鎖</div>';
-        el.style.position = 'relative';
-        el.appendChild(hint);
-      }
+    if(el) {
+      el.style.filter = '';
+      el.style.pointerEvents = '';
+      el.style.userSelect = '';
+      const mask = document.getElementById('ad-mask-'+id);
+      if(mask) mask.remove();
     }
   });
 }
 
-// 顯示廣告 overlay（帶馬賽克）
+// 顯示馬賽克 + 疊加解鎖提示（直接蓋在內容上）
 function showAdOverlay() {
-  // 先模糊各頁結果
   ['a-result','b-result','c-result','d-result','my-result'].forEach(id => {
     const el = document.getElementById(id);
-    if(el && el.style.display !== 'none') {
-      el.style.filter = 'blur(8px)';
-      el.style.pointerEvents = 'none';
-      el.style.userSelect = 'none';
+    if(!el || el.style.display === 'none') return;
+    // 馬賽克
+    el.style.filter = 'blur(6px)';
+    el.style.pointerEvents = 'none';
+    el.style.userSelect = 'none';
+    el.style.position = 'relative';
+    // 疊加解鎖按鈕（若還沒加）
+    if(!document.getElementById('ad-mask-'+id)) {
+      const mask = document.createElement('div');
+      mask.id = 'ad-mask-'+id;
+      mask.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:rgba(6,2,15,0.45);border-radius:14px;cursor:pointer;';
+      mask.innerHTML = `
+        <div style="background:linear-gradient(135deg,rgba(240,180,41,0.95),rgba(210,153,34,0.95));border-radius:16px;padding:16px 24px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.5);">
+          <div style="font-size:22px;margin-bottom:6px;">🔓</div>
+          <div style="font-size:14px;font-weight:900;color:#000;margin-bottom:4px;">觀看廣告解鎖分析</div>
+          <div style="font-size:11px;color:rgba(0,0,0,0.6);">點此觀看 30 秒廣告</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;">💎 訂閱月費可免廣告</div>`;
+      mask.onclick = openAdPopup;
+      el.appendChild(mask);
     }
   });
-  // 顯示 overlay
+}
+
+// 開啟廣告彈窗（30秒倒數）
+function openAdPopup() {
   const overlay = document.getElementById('ad-overlay');
   overlay.style.display = 'flex';
   document.getElementById('ad-simulate').style.display = 'none';
@@ -3808,7 +3814,7 @@ function showAdOverlay() {
   document.getElementById('ad-skip-btn').style.display = 'none';
 }
 
-// 開始看廣告
+// 開始看廣告（從 popup 內按鈕觸發）
 function startWatchAd() {
   document.getElementById('ad-watch-btn').style.display = 'none';
   const sim = document.getElementById('ad-simulate');
@@ -3832,15 +3838,15 @@ function unlockAd() {
   _adStock = currentStock;
   // 關閉 overlay
   document.getElementById('ad-overlay').style.display = 'none';
-  // 移除模糊和提示
+  // 移除模糊和疊加遮罩
   ['a-result','b-result','c-result','d-result','my-result'].forEach(id => {
     const el = document.getElementById(id);
     if(el) {
       el.style.filter = '';
       el.style.pointerEvents = '';
       el.style.userSelect = '';
-      const hint = document.getElementById('ad-hint-'+id);
-      if(hint) hint.remove();
+      const mask = document.getElementById('ad-mask-'+id);
+      if(mask) mask.remove();
     }
   });
 }
@@ -3858,7 +3864,6 @@ function toggleKnowledge(key) {
   <!-- 廣告解鎖 Overlay -->
   <div id="ad-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:8000;background:rgba(6,2,15,0.92);display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;">
     <div style="background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:28px 24px;width:100%;max-width:340px;text-align:center;position:relative;">
-      <button onclick="closeAdOverlay()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1;">✕</button>
       <div style="font-size:36px;margin-bottom:12px;">🐮</div>
       <div style="font-size:16px;font-weight:900;color:var(--accent);margin-bottom:12px;">解鎖 AI 分析內容</div>
       <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">由於 AI 分析成本高<br>為了維持牛牛生計<br>需觀看 <b style="color:var(--accent);">30秒廣告</b> 解鎖本次分析</div>
