@@ -34,8 +34,9 @@
   .app-title { font-size:22px; font-weight:900; color:var(--accent); letter-spacing:-0.5px; }
   .app-subtitle { font-size:11px; color:var(--muted); margin-top:2px; }
   .search-box { margin:0 16px 16px; position:relative; }
-  .search-input { width:100%; background:var(--card); border:1.5px solid var(--border); border-radius:14px; padding:12px 16px 12px 44px; color:var(--text); font-size:15px; font-family:inherit; outline:none; transition:border-color 0.2s; }
-  .search-input:focus { border-color:var(--accent); }
+  .search-input { width:100%; background:rgba(255,255,255,0.5); border:2px solid rgba(255,255,255,0.6); border-radius:14px; padding:12px 16px 12px 44px; color:#1a202c; font-size:15px; font-family:inherit; outline:none; transition:border-color 0.2s, box-shadow 0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.12); }
+  .search-input:focus { border-color:var(--accent); box-shadow:0 2px 12px rgba(240,180,41,0.25); }
+  .search-input::placeholder { color:#1a202c; }
   .search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--muted); }
   .search-results { margin:0 16px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:none; }
   .search-item { padding:12px 16px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.15s; }
@@ -142,7 +143,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.877</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.893</span></div>
     <input class="login-input" id="login-account" placeholder="請輸入帳號" type="text" autocomplete="off">
     <input class="login-input" id="login-password" placeholder="請輸入密碼" type="password">
     <div id="login-error" style="color:var(--red);font-size:12px;margin-bottom:8px;display:none;">帳號或密碼錯誤，請再試一次</div>
@@ -236,7 +237,7 @@
   </div>
 
   <div class="status-bar">
-    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.877</span></span>
+    <span>9:41 <span style="font-size:9px;color:var(--muted);font-weight:400;">v1.893</span></span>
     <div class="notch"></div>
     <span>📶 🔋</span>
   </div>
@@ -253,7 +254,7 @@
       </div>
       <div class="search-box">
         <span class="search-icon">🔍</span>
-        <input class="search-input" id="searchInput" placeholder="輸入股票代號或名稱..." oninput="doSearch(this.value)" autocomplete="off">
+        <input class="search-input" id="searchInput" placeholder="" oninput="doSearch(this.value)" autocomplete="off">
       </div>
       <div class="search-results" id="searchResults"></div>
       <div class="cow-section">
@@ -296,11 +297,119 @@
         <button class="ptab" onclick="setPeriod(this)">週</button>
         <button class="ptab" onclick="setPeriod(this)">月</button>
       </div>
-      <div class="chart-block"><div class="chart-label">K線走勢圖</div><div id="kline-plotly" style="width:100%;height:260px;"></div></div>
-      <div class="chart-block"><div class="chart-label">成交量（張）</div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
-      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">外資買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="foreign-plotly" style="width:100%;height:160px;"></div></div>
-      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">投信買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="trust-plotly" style="width:100%;height:130px;"></div></div>
-      <div class="chart-block"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">
+      <!-- 組1：K線 + 均線小知識 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(88,166,255,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(88,166,255,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#58a6ff;padding:0 16px 6px;letter-spacing:1px;">📊 K線走勢</div>
+      <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label">K線走勢圖</div><div id="kline-plotly" style="width:100%;height:260px;"></div></div>
+
+    <!-- 折疊1：K線均線小知識 -->
+    <div style="margin:0 16px 8px;">
+      <div onclick="toggleKnowledge('ma')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(88,166,255,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+        <div style="font-size:12px;font-weight:900;color:#58a6ff;">📖 K線均線小知識</div>
+        <div id="arrow-ma" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+      </div>
+      <div id="content-ma" style="display:none;margin-top:6px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:6px;">
+          <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📈 MA5｜1週均線</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">5個交易日</b>的平均價。短線交易、當沖、隔日沖常用。適合判斷<b style="color:var(--text)">短期市場情緒</b>與大戶博心理戰，但不適合拿來判別公司長期好壞。</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:6px;">
+          <div style="font-size:12px;font-weight:900;color:#f0b429;margin-bottom:6px;">📈 MA20｜月均線（成本防線）</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">20個交易日</b>的平均價。有些人視為「<b style="color:var(--text)">成本防線</b>」，股價維持在月線之上代表中期趨勢未變，法人可能持續鎖籌碼。<b style="color:var(--red)">帶量跌破 MA20</b>，可能代表大戶撤退，是中期投資、波段操作者的重要參考線。</div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+          <div style="font-size:12px;font-weight:900;color:#5dcaa5;margin-bottom:6px;">📈 MA100｜20週均線（終極防線）</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">100個交易日</b>的平均價。過濾所有短中期雜訊後的「<b style="color:var(--text)">真實趨勢</b>」。長線投資、價值投資、大波段操作者的終極防線，通常用於判斷一家公司長期趨勢與法人態度。</div>
+        </div>
+      </div>
+    </div>
+      </div>
+
+      <!-- 組2：成交量 + 成交量小知識 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(63,185,80,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(63,185,80,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#3fb950;padding:0 16px 6px;letter-spacing:1px;">📊 成交量</div>
+      <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label">成交量（張）</div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
+
+    <!-- 折疊2：成交量小知識 -->
+    <div style="margin:0 16px 8px;">
+      <div onclick="toggleKnowledge('vol')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(63,185,80,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+        <div style="font-size:12px;font-weight:900;color:#3fb950;">📊 成交量小知識</div>
+        <div id="arrow-vol" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+      </div>
+      <div id="content-vol" style="display:none;margin-top:6px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+          <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:8px;">📊 成交量｜分辨真假訊號的關鍵</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">一、價量關係基礎規則</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+            <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 價漲量增（最健康）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場高度認同，買盤願意加價進場，上漲趨勢通常延續。</div>
+            </div>
+            <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 價漲量縮（背離）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">追價力道薄弱，可能是散戶在推或主力縮手，隨時可能反轉回跌。</div>
+            </div>
+            <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--blue);">✅ 價跌量縮（良性修正）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">賣壓不重，持股者惜售，通常是健康盤整，未來有機會重啟漲勢。</div>
+            </div>
+            <div style="background:rgba(248,81,73,0.12);border-left:3px solid #ff6b35;padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:#ff6b35;">🚨 價跌量增（恐慌殺盤）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場信心崩潰，大家不計代價出脫持股，股價容易繼續探底。</div>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">二、結合均線的關鍵徵兆</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+            <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 帶量突破（真實）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">站上 MA20 或 MA100 時成交量達平時 <b style="color:var(--text)">1.5～2倍</b>以上，代表大戶法人出錢出力強攻，是很好的買進訊號。</div>
+            </div>
+            <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 無量突破（假突破）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價勉強站上均線但量能平平，通常很快就跌回來套牢追高的人。</div>
+            </div>
+          </div>
+          <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">三、特殊警訊：爆量</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--green);">📍 低檔爆量（見底訊號）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價跌很久後在 MA100 下方突然驚人巨量，通常是主力低位吃貨，可能是長線反轉的前兆。</div>
+            </div>
+            <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
+              <div style="font-size:11px;font-weight:700;color:var(--red);">📍 高檔爆量（見頂訊號）</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">沿著 MA5 連漲好幾天後突現天量長紅或長黑，往往是「<b style="color:var(--text)">利多出盡</b>」，大戶趁熱鬧把貨倒給散戶，要小心大回檔。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+      </div>
+
+      <!-- 組3：外資/投信 + 外資小知識 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(175,169,236,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(175,169,236,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#afa9ec;padding:0 16px 6px;letter-spacing:1px;">🐋 外資 / 投信</div>
+      <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">外資買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="foreign-plotly" style="width:100%;height:160px;"></div></div>
+      <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">投信買賣超（張）<span style="font-size:10px;color:var(--muted);font-weight:400;">每日</span></div><div id="trust-plotly" style="width:100%;height:130px;"></div></div>
+
+    <!-- 外資買賣超說明（折疊） -->
+    <div style="margin:0 16px 8px;">
+      <div onclick="toggleKnowledge('foreign')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(175,169,236,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+        <div style="font-size:12px;font-weight:900;color:#afa9ec;">🐋 外資買賣超小知識</div>
+        <div id="arrow-foreign" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+      </div>
+      <div id="content-foreign" style="display:none;margin-top:6px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+          <div style="font-size:12px;font-weight:900;color:#afa9ec;margin-bottom:6px;">🐋 外資買賣超（張）</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;"><b style="color:var(--green)">正值</b>代表買超、<b style="color:var(--red)">負值</b>代表賣超。外資連續 <b style="color:var(--text)">3～5天</b>以上買超同一檔股票，可能資金正在布局。但注意可能有假買超陷阱，需結合基本面與技術面一起判斷。</div>
+        </div>
+      </div>
+    </div>
+      </div>
+
+      <!-- 組4：主力法人圖 + 主力折疊 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(240,136,62,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(240,136,62,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#f0883e;padding:0 16px 6px;letter-spacing:1px;">⚖️ 主力法人 / 融資</div>
+      <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label" style="display:flex;justify-content:space-between;align-items:center;">
   <span>主力法人15日累計 vs 融資餘額</span>
   <span style="display:flex;align-items:center;gap:8px;font-size:10px;font-weight:400;">
     <span style="display:flex;align-items:center;gap:3px;color:#c9d1d9;">
@@ -313,90 +422,26 @@
   </span>
 </div><div id="main-plotly" style="width:100%;height:160px;"></div></div>
 
-    <!-- 牛牛小知識 -->
-    <div style="margin:16px 16px 8px;font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;">🐮 牛牛小知識</div>
-
-    <!-- MA5 -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📈 MA5｜1週均線</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">5個交易日</b>的平均價。短線交易、當沖、隔日沖常用。適合判斷<b style="color:var(--text)">短期市場情緒</b>與大戶博心理戰，但不適合拿來判別公司長期好壞。</div>
-    </div>
-
-    <!-- MA20 -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:#f0b429;margin-bottom:6px;">📈 MA20｜月均線（成本防線）</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">20個交易日</b>的平均價。有些人視為「<b style="color:var(--text)">成本防線</b>」，股價維持在月線之上代表中期趨勢未變，法人可能持續鎖籌碼。<b style="color:var(--red)">帶量跌破 MA20</b>，可能代表大戶撤退，是中期投資、波段操作者的重要參考線。</div>
-    </div>
-
-    <!-- MA100 -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:#5dcaa5;margin-bottom:6px;">📈 MA100｜20週均線（終極防線）</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">100個交易日</b>的平均價。過濾所有短中期雜訊後的「<b style="color:var(--text)">真實趨勢</b>」。長線投資、價值投資、大波段操作者的終極防線，通常用於判斷一家公司長期趨勢與法人態度。</div>
-    </div>
-
-    <!-- 成交量 -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:8px;">📊 成交量｜分辨真假訊號的關鍵</div>
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">一、價量關係基礎規則</div>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-        <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 價漲量增（最健康）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場高度認同，買盤願意加價進場，上漲趨勢通常延續。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 價漲量縮（背離）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">追價力道薄弱，可能是散戶在推或主力縮手，隨時可能反轉回跌。</div>
-        </div>
-        <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--blue);">✅ 價跌量縮（良性修正）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">賣壓不重，持股者惜售，通常是健康盤整，未來有機會重啟漲勢。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.12);border-left:3px solid #ff6b35;padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:#ff6b35;">🚨 價跌量增（恐慌殺盤）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場信心崩潰，大家不計代價出脫持股，股價容易繼續探底。</div>
-        </div>
+    <!-- 主力法人折疊 -->
+    <div style="margin:0 16px 8px;">
+      <div onclick="toggleKnowledge('inst')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(240,136,62,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+        <div style="font-size:12px;font-weight:900;color:#f0883e;">⚖️ 主力法人15日累計 vs 融資餘額</div>
+        <div id="arrow-inst" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
       </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">二、結合均線的關鍵徵兆</div>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-        <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 帶量突破（真實）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">站上 MA20 或 MA100 時成交量達平時 <b style="color:var(--text)">1.5～2倍</b>以上，代表大戶法人出錢出力強攻，是很好的買進訊號。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 無量突破（假突破）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價勉強站上均線但量能平平，通常很快就跌回來套牢追高的人。</div>
-        </div>
-      </div>
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">三、特殊警訊：爆量</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--green);">📍 低檔爆量（見底訊號）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價跌很久後在 MA100 下方突然驚人巨量，通常是主力低位吃貨，可能是長線反轉的前兆。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--red);">📍 高檔爆量（見頂訊號）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">沿著 MA5 連漲好幾天後突現天量長紅或長黑，往往是「<b style="color:var(--text)">利多出盡</b>」，大戶趁熱鬧把貨倒給散戶，要小心大回檔。</div>
+      <div id="content-inst" style="display:none;margin-top:6px;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+          <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">⚖️ 主力法人15日累計 vs 融資餘額</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:8px;"><b style="color:var(--text)">主力法人15日累計</b>：觀察外資、投信、自營商及大戶近15個交易日的總買賣力道。<br><br><b style="color:var(--text)">融資餘額</b>：市場投資人「借錢買股票」的總量，通常被視為<b style="color:var(--text)">散戶動向與市場情緒的溫度計</b>。</div>
+          <div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:10px;padding:10px 12px;">
+            <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px;">🔍 如何判讀？</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.8;">用來判斷該股處於「<b style="color:var(--green)">外資買、散戶丟</b>」還是「<b style="color:var(--red)">外資丟、散戶接</b>」的狀態。前者是健康格局，後者要特別小心。</div>
+          </div>
         </div>
       </div>
     </div>
-
-    <!-- 外資買賣超 -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:#afa9ec;margin-bottom:6px;">🐋 外資買賣超（張）</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;"><b style="color:var(--green)">正值</b>代表買超、<b style="color:var(--red)">負值</b>代表賣超。外資連續 <b style="color:var(--text)">3～5天</b>以上買超同一檔股票，可能資金正在布局。但注意可能有假買超陷阱，需結合基本面與技術面一起判斷。</div>
-    </div>
-
-    <!-- 主力法人15日 vs 融資 -->
-    <div style="margin:0 16px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">⚖️ 主力法人15日累計 vs 融資餘額</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:8px;"><b style="color:var(--text)">主力法人15日累計</b>：觀察外資、投信、自營商及大戶近15個交易日的總買賣力道。<br><br><b style="color:var(--text)">融資餘額</b>：市場投資人「借錢買股票」的總量，通常被視為<b style="color:var(--text)">散戶動向與市場情緒的溫度計</b>。</div>
-      <div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:10px;padding:10px 12px;">
-        <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px;">🔍 如何判讀？</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.8;">用來判斷該股處於「<b style="color:var(--green)">外資買、散戶丟</b>」還是「<b style="color:var(--red)">外資丟、散戶接</b>」的狀態。前者是健康格局，後者要特別小心。</div>
       </div>
-    </div>
 
-    </div><!-- end screen-detail -->
+              </div><!-- end screen-detail -->
 
     <!-- 營收頁 -->
     <div class="screen" id="screen-revenue">
@@ -404,47 +449,65 @@
         <div class="rev-title" id="rev-name">台積電 — 營收分析</div>
         <div class="rev-sub">資料來源：公開資訊觀測站</div>
       </div>
-      <div class="rev-summary" id="rev-summary-monthly"></div>
-      <div class="chart-block"><div class="chart-label">月營收 + 年增率</div><div id="monthly-svg" style="width:100%;height:200px;"></div></div>
-      <div class="rev-summary" id="rev-summary-quarterly"></div>
-      <div class="chart-block"><div class="chart-label">季營收 + 毛利率</div><div id="quarterly-svg" style="width:100%;height:200px;"></div></div>
-
-    <!-- 營收頁牛牛小知識 -->
-    <div style="margin:16px 16px 8px;font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;">🐮 牛牛小知識</div>
-
-    <!-- 年增率 YoY -->
-    <div style="margin:0 16px 10px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📊 年增率（YoY）</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;">將<b style="color:var(--text)">當月營收與去年同月</b>比較，直接觀察公司是否有實質成長。<br><br>
-        <span style="color:var(--green)">▲ 正值</span>：業務擴張，較去年同期更具競爭力。<br>
-        <span style="color:var(--red)">▼ 負值</span>：營收可能衰退，需警惕需求下滑或產業下行。
-      </div>
-    </div>
-
-    <!-- 季營收 + 毛利率 -->
-    <div style="margin:0 16px 20px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
-      <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">📈 季營收 + 季毛利率｜質與量同步分析</div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:10px;">你觀察過「<b style="color:var(--text)">營收創新高、股價卻不漲</b>」的情況嗎？這通常是毛利率出問題的警訊。毛利率越高，代表公司扣除直接成本後能留下的錢越多，幫你判斷公司是「表面訂單接不完根本沒賺錢」還是「質與量同步成長」。</div>
-      <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;">四種情境綜合分析</div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <div style="background:rgba(63,185,80,0.1);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 營收升 + 毛利升（最理想）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產品供不應求，公司甚至有漲價能力，或新產品毛利更高。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.08);border-left:3px solid #f0b429;padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:#f0b429;">⚠️ 營收升 + 毛利降（需警戒）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">可能採「降價競爭」搶市佔率，或原物料成本大幅上升無法轉嫁。</div>
-        </div>
-        <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--blue);">🔄 營收降 + 毛利升（轉型期）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">公司可能精簡產品線，放棄低毛利訂單，專注高價值產品。</div>
-        </div>
-        <div style="background:rgba(248,81,73,0.1);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
-          <div style="font-size:11px;font-weight:700;color:var(--red);">🚨 營收降 + 毛利降（衰退中）</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產業可能進入寒冬或競爭力喪失，產品賣不動且必須降價出清。</div>
+      <!-- 組1：月營收 + YoY小知識 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(88,166,255,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(88,166,255,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#58a6ff;padding:0 16px 6px;letter-spacing:1px;">📊 月營收</div>
+        <div class="rev-summary" id="rev-summary-monthly"></div>
+        <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label">月營收 + 年增率</div><div id="monthly-svg" style="width:100%;height:200px;"></div></div>
+        <div style="margin:0 16px 8px;">
+          <div onclick="toggleKnowledge('yoy')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(88,166,255,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:900;color:#58a6ff;">📊 年增率（YoY）小知識</div>
+            <div id="arrow-yoy" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+          </div>
+          <div id="content-yoy" style="display:none;margin-top:6px;">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+              <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📊 年增率（YoY）</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.8;">將<b style="color:var(--text)">當月營收與去年同月</b>比較，直接觀察公司是否有實質成長。<br><br>
+                <span style="color:var(--red)">▲ 正值</span>：業務擴張，較去年同期更具競爭力。<br>
+                <span style="color:var(--green)">▼ 負值</span>：營收可能衰退，需警惕需求下滑或產業下行。
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+
+      <!-- 組2：季營收 + 毛利率小知識 -->
+      <div style="margin:0 0 14px;border:1.5px solid rgba(63,185,80,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(63,185,80,0.04);">
+        <div style="font-size:10px;font-weight:700;color:#3fb950;padding:0 16px 6px;letter-spacing:1px;">📈 季營收</div>
+        <div class="rev-summary" id="rev-summary-quarterly"></div>
+        <div class="chart-block" style="margin-bottom:6px;"><div class="chart-label">季營收 + 毛利率</div><div id="quarterly-svg" style="width:100%;height:200px;"></div></div>
+        <div style="margin:0 16px 8px;">
+          <div onclick="toggleKnowledge('qrev')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid rgba(63,185,80,0.3);border-radius:14px;padding:12px 16px;cursor:pointer;">
+            <div style="font-size:12px;font-weight:900;color:#3fb950;">📈 季營收 + 毛利率小知識</div>
+            <div id="arrow-qrev" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+          </div>
+          <div id="content-qrev" style="display:none;margin-top:6px;">
+            <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+              <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">📈 季營收 + 季毛利率｜質與量同步分析</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:10px;">你觀察過「<b style="color:var(--text)">營收創新高、股價卻不漲</b>」的情況嗎？這通常是毛利率出問題的警訊。毛利率越高，代表公司扣除直接成本後能留下的錢越多，幫你判斷公司是「表面訂單接不完根本沒賺錢」還是「質與量同步成長」。</div>
+              <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px;">四種情境綜合分析</div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <div style="background:rgba(63,185,80,0.1);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;">
+                  <div style="font-size:11px;font-weight:700;color:var(--green);">✅ 營收升 + 毛利升（最理想）</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產品供不應求，公司甚至有漲價能力，或新產品毛利更高。</div>
+                </div>
+                <div style="background:rgba(248,81,73,0.08);border-left:3px solid #f0b429;padding:8px 10px;border-radius:0 8px 8px 0;">
+                  <div style="font-size:11px;font-weight:700;color:#f0b429;">⚠️ 營收升 + 毛利降（需警戒）</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">可能採「降價競爭」搶市佔率，或原物料成本大幅上升無法轉嫁。</div>
+                </div>
+                <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;">
+                  <div style="font-size:11px;font-weight:700;color:var(--blue);">🔄 營收降 + 毛利升（轉型期）</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">公司可能精簡產品線，放棄低毛利訂單，專注高價值產品。</div>
+                </div>
+                <div style="background:rgba(248,81,73,0.1);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;">
+                  <div style="font-size:11px;font-weight:700;color:var(--red);">🚨 營收降 + 毛利降（衰退中）</div>
+                  <div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">產業可能進入寒冬或競爭力喪失，產品賣不動且必須降價出清。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
     </div>
 
@@ -500,6 +563,11 @@
 
         <!-- 牛牛K線小知識 -->
         <div style="margin-top:24px;">
+          <div onclick="toggleKnowledge('kbar16')" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;cursor:pointer;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:900;color:var(--accent);">📖 K線16種核心型態</div>
+            <div id="arrow-kbar16" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+          </div>
+          <div id="content-kbar16" style="display:none;">
           <div style="font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-bottom:12px;">🐮 牛牛K線小知識｜16種核心型態</div>
 
           <!-- 標題列 -->
@@ -665,6 +733,7 @@
             <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:#f0b429;">強烈轉折訊號</b>，舊趨勢動能徹底消耗，極大機率反轉。</div>
           </div>
 
+          </div>
         </div>
       </div>
       <div id="a-error" style="display:none;margin:0 16px;background:var(--card);border:1px solid var(--red);border-radius:14px;padding:14px;color:var(--red);font-size:13px;"></div>
@@ -761,7 +830,7 @@
     <div class="screen" id="screen-my">
       <div style="padding:14px 20px 10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
         <div>
-          <div style="font-size:18px;font-weight:900;">💡 操作建議(AI)</div>
+          <div style="font-size:18px;font-weight:900;">💡 綜合評估(AI)</div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">AI牛牛綜合評估</div>
         </div>
         <div id="my-stock-badge" style="background:var(--card);border:1.5px solid var(--blue);border-radius:10px;padding:4px 12px;font-size:13px;font-weight:700;color:var(--blue);">台積電 2330</div>
@@ -857,7 +926,7 @@
   <div class="bottom-nav">
     <div class="nav-row">
       <button class="nav-btn active" id="nav-home" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span>首頁</span></button>
-      <button class="nav-btn" id="nav-detail" onclick="showScreen('detail')"><span class="nav-icon">📈</span><span>K線<br>分析</span></button>
+      <button class="nav-btn" id="nav-detail" onclick="showScreen('detail')"><span class="nav-icon">📈</span><span>K線<br>成交量</span></button>
       <button class="nav-btn" id="nav-revenue" onclick="showScreen('revenue')"><span class="nav-icon">💰</span><span>營收</span></button>
       <button class="nav-btn" id="nav-community" onclick="showScreen('community')"><span class="nav-icon">🐄</span><span>牛友<br>同溫層</span></button>
     </div>
@@ -871,9 +940,10 @@
       <button class="nav-btn" id="nav-b" onclick="showScreen('b')"><span class="nav-icon">🅱️</span><span>均線<br>趨勢</span></button>
       <button class="nav-btn" id="nav-c" onclick="showScreen('c')"><span class="nav-icon">🇨</span><span>大戶<br>散戶</span></button>
       <button class="nav-btn" id="nav-d" onclick="showScreen('d')"><span class="nav-icon">🇩</span><span>產業<br>展望</span></button>
-      <button class="nav-btn" id="nav-my" onclick="showScreen('my')"><span class="nav-icon">👤</span><span>操作<br>建議</span></button>
+      <button class="nav-btn" id="nav-my" onclick="showScreen('my')"><span class="nav-icon">👤</span><span>綜合<br>評估</span></button>
     </div>
   </div>
+</div>
 </div>
 
 <script>
@@ -1157,6 +1227,16 @@ function renderHotStocks(codes) {
   if(!codes) codes = ['2330','2317','2454','0050'];
   const grid = document.getElementById('hot-stocks-grid');
   if(!grid) return;
+  // 空清單時顯示引導
+  if(!codes || codes.length === 0) {
+    grid.innerHTML = '<div onclick="openHomeWatchEditor()" style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 16px;background:var(--card);border:1.5px dashed var(--border);border-radius:16px;cursor:pointer;gap:10px;">' +
+      '<div style="width:48px;height:48px;border-radius:50%;background:rgba(240,180,41,0.12);border:2px dashed var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--accent);">＋</div>' +
+      '<div style="font-size:13px;font-weight:700;color:var(--accent);">新增自選股</div>' +
+      '<div style="font-size:11px;color:var(--muted);text-align:center;">點此加入想追蹤的股票<br>最多可加入 20 檔</div>' +
+      '</div>';
+    return;
+  }
+
   grid.innerHTML = codes.map(code => {
     // 若 stockDB 沒有，先用代號顯示，等股價載入後會更新
     if(!stockDB[code]) {
@@ -1182,7 +1262,7 @@ function renderHotStocks(codes) {
 }
 
 // 首頁自選股清單（最多10支，存 localStorage）
-let homeWatchList = JSON.parse(localStorage.getItem('homeWatchList') || '["2330","2317","2454","0050"]');
+let homeWatchList = JSON.parse(localStorage.getItem('homeWatchList') || '[]');
 
 function saveHomeWatchList() {
   localStorage.setItem('homeWatchList', JSON.stringify(homeWatchList));
@@ -2234,11 +2314,7 @@ async function drawRevenueCharts() {
         const latestYoY = qYoY[qYoY.length - 1];
         const qoqColor  = qoq     >= 0 ? 'var(--green)' : 'var(--red)';
         const yoyColor  = latestYoY !== null && latestYoY >= 0 ? 'var(--green)' : 'var(--red)';
-        setEl('rev-summary-quarterly', 'html', `
-          <div class="rev-card"><div class="rev-card-label">最新季營收</div><div class="rev-card-val" style="color:var(--green)">${latestQ}億</div></div>
-          <div class="rev-card"><div class="rev-card-label">季增率(QoQ)</div><div class="rev-card-val" style="color:${qoqColor}">${qoq >= 0 ? '+' : ''}${qoq}%</div></div>
-          <div class="rev-card"><div class="rev-card-label">年增率(YoY)</div><div class="rev-card-val" style="color:${yoyColor}">${latestYoY !== null ? (latestYoY >= 0 ? '+' : '') + latestYoY + '%' : '-'}</div></div>
-          <div class="rev-card"><div class="rev-card-label">資料來源</div><div class="rev-card-val" style="font-size:11px;color:var(--muted)">月營收加總</div></div>`);
+        setEl('rev-summary-quarterly', 'html', '');
         drawQuarterlyChart({ quarters: qRevs, labels: qLabels, yoy: qYoY });
       } else {
         setEl('rev-summary-quarterly', 'html', '<div style="color:var(--muted);font-size:13px;padding:12px 0;">季營收資料不足，請稍後再試</div>');
@@ -3243,6 +3319,53 @@ if(document.getElementById('watchlistEl')) renderWatchlist();
     observer.observe(loginPage, { attributes: true, attributeFilter: ['style'] });
   }
 })();
+
+
+// ===== 搜索欄打字動畫 =====
+(function() {
+  const text = '輸入想查詢的股票代號或名稱...';
+  let idx = 0;
+  let forward = true;
+  let timer = null;
+
+  function typeEffect() {
+    const el = document.getElementById('searchInput');
+    if(!el || document.activeElement === el) {
+      timer = setTimeout(typeEffect, 300);
+      return;
+    }
+    if(forward) {
+      idx++;
+      el.placeholder = text.substring(0, idx);
+      if(idx >= text.length) {
+        forward = false;
+        timer = setTimeout(typeEffect, 2000);
+        return;
+      }
+      timer = setTimeout(typeEffect, 80);
+    } else {
+      idx--;
+      el.placeholder = text.substring(0, idx);
+      if(idx <= 0) {
+        forward = true;
+        timer = setTimeout(typeEffect, 600);
+        return;
+      }
+      timer = setTimeout(typeEffect, 40);
+    }
+  }
+  setTimeout(typeEffect, 1000);
+})();
+
+
+function toggleKnowledge(key) {
+  const c = document.getElementById('content-' + key);
+  const a = document.getElementById('arrow-' + key);
+  if(!c || !a) return;
+  const isOpen = c.style.display !== 'none';
+  c.style.display = isOpen ? 'none' : 'block';
+  a.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+}
 
 </script>
 </body>
