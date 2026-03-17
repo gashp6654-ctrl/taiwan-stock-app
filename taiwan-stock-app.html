@@ -2153,106 +2153,83 @@ function drawVolume(rows) {
 // 三大法人：FinMind 優先，fallback TWSE
 async function fetchInstitutional(code) {
   // ===== FinMind =====
-  {
-    try {
-      const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 380);
-      const fmt = d => d.toISOString().slice(0,10);
-      const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
-        data_id: code, start_date: fmt(start), end_date: fmt(end)
+  // 官方文件確認欄位：date, stock_id, buy(股), name(中文), sell(股)
+  // name 值：「外資及陸資」「投信」「自營商」
+  // buy/sell 單位為「股」，需 ÷1000 轉換為「張」
+  try {
+    const end = new Date();
+    const start = new Date(); start.setDate(start.getDate() - 380);
+    const fmt = d => d.toISOString().slice(0,10);
+    const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
+      data_id: code, start_date: fmt(start), end_date: fmt(end)
+    });
+    if(rows && rows.length > 0) {
+      const byDate = {};
+      rows.forEach(r => {
+        const date = r.date;
+        if(!byDate[date]) byDate[date] = { date, foreign: 0, trust: 0, dealer: 0 };
+        const buy  = Number(r.buy)  || 0;  // 單位：股
+        const sell = Number(r.sell) || 0;  // 單位：股
+        const net  = buy - sell;           // 買賣超（股）
+        const name = (r.name || '').trim();
+        if(name.includes('外資'))      byDate[date].foreign += net;
+        else if(name.includes('投信')) byDate[date].trust   += net;
+        else if(name.includes('自營')) byDate[date].dealer  += net;
       });
-      if(rows && rows.length > 0) {
-        // Debug：印出前兩筆資料結構，確認 FinMind 實際欄位名稱
-        console.log('[FinMind 三大法人] 資料範例:', JSON.stringify(rows.slice(0,2)));
-        const byDate = {};
-        rows.forEach(r => {
-          if(!byDate[r.date]) byDate[r.date] = { date: r.date, foreign: 0, trust: 0, dealer: 0 };
-          // FinMind 相容多種欄位命名：buy/sell（股）或 buy_turnover/sell_turnover（張）
-          const buyVal  = r.buy  ?? r.buy_turnover  ?? r.Buy  ?? 0;
-          const sellVal = r.sell ?? r.sell_turnover ?? r.Sell ?? 0;
-          const buyShares  = Number(buyVal)  || 0;
-          const sellShares = Number(sellVal) || 0;
-          const v = buyShares - sellShares; // 單位：股（需÷1000轉張）
-          const n = (r.name || r.InstitutionalInvestors || '').toString().trim();
-          // 外資：Foreign_Investor / 外資及陸資 / Foreign
-          if(/Foreign_Investor|外資及陸資|外資|Foreign/i.test(n)) {
-            byDate[r.date].foreign += v;
-          }
-          // 投信：Investment_Trust / 投信
-          else if(/Investment_Trust|投信/i.test(n)) {
-            byDate[r.date].trust += v;
-          }
-          // 自營商：Dealer_self / Dealer_Hedging / Dealer / 自營
-          else if(/Dealer|自營/i.test(n)) {
-            byDate[r.date].dealer += v;
-          }
-        });
-        const result = Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-250);
-        // 判斷單位：若三大法人合計最大值 > 5000 代表是「股」，需轉換；若已是「張」則不轉
-        const maxVal = Math.max(...result.map(d => Math.abs(d.foreign) + Math.abs(d.trust) + Math.abs(d.dealer)));
-        const needDiv = maxVal > 100000; // 超過10萬判定為股，需除以1000換算成張
-        return result.map(d => ({
+      return Object.values(byDate)
+        .sort((a, b) => a.date.localeCompare(b.date))
+        .slice(-250)
+        .map(d => ({
           date:    d.date,
-          foreign: Math.round(needDiv ? d.foreign / 1000 : d.foreign),
-          trust:   Math.round(needDiv ? d.trust   / 1000 : d.trust),
-          dealer:  Math.round(needDiv ? d.dealer  / 1000 : d.dealer),
+          foreign: Math.round(d.foreign / 1000), // 股 → 張
+          trust:   Math.round(d.trust   / 1000),
+          dealer:  Math.round(d.dealer  / 1000),
         }));
-      }
-    } catch(e) { console.warn('FinMind 三大法人失敗', e); }
-  }
+    }
+  } catch(e) { console.warn('FinMind 三大法人失敗', e); }
+
   // ===== Fallback: TWSE T86（僅今日單筆）=====
+  // T86 欄位：[0]代號 [1]名稱 [2]外資買進 [3]外資賣出 [4]外資買賣超(張)
+  //            [5]投信買進 [6]投信賣出 [7]投信買賣超(張)
+  //            [8]自營商買進 [9]自營商賣出 [10]自營商買賣超(張)
   try {
     const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`);
     const data = JSON.parse(res.text);
     if(!data.data || !data.date) return null;
     const row = data.data.find(r => r[0] === code);
     if(!row) return null;
-    // 日期格式：20260312 → 2026-03-12
-    const ds = data.date;
+    const ds = data.date; // 格式：20260318
     const dateStr = `${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`;
-    // T86 欄位（依官方說明）：
-    // [0]=股票代號 [1]=股票名稱
-    // [2]=外資買進 [3]=外資賣出 [4]=外資買賣超（張）
-    // [5]=投信買進 [6]=投信賣出 [7]=投信買賣超（張）  
-    // [8]=自營商買進 [9]=自營商賣出 [10]=自營商買賣超
-    // [11]=三大法人買賣超（張）
-    const toNum = (s) => Math.round(parseFloat((s||'0').toString().replace(/,/g,'')));
+    const toNum = s => Math.round(parseFloat((s||'0').toString().replace(/,/g,'')));
     return [{
       date:    dateStr,
-      foreign: toNum(row[4]),   // 外資買賣超，單位已是「張」
-      trust:   toNum(row[7]),   // 投信買賣超
-      dealer:  toNum(row[10]),  // 自營商買賣超
+      foreign: toNum(row[4]),  // 外資買賣超（張）
+      trust:   toNum(row[7]),  // 投信買賣超（張）
+      dealer:  toNum(row[10]), // 自營商買賣超（張）
     }];
   } catch(e) { return null; }
 }
 
 // 融資融券：FinMind 優先，fallback TWSE
 async function fetchMargin(code) {
-  // ===== FinMind =====
-  {
-    try {
-      const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 380);
-      const fmt = d => d.toISOString().slice(0,10);
-      const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
-        data_id: code, start_date: fmt(start), end_date: fmt(end)
-      });
-      if(rows && rows.length > 0) {
-        // Debug：印出第一筆確認欄位名稱
-        console.log('[FinMind 融資] 資料範例:', JSON.stringify(rows[0]));
-        return rows.slice(-250).map(r => ({
-          date: r.date,
-          // 相容新舊欄位命名（FinMind 不同版本欄位名稱不同）
-          marginBalance: r.MarginPurchaseTodayBalance
-                      || r.margin_purchase_today_balance
-                      || r.marginPurchaseTodayBalance
-                      || r.MarginPurchase_TodayBalance
-                      || 0,
-        })).filter(r => r.marginBalance > 0); // 過濾掉無效的 0 值
-      }
-    } catch(e) { console.warn('FinMind 融資失敗', e); }
-  }
-  // ===== Fallback: TWSE =====
+  // ===== FinMind（官方文件：MarginPurchaseTodayBalance = 融資今日餘額，單位：張）=====
+  try {
+    const end = new Date();
+    const start = new Date(); start.setDate(start.getDate() - 380);
+    const fmt = d => d.toISOString().slice(0,10);
+    const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
+      data_id: code, start_date: fmt(start), end_date: fmt(end)
+    });
+    if(rows && rows.length > 0) {
+      const result = rows.slice(-250).map(r => ({
+        date:          r.date,
+        marginBalance: Number(r.MarginPurchaseTodayBalance) || 0,
+      })).filter(r => r.marginBalance > 0);
+      if(result.length > 0) return result;
+    }
+  } catch(e) { console.warn('FinMind 融資失敗', e); }
+
+  // ===== Fallback: TWSE MI_MARGN（[4]=融資今日餘額）=====
   try {
     const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`);
     const data = JSON.parse(res.text);
@@ -2260,7 +2237,7 @@ async function fetchMargin(code) {
     return data.data.slice(-250).map(r => ({
       date:          r[0],
       marginBalance: parseFloat((r[4]||'0').replace(/,/g,'')),
-    }));
+    })).filter(r => r.marginBalance > 0);
   } catch(e) { return null; }
 }
 
