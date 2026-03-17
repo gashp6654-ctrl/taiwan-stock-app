@@ -2153,83 +2153,77 @@ function drawVolume(rows) {
 // 三大法人：FinMind 優先，fallback TWSE
 async function fetchInstitutional(code) {
   // ===== FinMind =====
-  // 官方文件確認欄位：date, stock_id, buy(股), name(中文), sell(股)
-  // name 值：「外資及陸資」「投信」「自營商」
-  // buy/sell 單位為「股」，需 ÷1000 轉換為「張」
-  try {
-    const end = new Date();
-    const start = new Date(); start.setDate(start.getDate() - 380);
-    const fmt = d => d.toISOString().slice(0,10);
-    const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
-      data_id: code, start_date: fmt(start), end_date: fmt(end)
-    });
-    if(rows && rows.length > 0) {
-      const byDate = {};
-      rows.forEach(r => {
-        const date = r.date;
-        if(!byDate[date]) byDate[date] = { date, foreign: 0, trust: 0, dealer: 0 };
-        const buy  = Number(r.buy)  || 0;  // 單位：股
-        const sell = Number(r.sell) || 0;  // 單位：股
-        const net  = buy - sell;           // 買賣超（股）
-        const name = (r.name || '').trim();
-        if(name.includes('外資'))      byDate[date].foreign += net;
-        else if(name.includes('投信')) byDate[date].trust   += net;
-        else if(name.includes('自營')) byDate[date].dealer  += net;
+  {
+    try {
+      const end = new Date();
+      const start = new Date(); start.setDate(start.getDate() - 380);
+      const fmt = d => d.toISOString().slice(0,10);
+      const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
       });
-      return Object.values(byDate)
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .slice(-250)
-        .map(d => ({
-          date:    d.date,
-          foreign: Math.round(d.foreign / 1000), // 股 → 張
-          trust:   Math.round(d.trust   / 1000),
-          dealer:  Math.round(d.dealer  / 1000),
-        }));
-    }
-  } catch(e) { console.warn('FinMind 三大法人失敗', e); }
-
+      if(rows && rows.length > 0) {
+        const byDate = {};
+        rows.forEach(r => {
+          if(!byDate[r.date]) byDate[r.date] = { date: r.date, foreign: 0, trust: 0, dealer: 0 };
+          const v = (r.buy - r.sell); // 單位：股
+          const n = r.name || '';
+          if(n === 'Foreign_Investor') byDate[r.date].foreign += v;
+          else if(n === 'Investment_Trust') byDate[r.date].trust += v;
+          else if(n === 'Dealer_self' || n === 'Dealer_Hedging') byDate[r.date].dealer += v;
+          // 相容中文名稱（舊 API）
+          else if(n.includes('外資') || n.includes('Foreign')) byDate[r.date].foreign += v;
+          else if(n.includes('投信')) byDate[r.date].trust += v;
+          else if(n.includes('自營') || n.includes('Dealer')) byDate[r.date].dealer += v;
+        });
+        return Object.values(byDate).sort((a,b)=>a.date.localeCompare(b.date)).slice(-250)
+          .map(d => ({
+            date:    d.date,
+            foreign: Math.round(d.foreign / 1000), // 股→張
+            trust:   Math.round(d.trust   / 1000),
+            dealer:  Math.round(d.dealer  / 1000),
+          }));
+      }
+    } catch(e) {}
+  }
   // ===== Fallback: TWSE T86（僅今日單筆）=====
-  // T86 欄位：[0]代號 [1]名稱 [2]外資買進 [3]外資賣出 [4]外資買賣超(張)
-  //            [5]投信買進 [6]投信賣出 [7]投信買賣超(張)
-  //            [8]自營商買進 [9]自營商賣出 [10]自營商買賣超(張)
   try {
     const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/fund/T86?response=json&selectType=ALL`);
     const data = JSON.parse(res.text);
     if(!data.data || !data.date) return null;
     const row = data.data.find(r => r[0] === code);
     if(!row) return null;
-    const ds = data.date; // 格式：20260318
+    // 日期格式：20260312 → 2026-03-12
+    const ds = data.date;
     const dateStr = `${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`;
-    const toNum = s => Math.round(parseFloat((s||'0').toString().replace(/,/g,'')));
     return [{
       date:    dateStr,
-      foreign: toNum(row[4]),  // 外資買賣超（張）
-      trust:   toNum(row[7]),  // 投信買賣超（張）
-      dealer:  toNum(row[10]), // 自營商買賣超（張）
+      foreign: Math.round(parseFloat((row[4]||'0').replace(/,/g,'')) / 1000),
+      trust:   Math.round(parseFloat((row[10]||'0').replace(/,/g,'')) / 1000),
+      dealer:  Math.round(parseFloat((row[11]||'0').replace(/,/g,'')) / 1000),
     }];
   } catch(e) { return null; }
 }
 
 // 融資融券：FinMind 優先，fallback TWSE
 async function fetchMargin(code) {
-  // ===== FinMind（官方文件：MarginPurchaseTodayBalance = 融資今日餘額，單位：張）=====
-  try {
-    const end = new Date();
-    const start = new Date(); start.setDate(start.getDate() - 380);
-    const fmt = d => d.toISOString().slice(0,10);
-    const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
-      data_id: code, start_date: fmt(start), end_date: fmt(end)
-    });
-    if(rows && rows.length > 0) {
-      const result = rows.slice(-250).map(r => ({
-        date:          r.date,
-        marginBalance: Number(r.MarginPurchaseTodayBalance) || 0,
-      })).filter(r => r.marginBalance > 0);
-      if(result.length > 0) return result;
-    }
-  } catch(e) { console.warn('FinMind 融資失敗', e); }
-
-  // ===== Fallback: TWSE MI_MARGN（[4]=融資今日餘額）=====
+  // ===== FinMind =====
+  {
+    try {
+      const end = new Date();
+      const start = new Date(); start.setDate(start.getDate() - 380);
+      const fmt = d => d.toISOString().slice(0,10);
+      const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
+        data_id: code, start_date: fmt(start), end_date: fmt(end)
+      });
+      if(rows && rows.length > 0) {
+        return rows.slice(-250).map(r => ({
+          date:          r.date,
+          marginBalance: r.MarginPurchaseTodayBalance || 0, // 融資今日餘額（張）
+        }));
+      }
+    } catch(e) {}
+  }
+  // ===== Fallback: TWSE =====
   try {
     const res = await proxyFetch(`https://www.twse.com.tw/rwd/zh/marginTrading/MI_MARGN?response=json&selectType=individ&stockNo=${code}`);
     const data = JSON.parse(res.text);
@@ -2237,7 +2231,7 @@ async function fetchMargin(code) {
     return data.data.slice(-250).map(r => ({
       date:          r[0],
       marginBalance: parseFloat((r[4]||'0').replace(/,/g,'')),
-    })).filter(r => r.marginBalance > 0);
+    }));
   } catch(e) { return null; }
 }
 
@@ -2262,7 +2256,7 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     hovertemplate: '%{x}<br>' + label + ': %{y:,}張<extra></extra>'
   };
   const layout = {
-    height: el.offsetHeight > 50 ? el.offsetHeight : (parseInt(el.style.height) || 130),
+    height: el.style.height ? parseInt(el.style.height) : 130,
     plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
     font: { color: '#c9d1d9', size: 10 },
     margin: { l: 55, r: 8, t: 8, b: 30 },
@@ -2271,7 +2265,7 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
       fixedrange: false, rangeslider: { visible: false },
-      range: [dates[Math.max(0, dates.length-30)], dates[dates.length - 1]],
+      range: [dates[0], dates[dates.length - 1]],
       minallowed: dates[0],
       maxallowed: dates[dates.length - 1]
     },
@@ -2282,11 +2276,8 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg) {
     },
     bargap: 0.2, showlegend: false
   };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
-  const instDates = data.map(d => d.date);
-  Plotly.newPlot(el, [trace], layout, config).then(() => {
-    attachKlineLongPress(el, instDates);
-  });
+  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  Plotly.newPlot(el, [trace], layout, config);
 }
 
 function drawForeign(data) { _instPlotly('foreign-plotly', data, 'foreign', '外資', '#ef5350', '#26a69a'); }
@@ -2349,7 +2340,7 @@ function drawMain(instData, marginData) {
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
       fixedrange: false,
-      range: [instDates[Math.max(0, instDates.length-30)], instDates[instDates.length - 1]],
+      range: [instDates[0], instDates[instDates.length - 1]],
       minallowed: instDates[0],
       maxallowed: instDates[instDates.length - 1]
     },
@@ -2366,10 +2357,8 @@ function drawMain(instData, marginData) {
     bargap: 0.2,
     showlegend: false
   };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
-  Plotly.newPlot(el, traces, layout, config).then(() => {
-    attachKlineLongPress(el, instDates);
-  });
+  const config = { responsive: true, displayModeBar: false, scrollZoom: true };
+  Plotly.newPlot(el, traces, layout, config);
 }
 
 async function fetchMopsRevenue(code) {
