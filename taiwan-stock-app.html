@@ -217,7 +217,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.948</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.950</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -318,7 +318,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.948</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.950</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -1955,6 +1955,25 @@ function drawKline(rows) {
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     if(e.touches.length === 1) {
+      // 計算點擊的 K棒 index，立即顯示十字線
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const plotW = rect.width - PL - PR;
+      const start = Math.max(0, offsetIdx);
+      const end   = Math.min(rows.length, start + visibleCount);
+      const n     = end - start;
+      const stepW = plotW / n;
+      const i = Math.floor((x - PL) / stepW);
+      if(i >= 0 && i < n) {
+        crossIdx = i;
+        const b = rows[start + i];
+        const isUp = b.close >= b.open;
+        tooltip.style.display = 'block';
+        tooltip.style.left = Math.min(x + 12, rect.width - 160) + 'px';
+        tooltip.style.top  = '8px';
+        tooltip.innerHTML  = `<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;
+        render();
+      }
       touchState = {
         type: 'single',
         startX: e.touches[0].clientX,
@@ -1965,6 +1984,8 @@ function drawKline(rows) {
         dir: null
       };
     } else if(e.touches.length === 2) {
+      crossIdx = -1;
+      tooltip.style.display = 'none';
       const dx = e.touches[1].clientX - e.touches[0].clientX;
       const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
       touchState = {
@@ -1975,7 +1996,6 @@ function drawKline(rows) {
         midX
       };
     }
-    crossIdx = -1;
   }, { passive: false });
 
   canvas.addEventListener('touchmove', e => {
@@ -1991,6 +2011,9 @@ function drawKline(rows) {
         if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         touchState.dirLocked = true;
         touchState.dir = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'zoom';
+        // 開始移動時隱藏十字線
+        crossIdx = -1;
+        tooltip.style.display = 'none';
       }
 
       const plotW = (container.clientWidth || 360) - PL - PR;
@@ -2118,84 +2141,369 @@ function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
   svg.innerHTML=html;
 }
 
+// ===== 通用 Canvas 長條圖引擎（成交量、法人圖共用）=====
+function drawCanvasBar(containerId, opts) {
+  // opts: { dates, vals, colors, height, label, yLabel, yLabel2,
+  //         line2: { dates, vals, color, label }, visibleCount }
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.innerHTML = '';
+
+  const canvas = document.createElement('canvas');
+  canvas.style.width = '100%';
+  canvas.style.height = (opts.height || 120) + 'px';
+  canvas.style.display = 'block';
+  canvas.style.cursor = 'crosshair';
+  container.style.position = 'relative';
+  container.appendChild(canvas);
+
+  const tooltip = document.createElement('div');
+  tooltip.style.cssText = 'position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #30363d;border-radius:8px;padding:5px 9px;font-size:11px;color:#c9d1d9;display:none;z-index:10;white-space:nowrap;';
+  container.appendChild(tooltip);
+
+  const PL = 8, PR = opts.line2 ? 52 : 52, PT = 10, PB = 24;
+  const dates = opts.dates;
+  const vals  = opts.vals;
+  const n     = dates.length;
+
+  let visibleCount = Math.min(opts.visibleCount || 30, n);
+  let offsetIdx    = Math.max(0, n - visibleCount);
+  let crossIdx     = -1;
+
+  function getSize() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = container.clientWidth || 360;
+    const h = opts.height || 120;
+    canvas.width  = w * dpr;
+    canvas.height = h * dpr;
+    return { w, h, dpr };
+  }
+
+  function fmtNum(v) {
+    if(Math.abs(v) >= 10000) return (v/10000).toFixed(1)+'萬';
+    return v.toLocaleString();
+  }
+
+  function render() {
+    const { w, h, dpr } = getSize();
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const plotW = w - PL - PR;
+    const plotH = h - PT - PB;
+
+    const start = Math.max(0, offsetIdx);
+    const end   = Math.min(n, start + visibleCount);
+    const vDates = dates.slice(start, end);
+    const vVals  = vals.slice(start, end);
+    const vColors = opts.colors.slice(start, end);
+    const cnt = vDates.length;
+    if(cnt === 0) return;
+
+    // Y 軸範圍
+    let yMin = Math.min(0, ...vVals);
+    let yMax = Math.max(0, ...vVals);
+
+    // 融資線 Y2 獨立軸
+    let line2Vals = null, y2Min = 0, y2Max = 1;
+    if(opts.line2) {
+      const l2 = opts.line2;
+      const vLine2 = vDates.map(d => {
+        const idx = l2.dates.indexOf(d);
+        return idx >= 0 ? l2.vals[idx] : null;
+      });
+      line2Vals = vLine2;
+      const valid = vLine2.filter(v => v !== null);
+      if(valid.length > 0) { y2Min = Math.min(...valid); y2Max = Math.max(...valid); }
+    }
+
+    const yPad = (yMax - yMin) * 0.1 || 1;
+    yMin -= yPad; yMax += yPad;
+
+    function yPos(v)  { return PT + plotH * (1 - (v - yMin) / (yMax - yMin)); }
+    function y2Pos(v) { return PT + plotH * (1 - (v - y2Min) / (y2Max - y2Min)); }
+
+    const stepW = plotW / cnt;
+    const barW  = Math.max(2, Math.min(20, stepW * 0.7));
+
+    // 背景
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, w, h);
+
+    // 零線
+    const zeroY = yPos(0);
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(PL, zeroY); ctx.lineTo(w - PR, zeroY); ctx.stroke();
+
+    // 格線
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 0.5;
+    [0.25, 0.5, 0.75, 1].forEach(t => {
+      const yp = PT + plotH * t;
+      ctx.beginPath(); ctx.moveTo(PL, yp); ctx.lineTo(w - PR, yp); ctx.stroke();
+    });
+
+    // Y 軸刻度（左）
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'right';
+    [0, 0.5, 1].forEach(t => {
+      const yv = yMin + (yMax - yMin) * (1 - t);
+      ctx.fillText(fmtNum(Math.round(yv)), PL + 50, PT + plotH * t + 3);
+    });
+
+    // Y2 軸刻度（右）— 融資
+    if(opts.line2 && line2Vals) {
+      ctx.fillStyle = opts.line2.color || '#FFA500';
+      ctx.textAlign = 'left';
+      [0, 0.5, 1].forEach(t => {
+        const yv = y2Min + (y2Max - y2Min) * (1 - t);
+        ctx.fillText(fmtNum(Math.round(yv)), w - PR + 2, PT + plotH * t + 3);
+      });
+    }
+
+    // 畫長條
+    vVals.forEach((v, i) => {
+      const x = PL + (i + 0.5) * stepW;
+      ctx.fillStyle = vColors[i];
+      const top = yPos(Math.max(0, v));
+      const bot = yPos(Math.min(0, v));
+      ctx.fillRect(x - barW / 2, top, barW, Math.max(1, bot - top));
+    });
+
+    // 畫融資線（Y2）
+    if(opts.line2 && line2Vals) {
+      ctx.strokeStyle = opts.line2.color || '#FFA500';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      let started = false;
+      line2Vals.forEach((v, i) => {
+        if(v === null) { started = false; return; }
+        const x = PL + (i + 0.5) * stepW;
+        const y = y2Pos(v);
+        if(!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+      });
+      ctx.stroke();
+    }
+
+    // 十字線
+    if(crossIdx >= 0 && crossIdx < cnt) {
+      const x = PL + (crossIdx + 0.5) * stepW;
+      ctx.strokeStyle = 'rgba(200,200,200,0.4)';
+      ctx.lineWidth = 0.8;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath(); ctx.moveTo(x, PT); ctx.lineTo(x, h - PB); ctx.stroke();
+      ctx.setLineDash([]);
+      // 日期標籤
+      ctx.fillStyle = '#58a6ff';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      let lx = Math.max(20, Math.min(w - 30, x));
+      ctx.fillRect(lx - 22, h - PB + 2, 44, 13);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(vDates[crossIdx].slice(2).replace(/-/g,'/'), lx, h - PB + 11);
+    }
+
+    // X 軸日期
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '9px sans-serif';
+    ctx.textAlign = 'center';
+    const step = Math.max(1, Math.floor(cnt / 4));
+    for(let i = 0; i < cnt; i += step) {
+      ctx.fillText(vDates[i].slice(2, 7).replace('-','/'), PL + (i + 0.5) * stepW, h - PB + 11);
+    }
+
+    // 圖例
+    if(opts.line2) {
+      ctx.font = '9px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillStyle = opts.line2.color || '#FFA500';
+      ctx.fillText('── ' + (opts.line2.label || ''), PL, PT - 2);
+    }
+  }
+
+  // ===== 手勢 =====
+  let touchState = null;
+
+  function showTooltip(i, clientX, rectLeft, rectWidth) {
+    const start = Math.max(0, offsetIdx);
+    const end   = Math.min(n, start + visibleCount);
+    const vDates = dates.slice(start, end);
+    const vVals  = vals.slice(start, end);
+    if(i < 0 || i >= vDates.length) return;
+    crossIdx = i;
+    const v = vVals[i];
+    let html = `<b style="color:#58a6ff">${vDates[i]}</b><br>${opts.label||''}：<b>${fmtNum(Math.round(v))}張</b>`;
+    if(opts.line2 && opts.line2.vals) {
+      const idx2 = opts.line2.dates.indexOf(vDates[i]);
+      if(idx2 >= 0) html += `<br>${opts.line2.label||'融資'}：${fmtNum(Math.round(opts.line2.vals[idx2]))}張`;
+    }
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    const tx = Math.min(clientX - rectLeft + 10, rectWidth - 140);
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top  = '4px';
+    render();
+  }
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if(e.touches.length === 1) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.touches[0].clientX - rect.left;
+      const plotW = rect.width - PL - PR;
+      const cnt2 = Math.min(n, offsetIdx + visibleCount) - Math.max(0, offsetIdx);
+      const i = Math.floor((x - PL) / (plotW / cnt2));
+      if(i >= 0 && i < cnt2) showTooltip(i, e.touches[0].clientX, rect.left, rect.width);
+      touchState = { type:'single', startX: e.touches[0].clientX, startY: e.touches[0].clientY,
+        startOffset: offsetIdx, startCount: visibleCount, dirLocked: false, dir: null };
+    } else if(e.touches.length === 2) {
+      crossIdx = -1; tooltip.style.display = 'none';
+      const dx = e.touches[1].clientX - e.touches[0].clientX;
+      touchState = { type:'pinch', startDist: Math.abs(dx), startCount: visibleCount, startOffset: offsetIdx };
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if(!touchState) return;
+    if(touchState.type === 'single' && e.touches.length === 1) {
+      const dx = e.touches[0].clientX - touchState.startX;
+      const dy = e.touches[0].clientY - touchState.startY;
+      if(!touchState.dirLocked) {
+        if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        touchState.dirLocked = true;
+        touchState.dir = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'zoom';
+        crossIdx = -1; tooltip.style.display = 'none';
+      }
+      const plotW2 = (container.clientWidth || 360) - PL - PR;
+      const stepW2 = plotW2 / touchState.startCount;
+      if(touchState.dir === 'pan') {
+        const shift = -Math.round(dx / stepW2);
+        offsetIdx = Math.max(0, Math.min(n - touchState.startCount, touchState.startOffset + shift));
+        render();
+      } else {
+        const scale = Math.pow(0.985, dy);
+        let nc = Math.round(touchState.startCount * scale);
+        nc = Math.max(5, Math.min(n, nc));
+        const center = touchState.startOffset + touchState.startCount / 2;
+        offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+        visibleCount = nc;
+        render();
+      }
+    } else if(touchState.type === 'pinch' && e.touches.length === 2) {
+      const dist = Math.abs(e.touches[1].clientX - e.touches[0].clientX);
+      const scale = touchState.startDist / dist;
+      let nc = Math.round(touchState.startCount * scale);
+      nc = Math.max(5, Math.min(n, nc));
+      const center = touchState.startOffset + touchState.startCount / 2;
+      offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+      visibleCount = nc;
+      render();
+    }
+  }, { passive: false });
+
+  canvas.addEventListener('touchend', e => {
+    if(e.touches.length === 0) touchState = null;
+  }, { passive: true });
+
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const plotW2 = rect.width - PL - PR;
+    const cnt2 = Math.min(n, offsetIdx + visibleCount) - Math.max(0, offsetIdx);
+    const i = Math.floor((x - PL) / (plotW2 / cnt2));
+    if(i >= 0 && i < cnt2) showTooltip(i, e.clientX, rect.left, rect.width);
+  });
+  canvas.addEventListener('mouseleave', () => {
+    crossIdx = -1; tooltip.style.display = 'none'; render();
+  });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 1.15 : 0.87;
+    let nc = Math.round(visibleCount * delta);
+    nc = Math.max(5, Math.min(n, nc));
+    const center = offsetIdx + visibleCount / 2;
+    offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+    visibleCount = nc;
+    render();
+  }, { passive: false });
+
+  if(window.ResizeObserver) {
+    new ResizeObserver(() => render()).observe(container);
+  }
+  render();
+}
+
+// ===== 成交量 =====
 function drawVolume(rows) {
   const el = document.getElementById('vol-plotly');
-  if (!el) return;
+  if(!el) return;
+  if(!rows || rows.length === 0) { el.innerHTML = ''; return; }
+  drawCanvasBar('vol-plotly', {
+    dates:  rows.map(b => b.date),
+    vals:   rows.map(b => Math.round((b.volume || 0) / 1000)),
+    colors: rows.map(b => b.close >= b.open ? '#ef5350' : '#26a69a'),
+    height: 100, label: '成交量', visibleCount: 30
+  });
+}
 
-  if (!rows || rows.length === 0) {
-    try { Plotly.purge(el); } catch(e){}
-    el.innerHTML = '';
+// ===== 三大法人 & 融資 真實資料 =====
+function _instCanvas(elId, data, field, label, tradingDates, height) {
+  const el = document.getElementById(elId);
+  if(!el) return;
+  if(!data || data.length === 0) {
+    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
     return;
   }
-
-  const dates  = rows.map(b => b.date);
-  const vols   = rows.map(b => Math.round((b.volume || 0) / 1000));
-  const colors = rows.map(b => b.close >= b.open ? '#ef5350' : '#26a69a');
-
-  const totalN     = rows.length;
-  const displayN   = Math.min(30, totalN);
-  const rangeStart = dates[dates.length - displayN];
-  const rangeStartAll = dates[0];
-  const rangeEnd   = dates[dates.length - 1];
-
-  let volRangebreaks = [];
-  if(currentPeriod === '日') {
-    const allDates = [];
-    const d0 = new Date(dates[0]), d1 = new Date(dates[dates.length - 1]);
-    for (let d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) {
-      allDates.push(d.toISOString().slice(0, 10));
-    }
-    const tradingSet = new Set(dates);
-    const missingDays = allDates.filter(d => !tradingSet.has(d));
-    if(missingDays.length > 0) volRangebreaks = [{ values: missingDays }];
-  }
-
-  const trace = {
-    type: 'bar', x: dates, y: vols,
-    name: '成交量',
-    marker: { color: colors },
-    hovertemplate: '%{x}<br>成交量: %{y:,}張<extra></extra>',
-    showlegend: false
-  };
-
-  const layout = {
-    height: 100,
-    plot_bgcolor: '#0d1117',
-    paper_bgcolor: '#0d1117',
-    font: { color: '#c9d1d9', size: 10 },
-    margin: { l: 50, r: 10, t: 5, b: 30 },
-    hovermode: 'x unified',
-    dragmode: 'pan',
-    xaxis: {
-      type: 'date',
-      range: [rangeStart, rangeEnd],
-      minallowed: rangeStartAll,
-      maxallowed: rangeEnd,
-      rangebreaks: volRangebreaks,
-      gridcolor: '#21262d',
-      tickfont: { size: 9 },
-      tickformat: '%Y/%m',
-      fixedrange: false
-    },
-    yaxis: {
-      gridcolor: '#21262d',
-      tickfont: { size: 9 },
-      fixedrange: true,
-      tickformat: ',d'
-    },
-    bargap: 0.2
-  };
-
-  const volConfig = { responsive: true, displayModeBar: false, scrollZoom: false };
-  if(el._fullLayout) {
-    Plotly.react(el, [trace], layout, volConfig);
-  } else {
-    Plotly.newPlot(el, [trace], layout, volConfig).then(() => {
-      attachKlineLongPress(el, dates);
-    });
-  }
+  const instMap = {};
+  data.forEach(d => { instMap[d.date] = d; });
+  const baseDates = (tradingDates && tradingDates.length > 0) ? tradingDates : data.map(d => d.date);
+  const aligned = baseDates.map(date => instMap[date] || { date, foreign: 0, trust: 0, dealer: 0 });
+  const dates = aligned.map(d => d.date);
+  const vals  = aligned.map(d => d[field]);
+  drawCanvasBar(elId, {
+    dates, vals,
+    colors: vals.map(v => v >= 0 ? '#ef5350' : '#26a69a'),
+    height: height || 130, label, visibleCount: 30
+  });
 }
-// ===== 三大法人 & 融資 真實資料 =====
+
+function drawForeign(data, tradingDates) { _instCanvas('foreign-plotly', data, 'foreign', '外資', tradingDates, 130); }
+function drawTrust(data, tradingDates)   { _instCanvas('trust-plotly',   data, 'trust',   '投信', tradingDates, 130); }
+
+function drawMain(instData, marginData, tradingDates) {
+  const el = document.getElementById('main-plotly');
+  if(!el) return;
+  if(!instData || instData.length === 0) {
+    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
+    return;
+  }
+  const instMap = {};
+  instData.forEach(d => { instMap[d.date] = d; });
+  const baseDates = (tradingDates && tradingDates.length > 0) ? tradingDates : instData.map(d => d.date);
+  const aligned = baseDates.map(date => instMap[date] || { date, foreign: 0, trust: 0, dealer: 0 });
+  const mainCum = aligned.map((_, i) => {
+    const slice = aligned.slice(Math.max(0, i - 14), i + 1);
+    return slice.reduce((s, d) => s + d.foreign + d.trust + d.dealer, 0);
+  });
+  const dates = aligned.map(d => d.date);
+
+  let line2 = null;
+  if(marginData && marginData.length > 0) {
+    line2 = {
+      dates: marginData.map(d => d.date),
+      vals:  marginData.map(d => d.marginBalance),
+      color: '#FFA500',
+      label: '融資餘額'
+    };
+  }
+  drawCanvasBar('main-plotly', {
+    dates, vals: mainCum,
+    colors: mainCum.map(v => v >= 0 ? '#ef5350' : '#26a69a'),
+    height: 160, label: '主力15日累計', visibleCount: 30,
+    line2
+  });
+}
 
 // 三大法人：FinMind 優先，fallback TWSE
 async function fetchInstitutional(code) {
@@ -2294,137 +2602,6 @@ function calcRangebreaks(dates) {
   const missing = allDates.filter(d => !tradingSet.has(d));
   return missing.length > 0 ? [{ values: missing }] : [];
 }
-
-function _instPlotly(elId, data, field, label, color_pos, color_neg, tradingDates) {
-  const el = document.getElementById(elId);
-  if(!el) return;
-  if(!data || data.length === 0) {
-    try { Plotly.purge(el); } catch(e){}
-    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
-    return;
-  }
-  try { Plotly.purge(el); } catch(e){}
-  el.innerHTML = '';
-  // 以股價交易日為基準，缺漏日補 0
-  const instMap = {};
-  data.forEach(d => { instMap[d.date] = d; });
-  const baseDates = (tradingDates && tradingDates.length > 0) ? tradingDates : data.map(d => d.date);
-  const aligned = baseDates.map(date => instMap[date] || { date, foreign: 0, trust: 0, dealer: 0 });
-  const dates  = aligned.map(d => d.date);
-  const vals   = aligned.map(d => d[field]);
-  const colors = vals.map(v => v >= 0 ? color_pos : color_neg);
-  const trace = {
-    type: 'bar', x: dates, y: vals,
-    marker: { color: colors },
-    name: label,
-    hovertemplate: '%{x}<br>' + label + ': %{y:,}張<extra></extra>'
-  };
-  const displayN     = Math.min(30, dates.length);
-  const rangeStart30 = dates[dates.length - displayN];
-  const rangeEnd     = dates[dates.length - 1];
-  const layout = {
-    height: el.style.height ? parseInt(el.style.height) : 130,
-    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
-    font: { color: '#c9d1d9', size: 10 },
-    margin: { l: 55, r: 8, t: 8, b: 30 },
-    hovermode: 'x unified', dragmode: 'pan',
-    xaxis: {
-      type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false, rangeslider: { visible: false },
-      tickformat: '%Y/%m',
-      range: [rangeStart30, rangeEnd],
-      minallowed: dates[0], maxallowed: rangeEnd,
-      rangebreaks: calcRangebreaks(dates),
-    },
-    yaxis: {
-      gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: true, tickformat: ',d', zerolinecolor: '#555'
-    },
-    bargap: 0.2, showlegend: false
-  };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
-  Plotly.newPlot(el, [trace], layout, config).then(() => {
-    attachKlineLongPress(el, dates);
-  });
-}
-
-function drawForeign(data, tradingDates) { _instPlotly('foreign-plotly', data, 'foreign', '外資', '#ef5350', '#26a69a', tradingDates); }
-function drawTrust(data, tradingDates)   { _instPlotly('trust-plotly',   data, 'trust',   '投信', '#ef5350', '#26a69a', tradingDates); }
-
-function drawMain(instData, marginData, tradingDates) {
-  const el = document.getElementById('main-plotly');
-  if(!el) return;
-  if(!instData || instData.length === 0) {
-    try { Plotly.purge(el); } catch(e){}
-    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:40px 0;font-size:12px;">資料載入中...</div>`;
-    return;
-  }
-  try { Plotly.purge(el); } catch(e){}
-  el.innerHTML = '';
-  // 以股價交易日為基準，缺漏日補 0
-  const instMap = {};
-  instData.forEach(d => { instMap[d.date] = d; });
-  const baseDates = (tradingDates && tradingDates.length > 0) ? tradingDates : instData.map(d => d.date);
-  const aligned = baseDates.map(date => instMap[date] || { date, foreign: 0, trust: 0, dealer: 0 });
-  // 精確 15 交易日滾動加總
-  const mainCum = aligned.map((_, i) => {
-    const slice = aligned.slice(Math.max(0, i - 14), i + 1);
-    return slice.reduce((s, d) => s + d.foreign + d.trust + d.dealer, 0);
-  });
-  const instDates  = aligned.map(d => d.date);
-  const mainColors = mainCum.map(v => v >= 0 ? '#ef5350' : '#26a69a');
-  const barTrace = {
-    type: 'bar', x: instDates, y: mainCum,
-    marker: { color: mainColors },
-    name: '主力法人15日累計(張)', yaxis: 'y',
-    hovertemplate: '%{x}<br>主力累計: %{y:,}張<extra></extra>'
-  };
-  const traces = [barTrace];
-  if(marginData && marginData.length > 0) {
-    traces.push({
-      type: 'scatter', mode: 'lines',
-      x: marginData.map(d => d.date),
-      y: marginData.map(d => d.marginBalance),
-      line: { color: '#FFA500', width: 1.5 },
-      name: '融資餘額(張)', yaxis: 'y2',
-      hovertemplate: '%{x}<br>融資餘額: %{y:,}張<extra></extra>'
-    });
-  }
-  const displayN     = Math.min(30, instDates.length);
-  const rangeStart30 = instDates[instDates.length - displayN];
-  const rangeEnd     = instDates[instDates.length - 1];
-  const layout = {
-    height: 160,
-    plot_bgcolor: '#0d1117', paper_bgcolor: '#0d1117',
-    font: { color: '#c9d1d9', size: 10 },
-    margin: { l: 55, r: 50, t: 4, b: 30 },
-    hovermode: 'x unified', dragmode: 'pan',
-    xaxis: {
-      type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: false, rangeslider: { visible: false },
-      tickformat: '%Y/%m',
-      range: [rangeStart30, rangeEnd],
-      minallowed: instDates[0], maxallowed: rangeEnd,
-      rangebreaks: calcRangebreaks(instDates),
-    },
-    yaxis: {
-      gridcolor: '#21262d', tickfont: { size: 9 },
-      fixedrange: true, tickformat: ',d', zerolinecolor: '#555',
-      title: { text: '張', font: { size: 9 }, standoff: 2 }
-    },
-    yaxis2: {
-      tickfont: { size: 9 }, fixedrange: true, tickformat: ',d',
-      overlaying: 'y', side: 'right',
-      title: { text: '融資(張)', font: { size: 9 }, standoff: 2 }
-    },
-    bargap: 0.2, showlegend: false
-  };
-  const config = { responsive: true, displayModeBar: false, scrollZoom: false };
-  Plotly.newPlot(el, traces, layout, config).then(() => {
-    attachKlineLongPress(el, instDates);
-  });
-}
-
 
 async function fetchMopsRevenue(code) {
   // ===== FinMind 月營收（所有股票都能用）=====
