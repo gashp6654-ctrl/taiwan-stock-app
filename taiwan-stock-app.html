@@ -202,13 +202,13 @@
 
   <!-- 登入頁 -->
   <div id="page-login" class="login-screen">
-    <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.45;pointer-events:none;z-index:0;"></canvas>
+    <canvas id="matrix-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.85;pointer-events:none;z-index:0;"></canvas>
     <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;">
     <div style="filter:drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 20px #f0b42966);animation:cowBob 2s ease-in-out infinite;margin-bottom:8px;">
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.935</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.940</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -309,7 +309,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.935</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.940</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -1917,12 +1917,13 @@ function drawKline(rows) {
     xaxis: {
       type: 'date',
       range: [rangeStart30, rangeEnd],
-      minallowed: rangeStartAll, // 最小縮放到全部K線起點
-      maxallowed: rangeEnd,      // 不能超出最新日期
+      minallowed: rangeStartAll,
+      maxallowed: rangeEnd,
       rangebreaks: rangebreaks,
       rangeslider: { visible: false },
       gridcolor: '#21262d',
       tickfont: { size: 10 },
+      tickformat: '%Y/%m',
       fixedrange: false
     },
     yaxis: {
@@ -2079,7 +2080,7 @@ function drawVolume(rows) {
 
   if (!rows || rows.length === 0) {
     try { Plotly.purge(el); } catch(e){}
-    el.innerHTML = `<div style="color:#8b949e;text-align:center;padding:30px 0;font-size:12px;">載入中...</div>`;
+    el.innerHTML = '';
     return;
   }
 
@@ -2129,6 +2130,7 @@ function drawVolume(rows) {
       rangebreaks: volRangebreaks,
       gridcolor: '#21262d',
       tickfont: { size: 9 },
+      tickformat: '%Y/%m',
       fixedrange: false
     },
     yaxis: {
@@ -2285,9 +2287,10 @@ function _instPlotly(elId, data, field, label, color_pos, color_neg, tradingDate
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
       fixedrange: false, rangeslider: { visible: false },
+      tickformat: '%Y/%m',
       range: [rangeStart30, rangeEnd],
       minallowed: dates[0], maxallowed: rangeEnd,
-      rangebreaks: calcRangebreaks(dates),   // ← 跳過非交易日
+      rangebreaks: calcRangebreaks(dates),
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
@@ -2355,9 +2358,10 @@ function drawMain(instData, marginData, tradingDates) {
     xaxis: {
       type: 'date', gridcolor: '#21262d', tickfont: { size: 9 },
       fixedrange: false, rangeslider: { visible: false },
+      tickformat: '%Y/%m',
       range: [rangeStart30, rangeEnd],
       minallowed: instDates[0], maxallowed: rangeEnd,
-      rangebreaks: calcRangebreaks(instDates),  // ← 跳過非交易日
+      rangebreaks: calcRangebreaks(instDates),
     },
     yaxis: {
       gridcolor: '#21262d', tickfont: { size: 9 },
@@ -3299,27 +3303,47 @@ function listenCommunity() {
     snapshot.forEach(doc => {
       const c = doc.data();
       const liked = c.likedBy && c.likedBy.includes(user);
+      const isOwner = user && c.user === user;
       const avatar = c.userPhoto
         ? `<img src="${c.userPhoto}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"/>`
         : `<div style="width:26px;height:26px;background:linear-gradient(135deg,#f0b429,#d29922);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;">${(c.user||'?').charAt(0).toUpperCase()}</div>`;
       const docId = doc.id;
       const replyCount = c.replies ? c.replies.length : 0;
-      const repliesHtml = (c.replies||[]).map(r => `
+      const repliesHtml = (c.replies||[]).map(r => {
+        const isReplyOwner = user && r.user === user;
+        const deleteReplyBtn = isReplyOwner
+          ? `<button onclick="fsDeleteReply('${docId}', ${r.id})" title="刪除回覆" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px;opacity:0.6;" onmouseover="this.style.color='var(--red)';this.style.opacity=1" onmouseout="this.style.color='var(--muted)';this.style.opacity=0.6">✕</button>`
+          : '';
+        return `
         <div style="display:flex;gap:6px;align-items:flex-start;margin-top:6px;padding-top:6px;border-top:1px solid var(--border);">
           <div style="width:20px;height:20px;background:var(--card2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:var(--accent);flex-shrink:0;">${(r.user||'?').charAt(0).toUpperCase()}</div>
           <div style="flex:1;">
-            <span style="font-size:11px;font-weight:700;color:var(--accent);">${r.user}</span>
-            <span style="font-size:11px;color:var(--muted);margin-left:6px;">${r.time||''}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <span style="font-size:11px;font-weight:700;color:var(--accent);">${r.user}</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:6px;">${r.time||''}</span>
+              </div>
+              ${deleteReplyBtn}
+            </div>
             <div style="font-size:12px;color:var(--text);margin-top:2px;">${r.text}</div>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
+
+      const deletePostBtn = isOwner
+        ? `<button onclick="fsDeleteComment('${docId}')" title="刪除貼文" style="background:none;border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">🗑️ 刪除</button>`
+        : '';
+
       html += `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <div style="display:flex;align-items:center;gap:6px;">
             ${avatar}
             <span style="font-size:12px;font-weight:700;color:var(--text);">${c.user || '匿名'}</span>
           </div>
-          <span style="font-size:11px;color:var(--muted);">${c.date || ''} ${c.time || ''}</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:var(--muted);">${c.date || ''} ${c.time || ''}</span>
+            ${deletePostBtn}
+          </div>
         </div>
         <div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px;">${c.text}</div>
         ${repliesHtml}
@@ -3337,6 +3361,45 @@ function listenCommunity() {
     });
     list.innerHTML = html;
   });
+}
+
+// 刪除自己的貼文
+async function fsDeleteComment(docId) {
+  if(!window._db) return;
+  const user = window._currentUser || '';
+  if(!user) { alert('請先登入！'); return; }
+  if(!confirm('確定要刪除這則貼文嗎？')) return;
+  try {
+    const { doc, deleteDoc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const ref = doc(window._db, 'comments', docId);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    if(snap.data().user !== user) { alert('只能刪除自己的貼文！'); return; }
+    await deleteDoc(ref);
+  } catch(e) {
+    console.error(e);
+    showApiError('刪除失敗，請稍後再試');
+  }
+}
+
+// 刪除自己的回覆
+async function fsDeleteReply(docId, replyId) {
+  if(!window._db) return;
+  const user = window._currentUser || '';
+  if(!user) { alert('請先登入！'); return; }
+  if(!confirm('確定要刪除這則回覆嗎？')) return;
+  try {
+    const { doc, getDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const ref = doc(window._db, 'comments', docId);
+    const snap = await getDoc(ref);
+    if(!snap.exists()) return;
+    const data = snap.data();
+    const newReplies = (data.replies || []).filter(r => !(r.id === replyId && r.user === user));
+    await updateDoc(ref, { replies: newReplies });
+  } catch(e) {
+    console.error(e);
+    showApiError('刪除失敗，請稍後再試');
+  }
 }
 
 // Firestore 按讚
@@ -3730,20 +3793,19 @@ if(document.getElementById('watchlistEl')) renderWatchlist();
   init();
 
   function draw() {
-    ctx.fillStyle = 'rgba(6,2,15,0.08)';
+    ctx.fillStyle = 'rgba(6,2,15,0.22)';  // 拖尾更短，每字更獨立清晰
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = fontSize + 'px monospace';
     for(let i = 0; i < drops.length; i++) {
       const char = chars[Math.floor(Math.random() * chars.length)];
-      // 頭部亮白，身體琥珀漸淡
-      const brightness = drops[i] < 3 ? 1 : Math.max(0.2, 1 - drops[i] * 0.04);
       if(drops[i] < 2) {
-        ctx.fillStyle = 'rgba(255,255,255,1)';
+        ctx.fillStyle = 'rgba(255,255,255,1)';         // 頭部純白
       } else if(drops[i] < 5) {
-        ctx.fillStyle = 'rgba(255,220,80,' + brightness + ')';
+        ctx.fillStyle = 'rgba(255,230,100,1)';         // 近頭部亮黃
       } else {
-        ctx.fillStyle = 'rgba(240,180,41,' + (brightness * 0.85) + ')';
+        const brightness = Math.max(0.35, 1 - drops[i] * 0.06);
+        ctx.fillStyle = 'rgba(240,180,41,' + brightness + ')'; // 身體琥珀漸淡
       }
       ctx.fillText(char, i * fontSize, drops[i] * fontSize);
 
