@@ -48,6 +48,7 @@
         const user = result.user;
         window._currentUser = user.displayName || user.email;
         window._userPhoto = user.photoURL;
+        window._userEmail = user.email;
         document.getElementById('page-login').style.display = 'none';
         // 檢查是否已完成問答
         const key = 'quiz_done_' + user.uid;
@@ -73,6 +74,7 @@
       if(user) {
         window._currentUser = user.displayName || user.email;
         window._userPhoto = user.photoURL;
+        window._userEmail = user.email;
         window._userUid = user.uid;
       }
     });
@@ -215,7 +217,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.941</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.943</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -316,7 +318,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.941</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.943</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -927,7 +929,31 @@
       <!-- 診斷結果 -->
       <div id="my-result" style="display:none;padding:0 16px 16px;">
         <div id="my-thinking" style="font-size:14px;line-height:2;color:var(--text);margin-top:12px;"></div>
+      </div>
 
+      <!-- 管理員 VIP1 管理區（只有管理員看得到） -->
+      <div id="admin-vip-panel" style="display:none;margin:16px 16px 0;padding-bottom:16px;">
+        <div style="border-top:1px solid var(--border);padding-top:16px;">
+          <div style="font-size:13px;font-weight:900;color:#ff6b6b;margin-bottom:12px;">👑 VIP1 管理員後台</div>
+          <!-- 新增VIP -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">新增 VIP1 用戶</div>
+            <div style="display:flex;gap:8px;margin-bottom:6px;">
+              <input id="vip-add-email" type="email" placeholder="Email" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input id="vip-add-name" placeholder="顯示名稱（選填）" style="flex:1;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none;">
+              <button onclick="adminAddVip()" style="background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:900;cursor:pointer;font-family:inherit;white-space:nowrap;">新增</button>
+            </div>
+          </div>
+          <!-- VIP 名單 -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px;">
+            <div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;">VIP1 名單</div>
+            <div id="vip-list-admin" style="display:flex;flex-direction:column;gap:6px;">
+              <div style="font-size:12px;color:var(--muted);text-align:center;padding:8px;">載入中...</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1163,6 +1189,15 @@ function enterApp() {
   if(fb) fb.style.display = 'flex';
   const sb = document.getElementById('setting-float-btn');
   if(sb) sb.style.display = 'flex';
+
+  // VIP1 檢查（登入後非同步執行）
+  const email = window._userEmail || '';
+  if(email) {
+    checkVip1Status(email).then(() => {
+      // 管理員：顯示 VIP 管理面板
+      if(email === ADMIN_EMAIL) showAdminVipPanel();
+    });
+  }
 }
 
 function showCertModal() {
@@ -3304,18 +3339,20 @@ function listenCommunity() {
       return;
     }
     const user = window._currentUser || '';
+    const userEmail = window._userEmail || '';
+    const isAdmin = userEmail === 'gashp6654@gmail.com';
     let html = '';
     snapshot.forEach(doc => {
       const c = doc.data();
       const liked = c.likedBy && c.likedBy.includes(user);
-      const isOwner = user && c.user === user;
+      const isOwner = user && (c.user === user || isAdmin);
       const avatar = c.userPhoto
         ? `<img src="${c.userPhoto}" style="width:26px;height:26px;border-radius:50%;object-fit:cover;"/>`
         : `<div style="width:26px;height:26px;background:linear-gradient(135deg,#f0b429,#d29922);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#000;">${(c.user||'?').charAt(0).toUpperCase()}</div>`;
       const docId = doc.id;
       const replyCount = c.replies ? c.replies.length : 0;
       const repliesHtml = (c.replies||[]).map(r => {
-        const isReplyOwner = user && r.user === user;
+        const isReplyOwner = user && (r.user === user || isAdmin);
         const deleteReplyBtn = isReplyOwner
           ? `<button onclick="fsDeleteReply('${docId}', ${r.id})" title="刪除回覆" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;padding:0 2px;opacity:0.6;" onmouseover="this.style.color='var(--red)';this.style.opacity=1" onmouseout="this.style.color='var(--muted)';this.style.opacity=0.6">✕</button>`
           : '';
@@ -3368,17 +3405,20 @@ function listenCommunity() {
   });
 }
 
-// 刪除自己的貼文
+// 刪除自己的貼文（管理員可刪所有人）
 async function fsDeleteComment(docId) {
   if(!window._db) return;
   const user = window._currentUser || '';
+  const isAdmin = (window._userEmail || '') === 'gashp6654@gmail.com';
   if(!user) { alert('請先登入！'); return; }
   if(!confirm('確定要刪除這則貼文嗎？')) return;
   try {
     const ref = window._doc(window._db, 'comments', docId);
-    const snap = await window._getDoc(ref);
-    if(!snap.exists()) return;
-    if(snap.data().user !== user) { alert('只能刪除自己的貼文！'); return; }
+    if(!isAdmin) {
+      const snap = await window._getDoc(ref);
+      if(!snap.exists()) return;
+      if(snap.data().user !== user) { alert('只能刪除自己的貼文！'); return; }
+    }
     await window._deleteDoc(ref);
   } catch(e) {
     console.error(e);
@@ -3386,10 +3426,11 @@ async function fsDeleteComment(docId) {
   }
 }
 
-// 刪除自己的回覆
+// 刪除自己的回覆（管理員可刪所有人）
 async function fsDeleteReply(docId, replyId) {
   if(!window._db) return;
   const user = window._currentUser || '';
+  const isAdmin = (window._userEmail || '') === 'gashp6654@gmail.com';
   if(!user) { alert('請先登入！'); return; }
   if(!confirm('確定要刪除這則回覆嗎？')) return;
   try {
@@ -3397,7 +3438,9 @@ async function fsDeleteReply(docId, replyId) {
     const snap = await window._getDoc(ref);
     if(!snap.exists()) return;
     const data = snap.data();
-    const newReplies = (data.replies || []).filter(r => !(r.id === replyId && r.user === user));
+    const newReplies = isAdmin
+      ? (data.replies || []).filter(r => r.id !== replyId)
+      : (data.replies || []).filter(r => !(r.id === replyId && r.user === user));
     await window._updateDoc(ref, { replies: newReplies });
   } catch(e) {
     console.error(e);
@@ -3914,11 +3957,101 @@ function showApiError(msg) {
 let _adUnlocked = false;      // 當前股票是否已解鎖
 let _adStock = null;           // 已解鎖的股票代號
 let _adTimer = null;           // 倒數計時器
-let _isPremium = false;        // 是否付費用戶（預留）
+let _isPremium = false;        // VIP1 用戶免廣告
+let _vip1Email = '';           // 目前登入用戶的 VIP1 email
+
+// ===== VIP1 系統 =====
+const ADMIN_EMAIL = 'gashp6654@gmail.com';
+
+// 登入後檢查是否為 VIP1
+async function checkVip1Status(email) {
+  if(!window._db || !email) return;
+  try {
+    const ref = window._doc(window._db, 'vip_users', email);
+    const snap = await window._getDoc(ref);
+    if(snap.exists()) {
+      _isPremium = true;
+      _vip1Email = email;
+      // 顯示 VIP 標示
+      const badge = document.getElementById('vip1-badge');
+      if(badge) badge.style.display = 'flex';
+    }
+  } catch(e) { console.warn('VIP 檢查失敗', e); }
+}
+
+// 管理員：顯示 VIP 管理面板 + 載入 VIP 名單
+function showAdminVipPanel() {
+  const panel = document.getElementById('admin-vip-panel');
+  if(panel) panel.style.display = 'block';
+  loadVipList();
+}
+
+// 載入 VIP 名單
+async function loadVipList() {
+  const el = document.getElementById('vip-list-admin');
+  if(!el || !window._db) return;
+  try {
+    const { getDocs, collection } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const snap = await getDocs(collection(window._db, 'vip_users'));
+    if(snap.empty) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px;">目前沒有 VIP1 用戶</div>';
+      return;
+    }
+    el.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      el.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent);">${d.displayName || d.email}</div>
+          <div style="font-size:11px;color:var(--muted);">${d.email}</div>
+        </div>
+        <button onclick="adminRemoveVip('${doc.id}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--red);font-size:11px;padding:3px 8px;cursor:pointer;font-family:inherit;">移除</button>
+      </div>`;
+    });
+  } catch(e) { el.innerHTML = '<div style="font-size:12px;color:var(--red);">載入失敗</div>'; }
+}
+
+// 管理員新增 VIP1
+async function adminAddVip() {
+  const emailEl = document.getElementById('vip-add-email');
+  const nameEl  = document.getElementById('vip-add-name');
+  const email   = emailEl ? emailEl.value.trim().toLowerCase() : '';
+  const name    = nameEl  ? nameEl.value.trim() : '';
+  if(!email) { alert('請輸入 Email'); return; }
+  if(!window._db) return;
+  try {
+    const ref = window._doc(window._db, 'vip_users', email);
+    await window._updateDoc(ref, {
+      email, displayName: name || email,
+      addedAt: window._serverTimestamp(),
+      addedBy: ADMIN_EMAIL
+    }).catch(async () => {
+      // 若文件不存在用 setDoc
+      const { setDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      await setDoc(ref, { email, displayName: name || email, addedAt: window._serverTimestamp(), addedBy: ADMIN_EMAIL });
+    });
+    if(emailEl) emailEl.value = '';
+    if(nameEl)  nameEl.value  = '';
+    await loadVipList();
+    alert(`✅ ${email} 已加入 VIP1！`);
+  } catch(e) { console.error(e); alert('新增失敗，請稍後再試'); }
+}
+
+// 管理員移除 VIP1
+async function adminRemoveVip(email) {
+  if(!confirm(`確定移除 ${email} 的 VIP1 資格嗎？`)) return;
+  if(!window._db) return;
+  try {
+    const ref = window._doc(window._db, 'vip_users', email);
+    await window._deleteDoc(ref);
+    await loadVipList();
+    alert(`已移除 ${email} 的 VIP1 資格`);
+  } catch(e) { console.error(e); alert('移除失敗，請稍後再試'); }
+}
 
 // 檢查是否需要看廣告
 function checkAdLock() {
-  if(_isPremium) return false;           // 付費用戶免廣告
+  if(_isPremium) return false;           // VIP1 用戶免廣告
   if(_adUnlocked && _adStock === currentStock) return false; // 已解鎖同一檔
   return true;
 }
