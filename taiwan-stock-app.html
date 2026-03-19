@@ -217,7 +217,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.954</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.956</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -318,7 +318,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.954</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.956</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -1585,6 +1585,7 @@ function goStock(code) {
   const s = stockDB[code];
   currentStock = code;
   resetAdLock();
+  resetChartSync();
   klineData = null;
   currentPeriod = '日';
 
@@ -1670,6 +1671,41 @@ function setPeriod(el) {
   el.classList.add('active');
   currentPeriod = el.textContent.trim();
   loadKlineAndDraw();
+}
+
+// ===== 五圖同步狀態 =====
+window._chartSync = {
+  visibleCount: 0,   // 0 = 尚未初始化，由第一個圖設定
+  offsetIdx: -1,     // -1 = 尚未初始化
+  crossDate: ''      // 目前十字線對應的日期
+};
+
+const SYNC_IDS = ['kline-plotly', 'vol-plotly', 'foreign-plotly', 'trust-plotly', 'main-plotly'];
+
+// 同步縮放/平移：通知其他圖重新 render
+function syncAllCharts(sourceId) {
+  SYNC_IDS.forEach(id => {
+    if(id === sourceId) return;
+    const el = document.getElementById(id);
+    if(el && el._canvasRender) el._canvasRender();
+  });
+}
+
+// 同步十字線：通知其他圖顯示對應日期
+function syncAllChartsCross(sourceId) {
+  const date = window._chartSync.crossDate;
+  SYNC_IDS.forEach(id => {
+    if(id === sourceId) return;
+    const el = document.getElementById(id);
+    if(el && el._canvasCrossSync) el._canvasCrossSync(date);
+  });
+}
+
+// 換股票時重置共用狀態
+function resetChartSync() {
+  window._chartSync.visibleCount = 0;
+  window._chartSync.offsetIdx = -1;
+  window._chartSync.crossDate = '';
 }
 
 function drawAllCharts() { drawKline(klineData); drawVolume(klineData); drawForeign(null); drawTrust(null); drawMain(null, null); }
@@ -1805,7 +1841,9 @@ function drawKline(rows) {
     const plotW = w - PL - PR;
     const plotH = h - PT - PB;
 
-    // 可見資料
+    // 可見資料（從共用狀態讀取）
+    const visibleCount = _sync.visibleCount;
+    const offsetIdx = _sync.offsetIdx;
     const start = Math.max(0, offsetIdx);
     const end   = Math.min(rows.length, start + visibleCount);
     const visible = rows.slice(start, end);
@@ -1961,106 +1999,90 @@ function drawKline(rows) {
     });
   }
 
-  // ===== 手勢處理 =====
+  // ===== 手勢處理（同步版）=====
   let touchState = null;
+
+  function showKlineCross(i) {
+    const vc = _sync.visibleCount;
+    const oi = _sync.offsetIdx;
+    const start = Math.max(0, oi);
+    const n = Math.min(rows.length, start + vc) - start;
+    if(i < 0 || i >= n) return;
+    crossIdx = i;
+    const b = rows[start + i];
+    const isUp = b.close >= b.open;
+    tooltip.style.display = 'block';
+    const rect = canvas.getBoundingClientRect();
+    const stepW = (rect.width - PL - PR) / n;
+    tooltip.style.left = Math.min(PL + (i + 0.5) * stepW + 12, rect.width - 160) + 'px';
+    tooltip.style.top  = '8px';
+    tooltip.innerHTML  = `<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;
+    // 同步日期到所有圖
+    _sync.crossDate = b.date;
+    syncAllChartsCross('kline-plotly');
+    render();
+  }
 
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     if(e.touches.length === 1) {
-      // 計算點擊的 K棒 index，立即顯示十字線
       const rect = canvas.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
       const plotW = rect.width - PL - PR;
-      const start = Math.max(0, offsetIdx);
-      const end   = Math.min(rows.length, start + visibleCount);
-      const n     = end - start;
-      const stepW = plotW / n;
-      const i = Math.floor((x - PL) / stepW);
-      if(i >= 0 && i < n) {
-        crossIdx = i;
-        const b = rows[start + i];
-        const isUp = b.close >= b.open;
-        tooltip.style.display = 'block';
-        tooltip.style.left = Math.min(x + 12, rect.width - 160) + 'px';
-        tooltip.style.top  = '8px';
-        tooltip.innerHTML  = `<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;
-        render();
-      }
-      touchState = {
-        type: 'single',
-        startX: e.touches[0].clientX,
-        startY: e.touches[0].clientY,
-        startOffset: offsetIdx,
-        startCount: visibleCount,
-        dirLocked: false,
-        dir: null
-      };
+      const vc = _sync.visibleCount;
+      const oi = _sync.offsetIdx;
+      const n = Math.min(rows.length, oi + vc) - Math.max(0, oi);
+      const i = Math.floor((x - PL) / (plotW / n));
+      if(i >= 0 && i < n) showKlineCross(i);
+      touchState = { type:'single', startX:e.touches[0].clientX, startY:e.touches[0].clientY,
+        startOffset:_sync.offsetIdx, startCount:_sync.visibleCount, dirLocked:false, dir:null };
     } else if(e.touches.length === 2) {
-      crossIdx = -1;
-      tooltip.style.display = 'none';
+      crossIdx = -1; tooltip.style.display = 'none';
+      _sync.crossDate = '';
       const dx = e.touches[1].clientX - e.touches[0].clientX;
-      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      touchState = {
-        type: 'pinch',
-        startDist: Math.abs(dx),
-        startCount: visibleCount,
-        startOffset: offsetIdx,
-        midX
-      };
+      touchState = { type:'pinch', startDist:Math.abs(dx),
+        startCount:_sync.visibleCount, startOffset:_sync.offsetIdx };
     }
   }, { passive: false });
 
   canvas.addEventListener('touchmove', e => {
     e.preventDefault();
     if(!touchState) return;
-
     if(touchState.type === 'single' && e.touches.length === 1) {
       const dx = e.touches[0].clientX - touchState.startX;
       const dy = e.touches[0].clientY - touchState.startY;
-
-      // 方向鎖定
       if(!touchState.dirLocked) {
         if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         touchState.dirLocked = true;
         touchState.dir = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'zoom';
-        // 開始移動時隱藏十字線
-        crossIdx = -1;
-        tooltip.style.display = 'none';
+        crossIdx = -1; tooltip.style.display = 'none';
+        _sync.crossDate = '';
       }
-
       const plotW = (container.clientWidth || 360) - PL - PR;
       const stepW = plotW / touchState.startCount;
-
       if(touchState.dir === 'pan') {
-        // 水平平移：每移動一個K棒寬度偏移1根
         const shift = -Math.round(dx / stepW);
-        let newOffset = touchState.startOffset + shift;
-        newOffset = Math.max(0, Math.min(rows.length - touchState.startCount, newOffset));
-        offsetIdx = newOffset;
+        _sync.offsetIdx = Math.max(0, Math.min(rows.length - touchState.startCount, touchState.startOffset + shift));
         crossIdx = -1;
-        render();
+        syncAllCharts('kline-plotly'); render();
       } else {
-        // 垂直縮放：向上放大（增加根數），向下縮小（減少根數）
         const scale = Math.pow(0.985, -dy);
-        let newCount = Math.round(touchState.startCount * scale);
-        newCount = Math.max(5, Math.min(rows.length, newCount));
-        // 保持畫面中心不動
-        const centerIdx = touchState.startOffset + touchState.startCount / 2;
-        offsetIdx = Math.round(Math.max(0, Math.min(rows.length - newCount, centerIdx - newCount / 2)));
-        visibleCount = newCount;
-        render();
+        let nc = Math.round(touchState.startCount * scale);
+        nc = Math.max(5, Math.min(rows.length, nc));
+        const center = touchState.startOffset + touchState.startCount / 2;
+        _sync.offsetIdx = Math.round(Math.max(0, Math.min(rows.length - nc, center - nc / 2)));
+        _sync.visibleCount = nc;
+        syncAllCharts('kline-plotly'); render();
       }
     } else if(touchState.type === 'pinch' && e.touches.length === 2) {
-      // 雙指縮放
-      const dx = e.touches[1].clientX - e.touches[0].clientX;
-      const dist = Math.abs(dx);
+      const dist = Math.abs(e.touches[1].clientX - e.touches[0].clientX);
       const scale = touchState.startDist / dist;
-      let newCount = Math.round(touchState.startCount * scale);
-      newCount = Math.max(5, Math.min(rows.length, newCount));
-      const centerIdx = touchState.startOffset + touchState.startCount / 2;
-      offsetIdx = Math.round(Math.max(0, Math.min(rows.length - newCount, centerIdx - newCount / 2)));
-      visibleCount = newCount;
-      render();
+      let nc = Math.round(touchState.startCount * scale);
+      nc = Math.max(5, Math.min(rows.length, nc));
+      const center = touchState.startOffset + touchState.startCount / 2;
+      _sync.offsetIdx = Math.round(Math.max(0, Math.min(rows.length - nc, center - nc / 2)));
+      _sync.visibleCount = nc;
+      syncAllCharts('kline-plotly'); render();
     }
   }, { passive: false });
 
@@ -2068,55 +2090,50 @@ function drawKline(rows) {
     if(e.touches.length === 0) touchState = null;
   }, { passive: true });
 
-  // 桌機：滑鼠 hover 十字線
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const plotW = rect.width - PL - PR;
-    const start = Math.max(0, offsetIdx);
-    const end = Math.min(rows.length, start + visibleCount);
-    const n = end - start;
-    const stepW = plotW / n;
+    const vc = _sync.visibleCount;
+    const oi = _sync.offsetIdx;
+    const n = Math.min(rows.length, oi + vc) - Math.max(0, oi);
+    const stepW = (rect.width - PL - PR) / n;
     const i = Math.floor((x - PL) / stepW);
-    if(i >= 0 && i < n) {
-      crossIdx = i;
-      const b = rows[start + i];
-      // 更新 tooltip
-      const isUp = b.close >= b.open;
-      tooltip.style.display = 'block';
-      tooltip.style.left = Math.min(e.clientX - rect.left + 12, rect.width - 160) + 'px';
-      tooltip.style.top  = '8px';
-      tooltip.innerHTML  = `<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;
-      render();
-    }
+    if(i >= 0 && i < n) showKlineCross(i);
   });
   canvas.addEventListener('mouseleave', () => {
-    crossIdx = -1;
-    tooltip.style.display = 'none';
+    crossIdx = -1; tooltip.style.display = 'none';
+    _sync.crossDate = '';
+    syncAllChartsCross('kline-plotly');
     render();
   });
 
-  // 桌機：滾輪縮放
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 1.15 : 0.87;
-    let newCount = Math.round(visibleCount * delta);
-    newCount = Math.max(5, Math.min(rows.length, newCount));
-    const centerIdx = offsetIdx + visibleCount / 2;
-    offsetIdx = Math.round(Math.max(0, Math.min(rows.length - newCount, centerIdx - newCount / 2)));
-    visibleCount = newCount;
-    render();
+    let nc = Math.round(_sync.visibleCount * delta);
+    nc = Math.max(5, Math.min(rows.length, nc));
+    const center = _sync.offsetIdx + _sync.visibleCount / 2;
+    _sync.offsetIdx = Math.round(Math.max(0, Math.min(rows.length - nc, center - nc / 2)));
+    _sync.visibleCount = nc;
+    syncAllCharts('kline-plotly'); render();
   }, { passive: false });
 
-  // ResizeObserver 自動重繪
   if(window.ResizeObserver) {
-    const ro = new ResizeObserver(() => render());
-    ro.observe(container);
+    new ResizeObserver(() => render()).observe(container);
   }
 
   render();
-  // 儲存 render 供外部呼叫（如期間切換）
   container._canvasRender = render;
+  container._canvasCrossSync = function(date) {
+    // 從外部同步十字線日期
+    const oi = _sync.offsetIdx;
+    const vc = _sync.visibleCount;
+    const start = Math.max(0, oi);
+    const end = Math.min(rows.length, start + vc);
+    const idx = rows.slice(start, end).findIndex(r => r.date === date);
+    if(idx >= 0) { crossIdx = idx; } else { crossIdx = -1; tooltip.style.display = 'none'; }
+    render();
+  };
 }
 
 function drawBarChart(svgId, data, colors, isNeg, dateLabels) {
@@ -2178,9 +2195,11 @@ function drawCanvasBar(containerId, opts) {
   const vals  = opts.vals;
   const n     = dates.length;
 
-  let visibleCount = Math.min(opts.visibleCount || 30, n);
-  let offsetIdx    = Math.max(0, n - visibleCount);
-  let crossIdx     = -1;
+  // 共用狀態
+  const _sync = window._chartSync;
+  if(_sync.visibleCount === 0) _sync.visibleCount = Math.min(opts.visibleCount || 30, n);
+  if(_sync.offsetIdx < 0) _sync.offsetIdx = Math.max(0, n - _sync.visibleCount);
+  let crossIdx = -1;
 
   function getSize() {
     const dpr = window.devicePixelRatio || 1;
@@ -2203,6 +2222,9 @@ function drawCanvasBar(containerId, opts) {
     const plotW = w - PL - PR;
     const plotH = h - PT - PB;
 
+    // 從共用狀態讀取
+    const visibleCount = _sync.visibleCount;
+    const offsetIdx = _sync.offsetIdx;
     const start = Math.max(0, offsetIdx);
     const end   = Math.min(n, start + visibleCount);
     const vDates = dates.slice(start, end);
@@ -2333,12 +2355,14 @@ function drawCanvasBar(containerId, opts) {
     }
   }
 
-  // ===== 手勢 =====
+  // ===== 手勢（同步版）=====
   let touchState = null;
 
   function showTooltip(i, clientX, rectLeft, rectWidth) {
-    const start = Math.max(0, offsetIdx);
-    const end   = Math.min(n, start + visibleCount);
+    const oi = _sync.offsetIdx;
+    const vc = _sync.visibleCount;
+    const start = Math.max(0, oi);
+    const end   = Math.min(n, start + vc);
     const vDates = dates.slice(start, end);
     const vVals  = vals.slice(start, end);
     if(i < 0 || i >= vDates.length) return;
@@ -2354,6 +2378,9 @@ function drawCanvasBar(containerId, opts) {
     const tx = Math.min(clientX - rectLeft + 10, rectWidth - 140);
     tooltip.style.left = tx + 'px';
     tooltip.style.top  = '4px';
+    // 同步日期
+    _sync.crossDate = vDates[i];
+    syncAllChartsCross(containerId);
     render();
   }
 
@@ -2363,15 +2390,16 @@ function drawCanvasBar(containerId, opts) {
       const rect = canvas.getBoundingClientRect();
       const x = e.touches[0].clientX - rect.left;
       const plotW = rect.width - PL - PR;
-      const cnt2 = Math.min(n, offsetIdx + visibleCount) - Math.max(0, offsetIdx);
+      const cnt2 = Math.min(n, _sync.offsetIdx + _sync.visibleCount) - Math.max(0, _sync.offsetIdx);
       const i = Math.floor((x - PL) / (plotW / cnt2));
       if(i >= 0 && i < cnt2) showTooltip(i, e.touches[0].clientX, rect.left, rect.width);
-      touchState = { type:'single', startX: e.touches[0].clientX, startY: e.touches[0].clientY,
-        startOffset: offsetIdx, startCount: visibleCount, dirLocked: false, dir: null };
+      touchState = { type:'single', startX:e.touches[0].clientX, startY:e.touches[0].clientY,
+        startOffset:_sync.offsetIdx, startCount:_sync.visibleCount, dirLocked:false, dir:null };
     } else if(e.touches.length === 2) {
       crossIdx = -1; tooltip.style.display = 'none';
+      _sync.crossDate = '';
       const dx = e.touches[1].clientX - e.touches[0].clientX;
-      touchState = { type:'pinch', startDist: Math.abs(dx), startCount: visibleCount, startOffset: offsetIdx };
+      touchState = { type:'pinch', startDist:Math.abs(dx), startCount:_sync.visibleCount, startOffset:_sync.offsetIdx };
     }
   }, { passive: false });
 
@@ -2386,21 +2414,23 @@ function drawCanvasBar(containerId, opts) {
         touchState.dirLocked = true;
         touchState.dir = Math.abs(dx) > Math.abs(dy) ? 'pan' : 'zoom';
         crossIdx = -1; tooltip.style.display = 'none';
+        _sync.crossDate = '';
       }
       const plotW2 = (container.clientWidth || 360) - PL - PR;
       const stepW2 = plotW2 / touchState.startCount;
       if(touchState.dir === 'pan') {
         const shift = -Math.round(dx / stepW2);
-        offsetIdx = Math.max(0, Math.min(n - touchState.startCount, touchState.startOffset + shift));
-        render();
+        _sync.offsetIdx = Math.max(0, Math.min(n - touchState.startCount, touchState.startOffset + shift));
+        crossIdx = -1;
+        syncAllCharts(containerId); render();
       } else {
         const scale = Math.pow(0.985, -dy);
         let nc = Math.round(touchState.startCount * scale);
         nc = Math.max(5, Math.min(n, nc));
         const center = touchState.startOffset + touchState.startCount / 2;
-        offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
-        visibleCount = nc;
-        render();
+        _sync.offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+        _sync.visibleCount = nc;
+        syncAllCharts(containerId); render();
       }
     } else if(touchState.type === 'pinch' && e.touches.length === 2) {
       const dist = Math.abs(e.touches[1].clientX - e.touches[0].clientX);
@@ -2408,9 +2438,9 @@ function drawCanvasBar(containerId, opts) {
       let nc = Math.round(touchState.startCount * scale);
       nc = Math.max(5, Math.min(n, nc));
       const center = touchState.startOffset + touchState.startCount / 2;
-      offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
-      visibleCount = nc;
-      render();
+      _sync.offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+      _sync.visibleCount = nc;
+      syncAllCharts(containerId); render();
     }
   }, { passive: false });
 
@@ -2421,29 +2451,56 @@ function drawCanvasBar(containerId, opts) {
   canvas.addEventListener('mousemove', e => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const plotW2 = rect.width - PL - PR;
-    const cnt2 = Math.min(n, offsetIdx + visibleCount) - Math.max(0, offsetIdx);
-    const i = Math.floor((x - PL) / (plotW2 / cnt2));
+    const cnt2 = Math.min(n, _sync.offsetIdx + _sync.visibleCount) - Math.max(0, _sync.offsetIdx);
+    const i = Math.floor((x - PL) / ((rect.width - PL - PR) / cnt2));
     if(i >= 0 && i < cnt2) showTooltip(i, e.clientX, rect.left, rect.width);
   });
   canvas.addEventListener('mouseleave', () => {
-    crossIdx = -1; tooltip.style.display = 'none'; render();
+    crossIdx = -1; tooltip.style.display = 'none';
+    _sync.crossDate = '';
+    syncAllChartsCross(containerId);
+    render();
   });
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 1.15 : 0.87;
-    let nc = Math.round(visibleCount * delta);
+    let nc = Math.round(_sync.visibleCount * delta);
     nc = Math.max(5, Math.min(n, nc));
-    const center = offsetIdx + visibleCount / 2;
-    offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
-    visibleCount = nc;
-    render();
+    const center = _sync.offsetIdx + _sync.visibleCount / 2;
+    _sync.offsetIdx = Math.round(Math.max(0, Math.min(n - nc, center - nc / 2)));
+    _sync.visibleCount = nc;
+    syncAllCharts(containerId); render();
   }, { passive: false });
 
   if(window.ResizeObserver) {
     new ResizeObserver(() => render()).observe(container);
   }
   render();
+  // 外部同步十字線
+  container._canvasCrossSync = function(date) {
+    const oi = _sync.offsetIdx;
+    const vc = _sync.visibleCount;
+    const start = Math.max(0, oi);
+    const end = Math.min(n, start + vc);
+    const vDates = dates.slice(start, end);
+    const idx = vDates.indexOf(date);
+    if(idx >= 0) {
+      crossIdx = idx;
+      const v = vals[start + idx];
+      let html = `<b style="color:#58a6ff">${date}</b><br>${opts.label||''}：<b>${fmtNum(Math.round(v))}張</b>`;
+      if(opts.line2 && opts.line2.vals) {
+        const idx2 = opts.line2.dates.indexOf(date);
+        if(idx2 >= 0) html += `<br>${opts.line2.label||'融資'}：${fmtNum(Math.round(opts.line2.vals[idx2]))}張`;
+      }
+      tooltip.innerHTML = html;
+      tooltip.style.display = 'block';
+      tooltip.style.left = '8px';
+      tooltip.style.top  = '4px';
+    } else {
+      crossIdx = -1; tooltip.style.display = 'none';
+    }
+    render();
+  };
 }
 
 // ===== 成交量 =====
@@ -2523,7 +2580,7 @@ async function fetchInstitutional(code) {
   {
     try {
       const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 380);
+      const start = new Date(); start.setDate(start.getDate() - 1825);
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockInstitutionalInvestorsBuySell', {
         data_id: code, start_date: fmt(start), end_date: fmt(end)
@@ -2577,7 +2634,7 @@ async function fetchMargin(code) {
   {
     try {
       const end = new Date();
-      const start = new Date(); start.setDate(start.getDate() - 380);
+      const start = new Date(); start.setDate(start.getDate() - 1825);
       const fmt = d => d.toISOString().slice(0,10);
       const rows = await fetchFinMind('TaiwanStockMarginPurchaseShortSale', {
         data_id: code, start_date: fmt(start), end_date: fmt(end)
