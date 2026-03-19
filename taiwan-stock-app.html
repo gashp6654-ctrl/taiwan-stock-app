@@ -9,7 +9,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, doc, deleteDoc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAeg6OgsAZ9U0AgOlGoFDcj4FAanfXXA2Q",
@@ -33,6 +33,13 @@
     window._orderBy = orderBy;
     window._onSnapshot = onSnapshot;
     window._serverTimestamp = serverTimestamp;
+    window._doc = doc;
+    window._deleteDoc = deleteDoc;
+    window._getDoc = getDoc;
+    window._updateDoc = updateDoc;
+    window._arrayUnion = arrayUnion;
+    window._arrayRemove = arrayRemove;
+    window._increment = increment;
 
     // Google 登入
     window.googleLogin = async function() {
@@ -208,7 +215,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.940</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.941</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -309,7 +316,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.940</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.941</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -331,9 +338,7 @@
         <div class="section-title" style="margin:0;">📌 我的首頁自選</div>
         <div onclick="openHomeWatchEditor()" style="font-size:11px;font-weight:700;color:var(--accent);cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:4px 12px;">＋ 編輯</div>
       </div>
-      <div class="hot-stocks" id="hot-stocks-grid">
-        <div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>
-      </div>
+      <div class="hot-stocks" id="hot-stocks-grid"></div>
       <!-- 首頁自選編輯 Modal -->
       <div id="home-watch-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:9999;display:none;align-items:center;justify-content:center;">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;width:300px;max-height:80vh;overflow-y:auto;">
@@ -3370,12 +3375,11 @@ async function fsDeleteComment(docId) {
   if(!user) { alert('請先登入！'); return; }
   if(!confirm('確定要刪除這則貼文嗎？')) return;
   try {
-    const { doc, deleteDoc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const ref = doc(window._db, 'comments', docId);
-    const snap = await getDoc(ref);
+    const ref = window._doc(window._db, 'comments', docId);
+    const snap = await window._getDoc(ref);
     if(!snap.exists()) return;
     if(snap.data().user !== user) { alert('只能刪除自己的貼文！'); return; }
-    await deleteDoc(ref);
+    await window._deleteDoc(ref);
   } catch(e) {
     console.error(e);
     showApiError('刪除失敗，請稍後再試');
@@ -3389,13 +3393,12 @@ async function fsDeleteReply(docId, replyId) {
   if(!user) { alert('請先登入！'); return; }
   if(!confirm('確定要刪除這則回覆嗎？')) return;
   try {
-    const { doc, getDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const ref = doc(window._db, 'comments', docId);
-    const snap = await getDoc(ref);
+    const ref = window._doc(window._db, 'comments', docId);
+    const snap = await window._getDoc(ref);
     if(!snap.exists()) return;
     const data = snap.data();
     const newReplies = (data.replies || []).filter(r => !(r.id === replyId && r.user === user));
-    await updateDoc(ref, { replies: newReplies });
+    await window._updateDoc(ref, { replies: newReplies });
   } catch(e) {
     console.error(e);
     showApiError('刪除失敗，請稍後再試');
@@ -3407,15 +3410,14 @@ async function fsToggleLike(docId) {
   if(!window._db) return;
   const user = window._currentUser || '';
   if(!user) { alert('請先登入！'); return; }
-  const { doc, getDoc, updateDoc, arrayUnion, arrayRemove, increment } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const ref = doc(window._db, 'comments', docId);
-  const snap = await getDoc(ref);
+  const ref = window._doc(window._db, 'comments', docId);
+  const snap = await window._getDoc(ref);
   if(!snap.exists()) return;
   const data = snap.data();
   const liked = data.likedBy && data.likedBy.includes(user);
-  await updateDoc(ref, {
-    likes: increment(liked ? -1 : 1),
-    likedBy: liked ? arrayRemove(user) : arrayUnion(user)
+  await window._updateDoc(ref, {
+    likes: window._increment(liked ? -1 : 1),
+    likedBy: liked ? window._arrayRemove(user) : window._arrayUnion(user)
   });
 }
 
@@ -3439,10 +3441,9 @@ async function fsPostReply(docId) {
   const user = window._currentUser || '匿名';
   const now = new Date();
   const timeStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  const { doc, updateDoc, arrayUnion } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-  const ref = doc(window._db, 'comments', docId);
-  await updateDoc(ref, {
-    replies: arrayUnion({ user, text, time: timeStr, id: Date.now() })
+  const ref = window._doc(window._db, 'comments', docId);
+  await window._updateDoc(ref, {
+    replies: window._arrayUnion({ user, text, time: timeStr, id: Date.now() })
   });
   if(input) input.value = '';
   document.getElementById('fs-reply-box-' + docId).style.display = 'none';
