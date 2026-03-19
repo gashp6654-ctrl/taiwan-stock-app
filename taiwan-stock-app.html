@@ -217,7 +217,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.945</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台 <span style="font-size:10px;opacity:0.5;">v1.947</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -318,7 +318,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.945</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.947</span></div>
           <div class="app-subtitle">台股智慧診斷平台</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -916,37 +916,6 @@
   <!-- 浮動約定圖示 -->
   <div id="cert-float-btn" onclick="showCertModal()" style="display:none;position:absolute;bottom:135px;right:12px;z-index:100;width:38px;height:38px;background:linear-gradient(135deg,#f0b429,#d29922);border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(240,180,41,0.5);font-size:18px;">📜</div>
 
-  <!-- 浮動設定按鈕 -->
-  <div id="setting-float-btn" onclick="showKeyModal()" style="display:none;position:absolute;bottom:182px;right:12px;z-index:100;width:38px;height:38px;background:linear-gradient(135deg,#30363d,#21262d);border:1.5px solid #58a6ff;border-radius:50%;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 10px rgba(88,166,255,0.3);font-size:16px;">🔑</div>
-
-  <!-- 換Key Modal -->
-  <div id="key-modal" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:250;align-items:center;justify-content:center;padding:24px;">
-    <div style="background:var(--bg);border:1.5px solid #58a6ff;border-radius:18px;padding:22px;width:100%;">
-      <div style="font-size:16px;font-weight:900;color:#58a6ff;margin-bottom:16px;">⚙️ Gemini API Key 設定</div>
-
-      <!-- 已有Key的狀態 -->
-      <div id="key-modal-has-key" style="display:none;">
-        <div style="background:rgba(63,185,80,0.1);border:1.5px solid #3fb950;border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;">
-          <span style="font-size:18px;">✅</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:#3fb950;">Gemini AI 已啟用</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px;">AI診斷功能已開啟</div>
-          </div>
-        </div>
-        <button onclick="startChangeKey()" style="width:100%;background:transparent;color:#f85149;border:1.5px solid #f85149;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;">🔄 更換 API Key</button>
-      </div>
-
-      <!-- 未有Key / 換Key輸入框 -->
-      <div id="key-modal-input-area">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;">請輸入您的 Gemini API Key，儲存後即可使用AI診斷功能。</div>
-        <input id="modal-key-input" type="password" placeholder="請輸入 Gemini API Key" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:12px;">
-        <button onclick="saveKeyFromModal()" style="width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">💾 儲存 Key</button>
-      </div>
-
-
-      <button onclick="closeKeyModal()" style="width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:12px;padding:10px;font-size:13px;cursor:pointer;font-family:inherit;margin-top:10px;">關閉</button>
-    </div>
-  </div>
 
   <!-- 約定證明 Modal -->
   <div id="cert-modal" style="display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:250;align-items:center;justify-content:center;padding:20px;">
@@ -1141,8 +1110,6 @@ function enterApp() {
   // 顯示浮動按鈕
   const fb = document.getElementById('cert-float-btn');
   if(fb) fb.style.display = 'flex';
-  const sb = document.getElementById('setting-float-btn');
-  if(sb) sb.style.display = 'flex';
 
   // VIP1 檢查（登入後非同步執行）
   const email = window._userEmail || '';
@@ -1171,48 +1138,6 @@ function showCertModal() {
     <div style="border-top:1px dashed var(--border);margin-top:14px;padding-top:10px;text-align:center;font-size:11px;color:var(--muted);">本人已完整閱讀上述條款並回答確認題目，本約定於登入時自動生效</div>
   `;
   document.getElementById('cert-modal').style.display = 'flex';
-}
-
-// ===== 換Key 浮動面板 =====
-function showKeyModal() {
-  const modal = document.getElementById('key-modal');
-  const hasKeyArea = document.getElementById('key-modal-has-key');
-  const inputArea = document.getElementById('key-modal-input-area');
-  const inp = document.getElementById('modal-key-input');
-  if(geminiApiKey) {
-    hasKeyArea.style.display = 'block';
-    inputArea.style.display = 'none';
-  } else {
-    hasKeyArea.style.display = 'none';
-    inputArea.style.display = 'block';
-  }
-  if(inp) inp.value = '';
-  modal.style.display = 'flex';
-}
-function closeKeyModal() {
-  document.getElementById('key-modal').style.display = 'none';
-}
-function startChangeKey() {
-  document.getElementById('key-modal-has-key').style.display = 'none';
-  document.getElementById('key-modal-input-area').style.display = 'block';
-  document.getElementById('modal-key-input').value = '';
-  document.getElementById('modal-key-input').focus();
-}
-function saveKeyFromModal() {
-  const inp = document.getElementById('modal-key-input');
-  const key = inp ? inp.value.trim() : '';
-  if(!key) { alert('請輸入 API Key'); return; }
-  geminiApiKey = key;
-  localStorage.setItem('geminiApiKey', key);
-  // 同步隱藏各頁輸入區、顯示saved-bar
-  ['a','b','c','d','my'].forEach(p => {
-    const sec = document.getElementById(p + '-apikey-section');
-    const bar = document.getElementById(p + '-apikey-saved-bar');
-    if(sec) sec.style.display = 'none';
-    if(bar) bar.style.display = 'flex';
-  });
-  closeKeyModal();
-  alert('✅ API Key 已儲存！AI診斷功能已啟用。');
 }
 
 // Enter鍵登入
@@ -1732,14 +1657,6 @@ function goStock(code) {
   // 操作建議頁
   setEl('my-pending','display','flex'); setEl('my-result','display','none');
   setEl('my-thinking','html','');
-
-  // 若無 Gemini Key，重新顯示輸入框
-  if(!geminiApiKey) {
-    ['a','b','c','d','my'].forEach(p => {
-      const sec = document.getElementById(p+'-apikey-section');
-      if(sec) sec.style.display = 'block';
-    });
-  }
 
   showScreen('detail');
 }
@@ -2770,8 +2687,8 @@ function drawQuarterlyChart(data) {
 
 
 // ===== K線診斷 API =====
-let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
 // FinMind token 已移至 Cloudflare Worker 後端
+// Gemini Key 已移至 Cloudflare Worker 後端
 
 // FinMind REST API 通用函式
 async function fetchFinMind(dataset, params) {
@@ -2784,40 +2701,6 @@ async function fetchFinMind(dataset, params) {
     if(data.status === 200 && data.data?.length > 0) return data.data;
     return null;
   } catch(e) { return null; }
-}
-
-// 通用：任一頁都可以儲存Key，儲存後隱藏該頁輸入區塊
-function saveApiKeyFrom(pageId) {
-  const input = document.getElementById(pageId + '-apikey-input');
-  const key = input ? input.value.trim() : '';
-  if(!key) { alert('請輸入 API Key'); return; }
-  geminiApiKey = key;
-  localStorage.setItem('geminiApiKey', key);
-  ['a','b','c','d','my'].forEach(p => {
-    const sec = document.getElementById(p + '-apikey-section');
-    const bar = document.getElementById(p + '-apikey-saved-bar');
-    if(sec) sec.style.display = 'none';
-    if(bar) bar.style.display = 'flex';
-  });
-  alert('✅ API Key 已儲存！\n五頁診斷功能已全部啟用，現在可以開始AI分析。');
-}
-
-// 舊版相容
-function saveApiKey() { saveApiKeyFrom('a'); }
-
-// 清除 API Key（換Key用）
-function clearApiKey() {
-  if(!confirm('確定要換 Key 嗎？\n清除後需重新輸入才能使用AI分析功能。')) return;
-  geminiApiKey = '';
-  localStorage.removeItem('geminiApiKey');
-  ['a','b','c','d','my'].forEach(p => {
-    const inp = document.getElementById(p + '-apikey-input');
-    const sec = document.getElementById(p + '-apikey-section');
-    const bar = document.getElementById(p + '-apikey-saved-bar');
-    if(inp) inp.value = '';
-    if(sec) sec.style.display = 'block';
-    if(bar) bar.style.display = 'none';
-  });
 }
 
 function updateAStockBadge() {
@@ -3015,14 +2898,6 @@ async function runAllDiagnosis() {
   showLoading();
 
   try {
-    if(!geminiApiKey || geminiApiKey === '••••••••••••••••') {
-      // 未輸入 API Key
-      hideLoading();
-      const errEl = document.getElementById('a-error');
-      if(errEl) { errEl.style.display='block'; errEl.textContent='⚠️ 請先輸入 Gemini API Key 才能使用 AI 分析功能。'; }
-      return;
-    }
-
     // ===== 整合近30日K線（含K線型態）=====
     let recentDataStr = '（K線資料載入中）';
     if(klineData && klineData.length >= 2) {
@@ -3573,21 +3448,8 @@ function cowTalk() { cowIdx=(cowIdx+1)%cowTexts.length; setEl('bubbleText','text
 
 drawAllCharts();
 if(document.getElementById('watchlistEl')) renderWatchlist();
-// 初始化：根據是否已有 API Key 決定顯示或隱藏輸入框
-(function initApiKeyUI() {
-  ['a','b','c','d','my'].forEach(p => {
-    const sec = document.getElementById(p + '-apikey-section');
-    const bar = document.getElementById(p + '-apikey-saved-bar');
-    if(!sec) return;
-    if(geminiApiKey) {
-      sec.style.display = 'none';
-      if(bar) bar.style.display = 'flex';
-    } else {
-      sec.style.display = 'block';
-      if(bar) bar.style.display = 'none';
-    }
-  });
-})();
+// localStorage 清理：移除舊版 geminiApiKey（已改由後端管理）
+localStorage.removeItem('geminiApiKey');
 </script>
 <script>
 // ===== AI 背景初始化 =====
