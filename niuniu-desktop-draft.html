@@ -171,7 +171,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.012</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.013</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -269,7 +269,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.012</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.013</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -301,7 +301,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.012</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.013</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -516,7 +516,7 @@ function goStock(code){if(!stockDB[code]){const found=_allStocks.find(s=>s.code=
 // ===== K線引擎 =====
 function setPeriod(el){document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));el.classList.add('active');currentPeriod=el.textContent.trim();loadKlineAndDraw();}
 const _SYNC_IDS=['kline-plotly','vol-plotly','foreign-plotly','trust-plotly','main-plotly'];
-function _syncViewTo(oi,vc,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncFrom)el._syncFrom(oi,vc);});}
+function _syncViewTo(startDate,endDate,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncDateRange)el._syncDateRange(startDate,endDate);});}
 function _syncCrossTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncFrom)el._syncFrom(el._lastOffset||0,el._lastCount||30,date);});}
 function _syncPinnedTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncPinned)el._syncPinned(date);});}
 function drawAllCharts(){drawKline(klineData);drawVolume(klineData);drawForeign(null);drawTrust(null);drawMain(null,null);}
@@ -538,7 +538,7 @@ canvas.addEventListener('mousemove',e=>{
     const rect=canvas.getBoundingClientRect(),stepW2=(rect.width-PL-PR)/visibleCount;
     const dx=e.clientX-dragStartX,shift=-Math.round(dx/stepW2);
     if(Math.abs(dx)>4)isDragging=true;
-    if(isDragging){crossIdx=-1;tooltip.style.display='none';offsetIdx=Math.max(0,Math.min(rows.length-visibleCount,dragStartOffset+shift));render();_syncViewTo(offsetIdx,visibleCount,'kline-plotly');}
+    if(isDragging){crossIdx=-1;tooltip.style.display='none';offsetIdx=Math.max(0,Math.min(rows.length-visibleCount,dragStartOffset+shift));render();const s=Math.max(0,offsetIdx),e2=Math.min(rows.length,s+visibleCount);_syncViewTo(rows[s].date,rows[e2-1].date,'kline-plotly');}
     return;
   }
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,offsetIdx),n2=Math.min(rows.length,start+visibleCount)-start;
@@ -572,9 +572,10 @@ canvas.addEventListener('click',e=>{
   }
 });
 canvas.addEventListener('mouseleave',()=>{isDragging=false;crossIdx=-1;tooltip.style.display='none';render();_syncCrossTo('','kline-plotly');});
-canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc=Math.round(visibleCount*delta);nc=Math.max(5,Math.min(rows.length,nc));const center=offsetIdx+visibleCount/2;offsetIdx=Math.round(Math.max(0,Math.min(rows.length-nc,center-nc/2)));visibleCount=nc;render();_syncViewTo(offsetIdx,visibleCount,'kline-plotly');},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc=Math.round(visibleCount*delta);nc=Math.max(5,Math.min(rows.length,nc));const center=offsetIdx+visibleCount/2;offsetIdx=Math.round(Math.max(0,Math.min(rows.length-nc,center-nc/2)));visibleCount=nc;render();const s=Math.max(0,offsetIdx),e2=Math.min(rows.length,s+visibleCount);_syncViewTo(rows[s].date,rows[e2-1].date,'kline-plotly');},{passive:false});
 if(window.ResizeObserver){let _rod=null;new ResizeObserver(()=>{clearTimeout(_rod);_rod=setTimeout(()=>render(),150);}).observe(container);}
 render();container._canvasRender=render;
+container._syncDateRange=function(startDate,endDate){const si=rows.findIndex(r=>r.date>=startDate),ei=rows.findIndex(r=>r.date>endDate);const s=si>=0?si:0,e=ei>=0?ei:rows.length;offsetIdx=s;visibleCount=Math.max(5,e-s);container._lastOffset=offsetIdx;container._lastCount=visibleCount;render();};
 container._syncFrom=function(no,nc,cd){offsetIdx=no;visibleCount=nc;container._lastOffset=no;container._lastCount=nc;
   if(cd!==undefined){
     if(!cd){crossIdx=-1;tooltip.style.display='none';}
@@ -605,7 +606,7 @@ canvas.addEventListener('mousemove',e=>{
     const cnt=Math.min(n,oi+vc)-Math.max(0,oi),stepW2=(canvas.getBoundingClientRect().width-PL-PR)/cnt;
     const dx=e.clientX-dragX2,shift=-Math.round(dx/stepW2);
     if(Math.abs(dx)>4)isDrag2=true;
-    if(isDrag2){ci=-1;tooltip.style.display='none';oi=Math.max(0,Math.min(n-vc,dragOi2+shift));render();_syncViewTo(oi,vc,cid);}
+    if(isDrag2){ci=-1;tooltip.style.display='none';oi=Math.max(0,Math.min(n-vc,dragOi2+shift));render();const s=Math.max(0,oi),e2=Math.min(n,s+vc);_syncViewTo(dates[s],dates[e2-1],cid);}
     return;
   }
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,oi),cnt=Math.min(n,start+vc)-start;
@@ -640,9 +641,10 @@ canvas.addEventListener('click',e=>{
   }
 });
 canvas.addEventListener('mouseleave',()=>{isDrag2=false;ci=-1;tooltip.style.display='none';render();_syncCrossTo('',cid);});
-canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc2=Math.round(vc*delta);nc2=Math.max(5,Math.min(n,nc2));const center=oi+vc/2;oi=Math.round(Math.max(0,Math.min(n-nc2,center-nc2/2)));vc=nc2;render();_syncViewTo(oi,vc,cid);},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc2=Math.round(vc*delta);nc2=Math.max(5,Math.min(n,nc2));const center=oi+vc/2;oi=Math.round(Math.max(0,Math.min(n-nc2,center-nc2/2)));vc=nc2;render();const s=Math.max(0,oi),e2=Math.min(n,s+vc);_syncViewTo(dates[s],dates[e2-1],cid);},{passive:false});
 if(window.ResizeObserver){let _rod2=null;new ResizeObserver(()=>{clearTimeout(_rod2);_rod2=setTimeout(()=>render(),150);}).observe(container);}
 render();container._canvasRender=render;
+container._syncDateRange=function(startDate,endDate){const si=dates.findIndex(d=>d>=startDate),ei=dates.findIndex(d=>d>endDate);const s=si>=0?si:0,e=ei>=0?ei:n;oi=s;vc=Math.max(5,e-s);container._lastOffset=oi;container._lastCount=vc;render();};
 container._syncFrom=function(no,nc,cd){oi=no;vc=nc;container._lastOffset=no;container._lastCount=nc;
   if(cd!==undefined){
     if(!cd){ci=-1;tooltip.style.display='none';}
