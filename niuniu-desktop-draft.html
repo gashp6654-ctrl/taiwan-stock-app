@@ -171,7 +171,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.006</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.007</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -269,7 +269,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.006</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.007</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -301,7 +301,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.006</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.007</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -539,6 +539,7 @@ canvas.addEventListener('mousemove',e=>{
     if(isDragging){offsetIdx=Math.max(0,Math.min(rows.length-visibleCount,dragStartOffset+shift));crossIdx=-1;tooltip.style.display='none';render();_syncViewTo(offsetIdx,visibleCount,'kline-plotly');}
     return;
   }
+  if(pinnedDate)return;
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,plotW2=rect.width-PL-PR;
   const{start,n}=getVisible(),stepW2=plotW2/n,i=Math.floor((x-PL)/stepW2);
   if(i>=0&&i<n){showKlineAt(i,e.clientX-rect.left,rect.width);render();_syncCrossTo(rows[start+i].date,'kline-plotly');}
@@ -561,7 +562,7 @@ canvas.addEventListener('mouseleave',()=>{
   }
   crossIdx=-1;tooltip.style.display='none';render();_syncCrossTo('','kline-plotly');
 });
-canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc=Math.round(visibleCount*delta);nc=Math.max(5,Math.min(rows.length,nc));const center=offsetIdx+visibleCount/2;offsetIdx=Math.round(Math.max(0,Math.min(rows.length-nc,center-nc/2)));visibleCount=nc;render();},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc=Math.round(visibleCount*delta);nc=Math.max(5,Math.min(rows.length,nc));const center=offsetIdx+visibleCount/2;offsetIdx=Math.round(Math.max(0,Math.min(rows.length-nc,center-nc/2)));visibleCount=nc;render();_syncViewTo(offsetIdx,visibleCount,'kline-plotly');},{passive:false});
 if(window.ResizeObserver){let _rod=null;new ResizeObserver(()=>{clearTimeout(_rod);_rod=setTimeout(()=>render(),150);}).observe(container);}
 render();container._canvasRender=render;
 container._syncFrom=function(no,nc,cd){offsetIdx=no;visibleCount=nc;container._lastOffset=no;container._lastCount=nc;if(cd!==undefined){if(!cd){pinnedDate=null;crossIdx=-1;tooltip.style.display='none';}else{const{start,n}=getVisible(),vi=rows.slice(start,start+n).findIndex(r=>r.date===cd);if(vi>=0){pinnedDate=cd;crossIdx=vi;tooltip.innerHTML=klineTooltipHtml(rows[start+vi]);tooltip.style.display='block';tooltip.style.left='8px';tooltip.style.top='8px';}else{pinnedDate=null;crossIdx=-1;tooltip.style.display='none';}}}render();};}
@@ -580,6 +581,7 @@ canvas.addEventListener('mousemove',e=>{
     if(isDrag2){oi=Math.max(0,Math.min(n-vc,dragOi2+shift));ci=-1;tooltip.style.display='none';render();_syncViewTo(oi,vc,cid);}
     return;
   }
+  if(pinnedDate2)return;
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,{cnt}=getBarVisible(),i=Math.floor((x-PL)/((rect.width-PL-PR)/cnt));
   if(i>=0&&i<cnt){showBarAt(i,e.clientX-rect.left,rect.width);render();_syncCrossTo(dates[oi+i],cid);}
 });
@@ -600,7 +602,7 @@ canvas.addEventListener('mouseleave',()=>{
   }
   ci=-1;tooltip.style.display='none';render();_syncCrossTo('',cid);
 });
-canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc2=Math.round(vc*delta);nc2=Math.max(5,Math.min(n,nc2));const center=oi+vc/2;oi=Math.round(Math.max(0,Math.min(n-nc2,center-nc2/2)));vc=nc2;render();},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc2=Math.round(vc*delta);nc2=Math.max(5,Math.min(n,nc2));const center=oi+vc/2;oi=Math.round(Math.max(0,Math.min(n-nc2,center-nc2/2)));vc=nc2;render();_syncViewTo(oi,vc,cid);},{passive:false});
 if(window.ResizeObserver){let _rod2=null;new ResizeObserver(()=>{clearTimeout(_rod2);_rod2=setTimeout(()=>render(),150);}).observe(container);}
 render();container._canvasRender=render;
 container._syncFrom=function(no,nc,cd){oi=no;vc=nc;container._lastOffset=no;container._lastCount=nc;if(cd!==undefined){if(!cd){pinnedDate2=null;ci=-1;tooltip.style.display='none';}else{const{start,cnt}=getBarVisible(),vi=dates.slice(start,start+cnt).indexOf(cd);if(vi>=0){pinnedDate2=cd;ci=vi;tooltip.innerHTML=barTooltipHtml(dates[start+vi],vals[start+vi]);tooltip.style.display='block';tooltip.style.left='8px';tooltip.style.top='4px';}else{pinnedDate2=null;ci=-1;tooltip.style.display='none';}}}render();};}
