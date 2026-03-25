@@ -516,7 +516,7 @@ function goStock(code){if(!stockDB[code]){const found=_allStocks.find(s=>s.code=
 // ===== K線引擎 =====
 function setPeriod(el){document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('active'));el.classList.add('active');currentPeriod=el.textContent.trim();loadKlineAndDraw();}
 const _SYNC_IDS=['kline-plotly','vol-plotly','foreign-plotly','trust-plotly','main-plotly'];
-function _syncViewTo(centerDate,ratio,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncZoom)el._syncZoom(centerDate,ratio);});}
+function _syncViewTo(startDate,endDate,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncZoom)el._syncZoom(startDate,endDate);});}
 function _syncCrossTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncFrom)el._syncFrom(el._lastOffset||0,el._lastCount||30,date);});}
 function _syncPinnedTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncPinned)el._syncPinned(date);});}
 function drawAllCharts(){drawKline(klineData);drawVolume(klineData);drawForeign(null);drawTrust(null);drawMain(null,null);}
@@ -538,7 +538,7 @@ canvas.addEventListener('mousemove',e=>{
     const rect=canvas.getBoundingClientRect(),stepW2=(rect.width-PL-PR)/visibleCount;
     const dx=e.clientX-dragStartX,shift=-Math.round(dx/stepW2);
     if(Math.abs(dx)>4)isDragging=true;
-    if(isDragging){crossIdx=-1;tooltip.style.display='none';offsetIdx=Math.max(0,Math.min(rows.length-visibleCount,dragStartOffset+shift));render();}
+    if(isDragging){crossIdx=-1;tooltip.style.display='none';offsetIdx=Math.max(0,Math.min(rows.length-visibleCount,dragStartOffset+shift));render();const ds=Math.max(0,offsetIdx),de=Math.min(rows.length,ds+visibleCount);_syncViewTo(rows[ds].date,rows[de-1].date,'kline-plotly');}
     return;
   }
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,offsetIdx),n2=Math.min(rows.length,start+visibleCount)-start;
@@ -597,7 +597,7 @@ canvas.addEventListener('touchmove',e=>{
     render();
     const s=Math.max(0,offsetIdx),e2=Math.min(rows.length,s+visibleCount);
     const centerDate=rows[Math.round((s+e2)/2)].date;
-    _syncViewTo(centerDate,1,'kline-plotly');
+    const ps=Math.max(0,offsetIdx),pe=Math.min(rows.length,ps+visibleCount);_syncViewTo(rows[ps].date,rows[pe-1].date,'kline-plotly');
   } else {
     const ratio=Math.pow(0.99,-dy);
     const newVc=Math.round(touchState.startVc*ratio);
@@ -606,7 +606,7 @@ canvas.addEventListener('touchmove',e=>{
     offsetIdx=Math.round(Math.max(0,Math.min(rows.length-visibleCount,centerIdx-visibleCount/2)));
     render();
     const centerDate=rows[Math.max(0,Math.min(rows.length-1,centerIdx))].date;
-    _syncViewTo(centerDate,ratio,'kline-plotly');
+    const ts=Math.max(0,offsetIdx),te=Math.min(rows.length,ts+visibleCount);_syncViewTo(rows[ts].date,rows[te-1].date,'kline-plotly');
   }
 },{passive:false});
 canvas.addEventListener('touchend',()=>{touchState=null;},{passive:true});
@@ -668,7 +668,7 @@ canvas.addEventListener('mousemove',e=>{
     const cnt=Math.min(n,oi+vc)-Math.max(0,oi),stepW2=(canvas.getBoundingClientRect().width-PL-PR)/cnt;
     const dx=e.clientX-dragX2,shift=-Math.round(dx/stepW2);
     if(Math.abs(dx)>4)isDrag2=true;
-    if(isDrag2){ci=-1;tooltip.style.display='none';oi=Math.max(0,Math.min(n-vc,dragOi2+shift));render();}
+    if(isDrag2){ci=-1;tooltip.style.display='none';oi=Math.max(0,Math.min(n-vc,dragOi2+shift));render();const bds=Math.max(0,oi),bde=Math.min(n,bds+vc);_syncViewTo(dates[bds],dates[bde-1],cid);}
     return;
   }
   const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,oi),cnt=Math.min(n,start+vc)-start;
@@ -727,7 +727,7 @@ canvas.addEventListener('touchmove',e=>{
     oi=Math.max(0,Math.min(n-vc,touchState2.startOi+shift));
     render();
     const centerDate=dates[Math.round(Math.min(n-1,oi+vc/2))];
-    _syncViewTo(centerDate,1,cid);
+    const bps=Math.max(0,oi),bpe=Math.min(n,bps+vc);_syncViewTo(dates[bps],dates[bpe-1],cid);
   } else {
     const ratio=Math.pow(0.99,-dy);
     const newVc=Math.round(touchState2.startVc*ratio);
@@ -736,7 +736,7 @@ canvas.addEventListener('touchmove',e=>{
     oi=Math.round(Math.max(0,Math.min(n-vc,centerIdx-vc/2)));
     render();
     const centerDate=dates[Math.max(0,Math.min(n-1,centerIdx))];
-    _syncViewTo(centerDate,ratio,cid);
+    const bts=Math.max(0,oi),bte=Math.min(n,bts+vc);_syncViewTo(dates[bts],dates[bte-1],cid);
   }
 },{passive:false});
 canvas.addEventListener('touchend',()=>{touchState2=null;},{passive:true});
@@ -755,7 +755,7 @@ canvas.addEventListener('wheel',e=>{
   oi=Math.round(Math.max(0,Math.min(n-vc,centerIdx-newRatio*vc)));
   container._lastOffset=oi;container._lastCount=vc;
   render();
-  _syncViewTo(centerDate,ratio,cid);
+  const bws=Math.max(0,oi),bwe=Math.min(n,bws+vc);_syncViewTo(dates[bws],dates[bwe-1],cid);
 },{passive:false});
 if(window.ResizeObserver){let _rod2=null;new ResizeObserver(()=>{clearTimeout(_rod2);_rod2=setTimeout(()=>render(),150);}).observe(container);}
 render();container._canvasRender=render;
