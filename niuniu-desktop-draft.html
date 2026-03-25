@@ -171,7 +171,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.011</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.012</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -269,7 +269,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.011</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.012</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -301,7 +301,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.011</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.012</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -518,6 +518,7 @@ function setPeriod(el){document.querySelectorAll('.ptab').forEach(b=>b.classList
 const _SYNC_IDS=['kline-plotly','vol-plotly','foreign-plotly','trust-plotly','main-plotly'];
 function _syncViewTo(oi,vc,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncFrom)el._syncFrom(oi,vc);});}
 function _syncCrossTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncFrom)el._syncFrom(el._lastOffset||0,el._lastCount||30,date);});}
+function _syncPinnedTo(date,src){_SYNC_IDS.forEach(id=>{if(id===src)return;const el=document.getElementById(id);if(el&&el._syncPinned)el._syncPinned(date);});}
 function drawAllCharts(){drawKline(klineData);drawVolume(klineData);drawForeign(null);drawTrust(null);drawMain(null,null);}
 function periodToRange(p){if(p==='日')return{range:'3y',interval:'1d'};if(p==='週')return{range:'2y',interval:'1wk'};if(p==='月')return{range:'5y',interval:'1mo'};return{range:'1y',interval:'1d'};}
 async function fetchHistoryByPeriod(code,period){const{range,interval}=periodToRange(period);const suffix=STOCK_SUFFIX[code]||'TW';try{const res=await proxyFetch(`${YF_BASE}${code}.${suffix}?interval=${interval}&range=${range}`);const data=JSON.parse(res.text);const result=data.chart.result[0];const timestamps=result.timestamp,quotes=result.indicators.quote[0];return timestamps.map((t,i)=>{const d=new Date(t*1000);let label=interval==='1mo'?d.toISOString().slice(0,7):d.toISOString().slice(0,10);return{date:label,open:parseFloat(quotes.open[i]?.toFixed(2)),high:parseFloat(quotes.high[i]?.toFixed(2)),low:parseFloat(quotes.low[i]?.toFixed(2)),close:parseFloat(quotes.close[i]?.toFixed(2)),volume:quotes.volume[i]||0};}).filter(d=>d.close&&!isNaN(d.close));}catch(e){return null;}}
@@ -527,8 +528,10 @@ async function loadKlineAndDraw(){const elK=document.getElementById('kline-plotl
   Promise.all([fetchInstitutional(currentStock),fetchMargin(currentStock)]).then(([inst,margin])=>{_lastInstData=inst;_lastMarginData=margin;const trd=klineData?klineData.map(d=>d.date):null;drawForeign(inst,trd);drawTrust(inst,trd);drawMain(inst,margin,trd);});}
 function calcMA(closes,period){return closes.map((_,i)=>i<period-1?null:closes.slice(i-period+1,i+1).reduce((s,v)=>s+v,0)/period);}
 function drawKline(rows){const container=document.getElementById('kline-plotly');if(!container)return;if(!rows||rows.length===0){container.innerHTML=`<div style="color:#f85149;text-align:center;padding:60px 0;font-size:13px;">資料載入失敗</div>`;return;}container.innerHTML='';const canvas=document.createElement('canvas');canvas.style.width='100%';canvas.style.height='320px';canvas.style.display='block';canvas.style.cursor='crosshair';container.style.position='relative';container.appendChild(canvas);
-const tooltip=document.createElement('div');tooltip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #8b949e;border-radius:8px;padding:6px 10px;font-size:11px;color:#c9d1d9;display:none;z-index:10;white-space:nowrap;';container.appendChild(tooltip);const closes=rows.map(r=>r.close);const ma5=calcMA(closes,5),ma20=calcMA(closes,20),ma100=calcMA(closes,100);rows.forEach((r,i)=>{r.ma5=ma5[i];r.ma20=ma20[i];r.ma100=ma100[i];});const PL=42,PR=52,PT=24,PB=22;let visibleCount=Math.min(60,rows.length),offsetIdx=Math.max(0,rows.length-visibleCount),crossIdx=-1;function getSize(){const dpr=window.devicePixelRatio||1,w=container.clientWidth||800,h=320;canvas.width=w*dpr;canvas.height=h*dpr;return{w,h,dpr};}function render(){const{w,h,dpr}=getSize();const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const plotW=w-PL-PR,plotH=h-PT-PB,start=Math.max(0,offsetIdx),end=Math.min(rows.length,start+visibleCount);const visible=rows.slice(start,end),vma5=ma5.slice(start,end),vma20=ma20.slice(start,end),vma100=ma100.slice(start,end),n=visible.length;if(!n)return;let yMin=Infinity,yMax=-Infinity;visible.forEach(b=>{yMin=Math.min(yMin,b.low);yMax=Math.max(yMax,b.high);});[...vma5,...vma20,...vma100].forEach(v=>{if(v!==null){yMin=Math.min(yMin,v);yMax=Math.max(yMax,v);}});const yPad=(yMax-yMin)*0.08||1;yMin-=yPad;yMax+=yPad;function yPos(v){return PT+plotH*(1-(v-yMin)/(yMax-yMin));}const stepW=plotW/n,bodyW=Math.max(2,Math.min(16,stepW*0.65));ctx.fillStyle='#0d1117';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#21262d';ctx.lineWidth=0.5;for(let i=0;i<=4;i++){const yv=yMin+(yMax-yMin)*i/4,yp=yPos(yv);ctx.beginPath();ctx.moveTo(PL,yp);ctx.lineTo(w-PR,yp);ctx.stroke();}ctx.fillStyle='#8b949e';ctx.font='10px sans-serif';ctx.textAlign='left';for(let i=0;i<=4;i++){const yv=yMin+(yMax-yMin)*i/4;ctx.fillText(yv.toFixed(1),w-PR+4,yPos(yv)+3);}function drawMA(arr,col){ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();let st=false;arr.forEach((v,i)=>{if(v===null){st=false;return;}const x=PL+(i+0.5)*stepW,y=yPos(v);if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);});ctx.stroke();}drawMA(vma100,'#00CED1');drawMA(vma20,'#FF69B4');drawMA(vma5,'#FFD700');visible.forEach((b,i)=>{const x=PL+(i+0.5)*stepW,isUp=b.close>=b.open,color=isUp?'#ef5350':'#26a69a';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,yPos(b.high));ctx.lineTo(x,yPos(b.low));ctx.stroke();const oY=yPos(b.open),cY=yPos(b.close),bTop=Math.min(oY,cY),bH=Math.max(1,Math.abs(cY-oY));ctx.fillRect(x-bodyW/2,bTop,bodyW,bH);});if(crossIdx>=0&&crossIdx<n){const b=visible[crossIdx],x=PL+(crossIdx+0.5)*stepW;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,h-PB);ctx.stroke();const midY=(yPos(b.high)+yPos(b.low))/2;ctx.beginPath();ctx.moveTo(PL,midY);ctx.lineTo(w-PR,midY);ctx.stroke();ctx.setLineDash([]);}
-ctx.fillStyle='#8b949e';ctx.font='10px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(n/6));for(let i=0;i<n;i+=step){const b=visible[i],x=PL+(i+0.5)*stepW;ctx.fillText(b.date.slice(2,7).replace('-','/'),x,h-PB+12);}ctx.font='bold 10px sans-serif';ctx.textAlign='left';const mi=n-1;let lx2=PL;[{label:'MA5',color:'#FFD700',v:vma5[mi],prev:vma5[mi-1]},{label:'MA20',color:'#FF69B4',v:vma20[mi],prev:vma20[mi-1]},{label:'MA100',color:'#00CED1',v:vma100[mi],prev:vma100[mi-1]}].forEach(lg=>{const arrow=(lg.v!==null&&lg.prev!==null)?(lg.v>lg.prev?' ▲':lg.v<lg.prev?' ▼':''):'';const ac=arrow===' ▲'?'#ef5350':arrow===' ▼'?'#26a69a':lg.color;const vs=lg.v!==null?' '+lg.v.toFixed(1):'';ctx.fillStyle=lg.color;ctx.fillText(lg.label+vs,lx2,PT-4);const bw=ctx.measureText(lg.label+vs).width;if(arrow){ctx.fillStyle=ac;ctx.fillText(arrow,lx2+bw,PT-4);}lx2+=ctx.measureText(lg.label+vs+arrow).width+10;});}let isDragging=false,dragStartX=0,dragStartOffset=0;
+const tooltip=document.createElement('div');tooltip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #8b949e;border-radius:8px;padding:6px 10px;font-size:11px;color:#c9d1d9;display:none;z-index:11;white-space:nowrap;';container.appendChild(tooltip);
+const pinnedTip=document.createElement('div');pinnedTip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #f0b429;border-radius:8px;padding:6px 10px;font-size:11px;color:#f0b429;display:none;z-index:10;white-space:nowrap;left:8px;top:8px;';container.appendChild(pinnedTip);const closes=rows.map(r=>r.close);const ma5=calcMA(closes,5),ma20=calcMA(closes,20),ma100=calcMA(closes,100);rows.forEach((r,i)=>{r.ma5=ma5[i];r.ma20=ma20[i];r.ma100=ma100[i];});const PL=42,PR=52,PT=24,PB=22;let visibleCount=Math.min(60,rows.length),offsetIdx=Math.max(0,rows.length-visibleCount),crossIdx=-1;function getSize(){const dpr=window.devicePixelRatio||1,w=container.clientWidth||800,h=320;canvas.width=w*dpr;canvas.height=h*dpr;return{w,h,dpr};}function render(){const{w,h,dpr}=getSize();const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const plotW=w-PL-PR,plotH=h-PT-PB,start=Math.max(0,offsetIdx),end=Math.min(rows.length,start+visibleCount);const visible=rows.slice(start,end),vma5=ma5.slice(start,end),vma20=ma20.slice(start,end),vma100=ma100.slice(start,end),n=visible.length;if(!n)return;let yMin=Infinity,yMax=-Infinity;visible.forEach(b=>{yMin=Math.min(yMin,b.low);yMax=Math.max(yMax,b.high);});[...vma5,...vma20,...vma100].forEach(v=>{if(v!==null){yMin=Math.min(yMin,v);yMax=Math.max(yMax,v);}});const yPad=(yMax-yMin)*0.08||1;yMin-=yPad;yMax+=yPad;function yPos(v){return PT+plotH*(1-(v-yMin)/(yMax-yMin));}const stepW=plotW/n,bodyW=Math.max(2,Math.min(16,stepW*0.65));ctx.fillStyle='#0d1117';ctx.fillRect(0,0,w,h);ctx.strokeStyle='#21262d';ctx.lineWidth=0.5;for(let i=0;i<=4;i++){const yv=yMin+(yMax-yMin)*i/4,yp=yPos(yv);ctx.beginPath();ctx.moveTo(PL,yp);ctx.lineTo(w-PR,yp);ctx.stroke();}ctx.fillStyle='#8b949e';ctx.font='10px sans-serif';ctx.textAlign='left';for(let i=0;i<=4;i++){const yv=yMin+(yMax-yMin)*i/4;ctx.fillText(yv.toFixed(1),w-PR+4,yPos(yv)+3);}function drawMA(arr,col){ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.beginPath();let st=false;arr.forEach((v,i)=>{if(v===null){st=false;return;}const x=PL+(i+0.5)*stepW,y=yPos(v);if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);});ctx.stroke();}drawMA(vma100,'#00CED1');drawMA(vma20,'#FF69B4');drawMA(vma5,'#FFD700');visible.forEach((b,i)=>{const x=PL+(i+0.5)*stepW,isUp=b.close>=b.open,color=isUp?'#ef5350':'#26a69a';ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,yPos(b.high));ctx.lineTo(x,yPos(b.low));ctx.stroke();const oY=yPos(b.open),cY=yPos(b.close),bTop=Math.min(oY,cY),bH=Math.max(1,Math.abs(cY-oY));ctx.fillRect(x-bodyW/2,bTop,bodyW,bH);});if(pinnedDate){const pi=rows.slice(start,end).findIndex(r=>r.date===pinnedDate);if(pi>=0){const pb=visible[pi],px=PL+(pi+0.5)*stepW;ctx.strokeStyle='rgba(240,180,41,0.9)';ctx.lineWidth=1.2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(px,PT);ctx.lineTo(px,h-PB);ctx.stroke();const pmid=(yPos(pb.high)+yPos(pb.low))/2;ctx.beginPath();ctx.moveTo(PL,pmid);ctx.lineTo(w-PR,pmid);ctx.stroke();}}
+if(crossIdx>=0&&crossIdx<n){const b=visible[crossIdx],x=PL+(crossIdx+0.5)*stepW;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,h-PB);ctx.stroke();const midY=(yPos(b.high)+yPos(b.low))/2;ctx.beginPath();ctx.moveTo(PL,midY);ctx.lineTo(w-PR,midY);ctx.stroke();ctx.setLineDash([]);}
+ctx.fillStyle='#8b949e';ctx.font='10px sans-serif';ctx.textAlign='center';const step=Math.max(1,Math.floor(n/6));for(let i=0;i<n;i+=step){const b=visible[i],x=PL+(i+0.5)*stepW;ctx.fillText(b.date.slice(2,7).replace('-','/'),x,h-PB+12);}ctx.font='bold 10px sans-serif';ctx.textAlign='left';const mi=n-1;let lx2=PL;[{label:'MA5',color:'#FFD700',v:vma5[mi],prev:vma5[mi-1]},{label:'MA20',color:'#FF69B4',v:vma20[mi],prev:vma20[mi-1]},{label:'MA100',color:'#00CED1',v:vma100[mi],prev:vma100[mi-1]}].forEach(lg=>{const arrow=(lg.v!==null&&lg.prev!==null)?(lg.v>lg.prev?' ▲':lg.v<lg.prev?' ▼':''):'';const ac=arrow===' ▲'?'#ef5350':arrow===' ▼'?'#26a69a':lg.color;const vs=lg.v!==null?' '+lg.v.toFixed(1):'';ctx.fillStyle=lg.color;ctx.fillText(lg.label+vs,lx2,PT-4);const bw=ctx.measureText(lg.label+vs).width;if(arrow){ctx.fillStyle=ac;ctx.fillText(arrow,lx2+bw,PT-4);}lx2+=ctx.measureText(lg.label+vs+arrow).width+10;});}let isDragging=false,dragStartX=0,dragStartOffset=0,pinnedDate=null;
 canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;isDragging=false;dragStartX=e.clientX;dragStartOffset=offsetIdx;});
 canvas.addEventListener('mousemove',e=>{
   if(e.buttons===1){
@@ -551,6 +554,23 @@ canvas.addEventListener('mousemove',e=>{
     _syncCrossTo(b.date,'kline-plotly');
   }
 });
+canvas.addEventListener('click',e=>{
+  if(isDragging){isDragging=false;return;}
+  const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,offsetIdx),n2=Math.min(rows.length,start+visibleCount)-start;
+  const i=Math.floor((x-PL)/((rect.width-PL-PR)/n2));
+  if(i>=0&&i<n2){
+    const date=rows[start+i].date;
+    if(pinnedDate===date){
+      pinnedDate=null;pinnedTip.style.display='none';render();_syncPinnedTo('','kline-plotly');
+    } else {
+      pinnedDate=date;
+      const b=rows[start+i],isUp=b.close>=b.open;
+      pinnedTip.innerHTML=`<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;
+      pinnedTip.style.display='block';
+      render();_syncPinnedTo(date,'kline-plotly');
+    }
+  }
+});
 canvas.addEventListener('mouseleave',()=>{isDragging=false;crossIdx=-1;tooltip.style.display='none';render();_syncCrossTo('','kline-plotly');});
 canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc=Math.round(visibleCount*delta);nc=Math.max(5,Math.min(rows.length,nc));const center=offsetIdx+visibleCount/2;offsetIdx=Math.round(Math.max(0,Math.min(rows.length-nc,center-nc/2)));visibleCount=nc;render();_syncViewTo(offsetIdx,visibleCount,'kline-plotly');},{passive:false});
 if(window.ResizeObserver){let _rod=null;new ResizeObserver(()=>{clearTimeout(_rod);_rod=setTimeout(()=>render(),150);}).observe(container);}
@@ -563,14 +583,22 @@ container._syncFrom=function(no,nc,cd){offsetIdx=no;visibleCount=nc;container._l
       else{crossIdx=-1;tooltip.style.display='none';}
     }
   }
+  render();};
+container._syncPinned=function(date){
+  if(!date){pinnedDate=null;pinnedTip.style.display='none';}
+  else{pinnedDate=date;const start=Math.max(0,offsetIdx),n2=Math.min(rows.length,start+visibleCount)-start,vi=rows.slice(start,start+n2).findIndex(r=>r.date===date);
+    if(vi>=0){const b=rows[start+vi],isUp=b.close>=b.open;pinnedTip.innerHTML=`<b style="color:${isUp?'#ef5350':'#26a69a'}">${b.date}</b><br>開:${b.open} 高:${b.high}<br>低:${b.low} 收:<b>${b.close}</b>`;pinnedTip.style.display='block';}
+  }
   render();};}
 // ===== Canvas 長條圖（成交量/法人共用）=====
 function fmtNum(v){return Math.abs(v)>=10000?(v/10000).toFixed(1)+'萬':String(Math.round(v));}
 function drawCanvasBar(cid,opts){const container=document.getElementById(cid);if(!container)return;container.innerHTML='';const canvas=document.createElement('canvas');canvas.style.width='100%';canvas.style.height=(opts.height||120)+'px';canvas.style.display='block';canvas.style.cursor='crosshair';container.style.position='relative';container.appendChild(canvas);
-const tooltip=document.createElement('div');tooltip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #8b949e;border-radius:8px;padding:5px 9px;font-size:11px;color:#c9d1d9;display:none;z-index:10;white-space:nowrap;';container.appendChild(tooltip);
-const PL=8,PR=52,PT=10,PB=24,dates=opts.dates,vals=opts.vals,n=dates.length;let vc=Math.min(opts.visibleCount||60,n),oi=Math.max(0,n-vc),ci=-1;function getSize(){const dpr=window.devicePixelRatio||1,w=container.clientWidth||600,h=opts.height||120;canvas.width=w*dpr;canvas.height=h*dpr;return{w,h,dpr};}function render(){const{w,h,dpr}=getSize();const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const plotW=w-PL-PR,plotH=h-PT-PB,start=Math.max(0,oi),end=Math.min(n,start+vc),vis=vals.slice(start,end),visDates=dates.slice(start,end),nc=vis.length;if(!nc)return;ctx.fillStyle='#0d1117';ctx.fillRect(0,0,w,h);const maxV=Math.max(...vis.map(Math.abs))||1;const midY=PT+plotH/2;ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(PL,midY);ctx.lineTo(w-PR,midY);ctx.stroke();const stepW=plotW/nc,bw=Math.max(1.5,stepW*0.65);vis.forEach((v,i)=>{const x=PL+(i+0.5)*stepW,col=Array.isArray(opts.colors)?(opts.colors[start+i]||'#8b949e'):(opts.colors||'#8b949e');const h2=Math.abs(v)/maxV*(plotH/2),y=v>=0?midY-h2:midY;ctx.fillStyle=col;ctx.fillRect(x-bw/2,y,bw,Math.max(1,h2));});if(opts.line2&&opts.line2.vals){const l2=opts.line2,l2max=Math.max(...l2.vals.map(Math.abs))||1;ctx.strokeStyle=l2.color||'#FFA500';ctx.lineWidth=1.5;ctx.beginPath();let st=false;visDates.forEach((date,i)=>{const idx=l2.dates.indexOf(date);if(idx<0){st=false;return;}const v=l2.vals[idx],x=PL+(i+0.5)*stepW,y=PT+plotH*(1-(v/l2max)*0.85);if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);});ctx.stroke();}if(ci>=0&&ci<nc){const x=PL+(ci+0.5)*stepW;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,h-PB);ctx.stroke();ctx.setLineDash([]);}
+const tooltip=document.createElement('div');tooltip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #8b949e;border-radius:8px;padding:5px 9px;font-size:11px;color:#c9d1d9;display:none;z-index:11;white-space:nowrap;';container.appendChild(tooltip);
+const pinnedTip=document.createElement('div');pinnedTip.style.cssText='position:absolute;pointer-events:none;background:rgba(13,17,23,0.92);border:1px solid #f0b429;border-radius:8px;padding:5px 9px;font-size:11px;color:#f0b429;display:none;z-index:10;white-space:nowrap;left:8px;top:4px;';container.appendChild(pinnedTip);
+const PL=8,PR=52,PT=10,PB=24,dates=opts.dates,vals=opts.vals,n=dates.length;let vc=Math.min(opts.visibleCount||60,n),oi=Math.max(0,n-vc),ci=-1;function getSize(){const dpr=window.devicePixelRatio||1,w=container.clientWidth||600,h=opts.height||120;canvas.width=w*dpr;canvas.height=h*dpr;return{w,h,dpr};}function render(){const{w,h,dpr}=getSize();const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);const plotW=w-PL-PR,plotH=h-PT-PB,start=Math.max(0,oi),end=Math.min(n,start+vc),vis=vals.slice(start,end),visDates=dates.slice(start,end),nc=vis.length;if(!nc)return;ctx.fillStyle='#0d1117';ctx.fillRect(0,0,w,h);const maxV=Math.max(...vis.map(Math.abs))||1;const midY=PT+plotH/2;ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(PL,midY);ctx.lineTo(w-PR,midY);ctx.stroke();const stepW=plotW/nc,bw=Math.max(1.5,stepW*0.65);vis.forEach((v,i)=>{const x=PL+(i+0.5)*stepW,col=Array.isArray(opts.colors)?(opts.colors[start+i]||'#8b949e'):(opts.colors||'#8b949e');const h2=Math.abs(v)/maxV*(plotH/2),y=v>=0?midY-h2:midY;ctx.fillStyle=col;ctx.fillRect(x-bw/2,y,bw,Math.max(1,h2));});if(opts.line2&&opts.line2.vals){const l2=opts.line2,l2max=Math.max(...l2.vals.map(Math.abs))||1;ctx.strokeStyle=l2.color||'#FFA500';ctx.lineWidth=1.5;ctx.beginPath();let st=false;visDates.forEach((date,i)=>{const idx=l2.dates.indexOf(date);if(idx<0){st=false;return;}const v=l2.vals[idx],x=PL+(i+0.5)*stepW,y=PT+plotH*(1-(v/l2max)*0.85);if(!st){ctx.moveTo(x,y);st=true;}else ctx.lineTo(x,y);});ctx.stroke();}if(pinnedDate2){const pvi=visDates.indexOf(pinnedDate2);if(pvi>=0){const px=PL+(pvi+0.5)*stepW;ctx.strokeStyle='rgba(240,180,41,0.9)';ctx.lineWidth=1.2;ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(px,PT);ctx.lineTo(px,h-PB);ctx.stroke();}}
+if(ci>=0&&ci<nc){const x=PL+(ci+0.5)*stepW;ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=0.8;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,PT);ctx.lineTo(x,h-PB);ctx.stroke();ctx.setLineDash([]);}
 ctx.fillStyle='#8b949e';ctx.font='9px sans-serif';ctx.textAlign='center';const ls=Math.max(1,Math.floor(nc/5));for(let i=0;i<nc;i+=ls){const x=PL+(i+0.5)*stepW;ctx.fillText(visDates[i].slice(2,7).replace('-','/'),x,h-PB+10);}ctx.textAlign='right';ctx.fillText(fmtNum(maxV),w-PR+50,PT+8);ctx.fillText('0',w-PR+50,midY+4);ctx.fillText('-'+fmtNum(maxV),w-PR+50,h-PB+4);}
-let isDrag2=false,dragX2=0,dragOi2=0;
+let isDrag2=false,dragX2=0,dragOi2=0,pinnedDate2=null;
 canvas.addEventListener('mousedown',e=>{if(e.button!==0)return;isDrag2=false;dragX2=e.clientX;dragOi2=oi;});
 canvas.addEventListener('mousemove',e=>{
   if(e.buttons===1){
@@ -593,6 +621,24 @@ canvas.addEventListener('mousemove',e=>{
     _syncCrossTo(d,cid);
   }
 });
+canvas.addEventListener('click',e=>{
+  if(isDrag2){isDrag2=false;return;}
+  const rect=canvas.getBoundingClientRect(),x=e.clientX-rect.left,start=Math.max(0,oi),cnt=Math.min(n,start+vc)-start;
+  const i=Math.floor((x-PL)/((rect.width-PL-PR)/cnt));
+  if(i>=0&&i<cnt){
+    const date=dates[start+i];
+    if(pinnedDate2===date){
+      pinnedDate2=null;pinnedTip.style.display='none';render();_syncPinnedTo('',cid);
+    } else {
+      pinnedDate2=date;
+      const v=vals[start+i];
+      let html=`<b style="color:#f0b429">${date}</b><br>${opts.label||''}：<b>${fmtNum(Math.round(v))}張</b>`;
+      if(opts.line2&&opts.line2.vals){const idx2=opts.line2.dates.indexOf(date);if(idx2>=0)html+=`<br>${opts.line2.label||''}：${fmtNum(Math.round(opts.line2.vals[idx2]))}張`;}
+      pinnedTip.innerHTML=html;pinnedTip.style.display='block';
+      render();_syncPinnedTo(date,cid);
+    }
+  }
+});
 canvas.addEventListener('mouseleave',()=>{isDrag2=false;ci=-1;tooltip.style.display='none';render();_syncCrossTo('',cid);});
 canvas.addEventListener('wheel',e=>{e.preventDefault();e.stopPropagation();const delta=e.deltaY>0?1.15:0.87;let nc2=Math.round(vc*delta);nc2=Math.max(5,Math.min(n,nc2));const center=oi+vc/2;oi=Math.round(Math.max(0,Math.min(n-nc2,center-nc2/2)));vc=nc2;render();_syncViewTo(oi,vc,cid);},{passive:false});
 if(window.ResizeObserver){let _rod2=null;new ResizeObserver(()=>{clearTimeout(_rod2);_rod2=setTimeout(()=>render(),150);}).observe(container);}
@@ -604,6 +650,12 @@ container._syncFrom=function(no,nc,cd){oi=no;vc=nc;container._lastOffset=no;cont
       if(vi>=0){ci=vi;const d=dates[start+vi],v=vals[start+vi];let html=`<b style="color:#58a6ff">${d}</b><br>${opts.label||''}：<b>${fmtNum(Math.round(v))}張</b>`;if(opts.line2&&opts.line2.vals){const idx2=opts.line2.dates.indexOf(d);if(idx2>=0)html+=`<br>${opts.line2.label||''}：${fmtNum(Math.round(opts.line2.vals[idx2]))}張`;}tooltip.innerHTML=html;tooltip.style.display='block';tooltip.style.left='8px';tooltip.style.top='4px';}
       else{ci=-1;tooltip.style.display='none';}
     }
+  }
+  render();};
+container._syncPinned=function(date){
+  if(!date){pinnedDate2=null;pinnedTip.style.display='none';}
+  else{pinnedDate2=date;const start=Math.max(0,oi),cnt=Math.min(n,start+vc)-start,vi=dates.slice(start,start+cnt).indexOf(date);
+    if(vi>=0){const v=vals[start+vi];let html=`<b style="color:#f0b429">${date}</b><br>${opts.label||''}：<b>${fmtNum(Math.round(v))}張</b>`;if(opts.line2&&opts.line2.vals){const idx2=opts.line2.dates.indexOf(date);if(idx2>=0)html+=`<br>${opts.line2.label||''}：${fmtNum(Math.round(opts.line2.vals[idx2]))}張`;}pinnedTip.innerHTML=html;pinnedTip.style.display='block';}
   }
   render();};}
 function drawVolume(rows){const el=document.getElementById('vol-plotly');if(!el)return;if(!rows||!rows.length){el.innerHTML='';return;}drawCanvasBar('vol-plotly',{dates:rows.map(b=>b.date),vals:rows.map(b=>Math.round((b.volume||0)/1000)),colors:rows.map(b=>b.close>=b.open?'#ef5350':'#26a69a'),height:100,label:'成交量',visibleCount:60});}
