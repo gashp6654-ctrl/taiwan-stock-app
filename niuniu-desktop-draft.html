@@ -128,6 +128,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .dh{margin-bottom:12px;}
 .dht{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
 .rsm{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;padding:0 12px;}
+.rev-summary{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;}
+.rev-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 12px;}
+.rev-card-label{font-size:11px;color:var(--muted);margin-bottom:3px;}
+.rev-card-val{font-size:16px;font-weight:900;}
 .rc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
 .rcl{font-size:11px;color:var(--muted);margin-bottom:3px;}
 .rcv{font-size:15px;font-weight:900;}
@@ -171,7 +175,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.025</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.026</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -269,7 +273,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.025</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.026</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -301,7 +305,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.025</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.026</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -414,7 +418,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
         <!-- 月營收群組 -->
         <div style="margin:0 0 10px;border:1.5px solid rgba(88,166,255,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(88,166,255,0.04);">
           <div style="font-size:10px;font-weight:700;color:#58a6ff;padding:0 16px 6px;letter-spacing:1px;">📊 月營收</div>
-          <div class="rsm" id="rev-summary-monthly"></div>
+          <div class="rev-summary" id="rev-summary-monthly"></div>
           <div class="cb" style="margin-bottom:6px;"><div class="cl">月營收 + 年增率</div><div id="monthly-svg" style="width:100%;height:200px;"></div></div>
           <div style="margin:0 16px 8px;">
             <div onclick="toggleKnowledge('yoy')" class="kt" style="border:1px solid rgba(88,166,255,0.3);"><div style="font-size:12px;font-weight:900;color:#58a6ff;">📊 年增率（YoY）小知識</div><div id="arrow-yoy" class="ka">▼</div></div>
@@ -429,7 +433,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
         <!-- 季營收群組 -->
         <div style="margin:0 0 10px;border:1.5px solid rgba(63,185,80,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(63,185,80,0.04);">
           <div style="font-size:10px;font-weight:700;color:#3fb950;padding:0 16px 6px;letter-spacing:1px;">📈 季營收</div>
-          <div class="rsm" id="rev-summary-quarterly"></div>
+          <div class="rev-summary" id="rev-summary-quarterly"></div>
           <div class="cb" style="margin-bottom:6px;"><div class="cl">季營收 + 毛利率</div><div id="quarterly-svg" style="width:100%;height:200px;"></div></div>
           <div style="margin:0 16px 8px;">
             <div onclick="toggleKnowledge('qrev')" class="kt" style="border:1px solid rgba(63,185,80,0.3);"><div style="font-size:12px;font-weight:900;color:#3fb950;">📈 季營收 + 毛利率小知識</div><div id="arrow-qrev" class="ka">▼</div></div>
@@ -894,16 +898,37 @@ async function fetchMargin(code){try{const end=new Date(),start=new Date();start
 async function fetchMopsRevenue(code){try{const end=new Date(),start=new Date();start.setFullYear(start.getFullYear()-5);const fmt=d=>d.toISOString().slice(0,10);const rows=await fetchFinMind('TaiwanStockMonthRevenue',{data_id:code,start_date:fmt(start),end_date:fmt(end)});if(rows&&rows.length>=2){const sorted=rows.sort((a,b)=>a.date.localeCompare(b.date));return sorted.map(r=>{const sly=sorted.find(x=>x.revenue_year===r.revenue_year-1&&x.revenue_month===r.revenue_month);const yoy=sly&&sly.revenue>0?parseFloat(((r.revenue-sly.revenue)/sly.revenue*100).toFixed(1)):null;return{label:`${r.revenue_year-1911}/${String(r.revenue_month).padStart(2,'0')}`,value:parseFloat((r.revenue/100000000).toFixed(1)),yoy,rocYear:r.revenue_year-1911,month:r.revenue_month};});}}catch(e){}return[];}
 async function fetchGrossMargin(code){try{const end=new Date(),start=new Date();start.setFullYear(start.getFullYear()-4);const fmt=d=>d.toISOString().slice(0,10);const rows=await fetchFinMind('TaiwanStockFinancialStatements',{data_id:code,start_date:fmt(start),end_date:fmt(end)});if(!rows||!rows.length)return null;function dToQ(ds){const d=new Date(ds);return`${d.getFullYear()}Q${Math.ceil((d.getMonth()+1)/3)}`;}const byQ={};rows.forEach(r=>{const ql=dToQ(r.date);if(!byQ[ql])byQ[ql]={gp:null,rev:null};const t=r.type||'',nm=r.origin_name||'',val=parseFloat(r.value)||0;if((t==='GrossProfit'||nm.includes('毛利'))&&byQ[ql].gp===null)byQ[ql].gp=val;if((t==='Revenue'||nm.includes('營業收入'))&&byQ[ql].rev===null)byQ[ql].rev=val;});const res={};Object.entries(byQ).forEach(([ql,d])=>{if(d.rev&&Math.abs(d.rev)>0&&d.gp!==null)res[ql]=Math.round(d.gp/d.rev*1000)/10;});return Object.keys(res).length>0?res:null;}catch(e){return null;}}
 async function drawRevenueCharts(){const code=currentStock;setEl('rev-name','text',`${stockDB[code]?.name||code} — 營收分析`);updateBadges();setEl('rev-summary-monthly','html','<div style="color:var(--muted);font-size:13px;padding:8px;">載入中...</div>');setEl('rev-summary-quarterly','html','');
-  try{const revData=await fetchMopsRevenue(code);if(revData&&revData.length>=2){const revDisplay=revData.slice(-14);const monthly=revDisplay.map(d=>d.value);const labels=revDisplay.map(d=>d.label);const yoy=revDisplay.map((d,i)=>{if(d.yoy!==null&&d.yoy!==undefined)return d.yoy;if(i<12)return 0;const prev12=monthly[i-12];return prev12?Math.round((d.value-prev12)/prev12*1000)/10:0;});const latest=revData[revData.length-1];const prev=revData[revData.length-2];const mom=prev?Math.round((latest.value-prev.value)/prev.value*1000)/10:0;const annual=Math.round(monthly.reduce((a,b)=>a+b,0)*10)/10;const yoyLatest=yoy[yoy.length-1]||0;const upColor=yoyLatest>=0?'var(--green)':'var(--red)';const momColor=mom>=0?'var(--green)':'var(--red)';setEl('rev-summary-monthly','html',`<div class="rc"><div class="rcl">本月營收</div><div class="rcv" style="color:var(--green)">${latest.value}億</div></div><div class="rc"><div class="rcl">年增率</div><div class="rcv" style="color:${upColor}">${yoyLatest>=0?'+':''}${yoyLatest}%</div></div><div class="rc"><div class="rcl">月增率</div><div class="rcv" style="color:${momColor}">${mom>=0?'+':''}${mom}%</div></div><div class="rc"><div class="rcl">累計年營收</div><div class="rcv">${annual}億</div></div>`);
-  drawMonthlyChart({monthly,yoy,labels});
-  const byQ={};revData.forEach(r=>{const qk=`${r.rocYear}Q${Math.ceil(r.month/3)}`;if(!byQ[qk])byQ[qk]={label:qk,total:0,months:0};byQ[qk].total+=r.value;byQ[qk].months++;});const quarterly=Object.values(byQ).filter(q=>q.months>=3).slice(-8);if(!quarterly.length)return;const ql=quarterly[quarterly.length-1],qp=quarterly[quarterly.length-2];setEl('rev-summary-quarterly','html',`<div class="rc"><div class="rcl">最新季別</div><div class="rcv" style="font-size:13px;">${ql?.label||'--'}</div></div><div class="rc"><div class="rcl">季營收</div><div class="rcv">${ql?.total.toFixed(1)||'--'}億</div></div><div class="rc"><div class="rcl">季增率</div><div class="rcv">${qp&&qp.total>0?((ql.total/qp.total-1)*100).toFixed(1)+'%':'--'}</div></div><div class="rc"><div class="rcl">毛利率</div><div class="rcv">${gmData&&gmData[ql?.label]!==undefined?gmData[ql.label]+'%':'--'}</div></div>`);
-  // 季營收邏輯（忠於原作）
-  const revMap={};revData.forEach(d=>{const m=d.label.match(/(\d+)\/(\d+)/);if(m)revMap[`${m[1]}/${String(m[2]).padStart(2,'0')}`]=d.value;});
-  const qLabels=[],qRevs=[];const allKeys=Object.keys(revMap).sort();
-  if(allKeys.length>=3){const lastKey=allKeys[allKeys.length-1];const[lyStr,lmStr]=lastKey.split('/');let ly=parseInt(lyStr),lm=parseInt(lmStr);lm=Math.floor((lm-1)/3)*3+3;
-    for(let q=0;q<12;q++){let qEndM=lm-q*3,qY=ly;while(qEndM<=0){qEndM+=12;qY--;}const qStartM=qEndM-2;const k1=`${qY}/${String(qStartM).padStart(2,'0')}`,k2=`${qY}/${String(qStartM+1).padStart(2,'0')}`,k3=`${qY}/${String(qEndM).padStart(2,'0')}`;const m1=revMap[k1],m2=revMap[k2],m3=revMap[k3];if(m1!==undefined&&m2!==undefined&&m3!==undefined){const qRev=Math.round((m1+m2+m3)*10)/10;const qNum=Math.ceil(qEndM/3);qLabels.unshift(`${qY}Q${qNum}`);qRevs.unshift(qRev);}}}
-  if(qRevs.length>=2){fetchGrossMargin(code).then(gmMap=>{const grossMargins=qLabels.map(label=>{if(gmMap&&gmMap[label]!==undefined)return gmMap[label];const m=label.match(/^(\d{2,3})(Q[1-4])$/);if(m){const rocYear=parseInt(m[1]);if(rocYear<200){const adLabel=`${rocYear+1911}${m[2]}`;if(gmMap&&gmMap[adLabel]!==undefined)return gmMap[adLabel];}}return null;});drawQuarterlyChart({quarters:qRevs,labels:qLabels,grossMargins});});}
-  return;}}catch(e){console.warn('營收載入失敗',e);}
+  try{const revData=await fetchMopsRevenue(code);if(revData&&revData.length>=2){
+    const revDisplay=revData.slice(-14);
+    const monthly=revDisplay.map(d=>d.value);
+    const labels=revDisplay.map(d=>d.label);
+    const yoy=revDisplay.map((d,i)=>{if(d.yoy!==null&&d.yoy!==undefined)return d.yoy;if(i<12)return 0;const prev12=monthly[i-12];return prev12?Math.round((d.value-prev12)/prev12*1000)/10:0;});
+    const latest=revData[revData.length-1],prev=revData[revData.length-2];
+    const mom=prev?Math.round((latest.value-prev.value)/prev.value*1000)/10:0;
+    const annual=Math.round(monthly.reduce((a,b)=>a+b,0)*10)/10;
+    const yoyLatest=yoy[yoy.length-1]||0;
+    const upColor=yoyLatest>=0?'var(--green)':'var(--red)';
+    const momColor=mom>=0?'var(--green)':'var(--red)';
+    setEl('rev-summary-monthly','html',`<div class="rev-card"><div class="rev-card-label">本月營收</div><div class="rev-card-val" style="color:var(--green)">${latest.value}億</div></div><div class="rev-card"><div class="rev-card-label">年增率</div><div class="rev-card-val" style="color:${upColor}">${yoyLatest>=0?'+':''}${yoyLatest}%</div></div><div class="rev-card"><div class="rev-card-label">月增率</div><div class="rev-card-val" style="color:${momColor}">${mom>=0?'+':''}${mom}%</div></div><div class="rev-card"><div class="rev-card-label">累計年營收</div><div class="rev-card-val">${annual}億</div></div>`);
+    drawMonthlyChart({monthly,yoy,labels});
+    // 季營收：用月營收加總
+    const revMap={};revData.forEach(d=>{const m=d.label.match(/(\d+)\/(\d+)/);if(m)revMap[`${m[1]}/${String(m[2]).padStart(2,'0')}`]=d.value;});
+    const qLabels=[],qRevs=[];const allKeys=Object.keys(revMap).sort();
+    if(allKeys.length>=3){const lastKey=allKeys[allKeys.length-1];const[lyStr,lmStr]=lastKey.split('/');let ly=parseInt(lyStr),lm=parseInt(lmStr);lm=Math.floor((lm-1)/3)*3+3;
+      for(let q=0;q<12;q++){let qEndM=lm-q*3,qY=ly;while(qEndM<=0){qEndM+=12;qY--;}const qStartM=qEndM-2;const k1=`${qY}/${String(qStartM).padStart(2,'0')}`,k2=`${qY}/${String(qStartM+1).padStart(2,'0')}`,k3=`${qY}/${String(qEndM).padStart(2,'0')}`;const m1=revMap[k1],m2=revMap[k2],m3=revMap[k3];if(m1!==undefined&&m2!==undefined&&m3!==undefined){const qRev=Math.round((m1+m2+m3)*10)/10;const qNum=Math.ceil(qEndM/3);qLabels.unshift(`${qY}Q${qNum}`);qRevs.unshift(qRev);}}}
+    if(qRevs.length>=2){
+      fetchGrossMargin(code).then(gmMap=>{
+        const grossMargins=qLabels.map(label=>{
+          if(gmMap&&gmMap[label]!==undefined)return gmMap[label];
+          const m=label.match(/^(\d{2,3})(Q[1-4])$/);
+          if(m){const rocYear=parseInt(m[1]);if(rocYear<200){const adLabel=`${rocYear+1911}${m[2]}`;if(gmMap&&gmMap[adLabel]!==undefined)return gmMap[adLabel];}}
+          return null;
+        });
+        drawQuarterlyChart({quarters:qRevs,labels:qLabels,grossMargins});
+      });
+    }else{setEl('rev-summary-quarterly','html','<div style="color:var(--muted);font-size:13px;padding:12px 0;">季營收資料不足，請稍後再試</div>');}
+    return;
+  }}catch(e){console.warn('營收載入失敗',e);}
   setEl('rev-summary-monthly','html','<div style="color:var(--muted);font-size:13px;padding:12px 0;">月營收資料載入失敗，請稍後再試</div>');
   setEl('rev-summary-quarterly','html','<div style="color:var(--muted);font-size:13px;padding:12px 0;">季營收資料整合中，敬請期待</div>');}
 function drawMonthlyChart(data){const el=document.getElementById('monthly-svg');if(!el)return;try{Plotly.purge(el);}catch(e){}el.innerHTML='';const n=data.monthly.length;const colors=data.monthly.map((v,i)=>i===n-1?'#58a6ff':'#3fb950');const barTrace={type:'bar',x:data.labels,y:data.monthly,marker:{color:colors},name:'月營收(億)',yaxis:'y',hovertemplate:'%{x}<br>月營收：%{y}億<extra></extra>'};const lineTrace={type:'scatter',mode:'lines+markers',x:data.labels,y:data.yoy,line:{color:'#d29922',width:2},marker:{color:'#d29922',size:5},name:'年增率(%)',yaxis:'y2',hovertemplate:'%{x}<br>年增率：%{y}%<extra></extra>'};const layout={height:200,plot_bgcolor:'#0d1117',paper_bgcolor:'#0d1117',font:{color:'#c9d1d9',size:10},margin:{l:46,r:38,t:8,b:30},hovermode:'x unified',dragmode:'pan',bargap:0.25,xaxis:{gridcolor:'#21262d',tickfont:{size:8},fixedrange:true},yaxis:{gridcolor:'#21262d',tickfont:{size:9},fixedrange:true,title:{text:'億',font:{size:9},standoff:2}},yaxis2:{tickfont:{size:9,color:'#d29922'},fixedrange:true,overlaying:'y',side:'right',ticksuffix:'%',title:{text:'%',font:{size:9,color:'#d29922'},standoff:2}},showlegend:true,legend:{orientation:'h',x:0,y:1.12,font:{size:9}}};const config={responsive:true,displayModeBar:false,scrollZoom:false};Plotly.newPlot(el,[barTrace,lineTrace],layout,config);}
