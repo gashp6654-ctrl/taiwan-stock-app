@@ -171,7 +171,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.020</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.023</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -269,7 +269,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.020</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.023</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -301,7 +301,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.020</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.023</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -326,8 +326,56 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
             <button class="ptab" onclick="setPeriod(this)">月</button>
           </div>
         </div>
-        <div class="cb"><div class="cl">📈 K線走勢圖</div><div id="kline-plotly" style="width:100%;height:320px;"></div></div>
-        <div class="cb"><div class="cl">📦 成交量（張）<span style="font-size:10px;font-weight:400;">每日</span></div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
+        <div style="margin:0 0 10px;border:1.5px solid rgba(88,166,255,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(88,166,255,0.04);">
+          <div style="font-size:10px;font-weight:700;color:#58a6ff;padding:0 16px 6px;letter-spacing:1px;">📊 K線走勢</div>
+          <div class="cb" style="margin-bottom:6px;"><div class="cl">📈 K線走勢圖</div><div id="kline-plotly" style="width:100%;height:320px;"></div></div>
+          <div style="margin:0 16px 8px;">
+            <div onclick="toggleKnowledge('ma')" class="kt" style="border:1px solid rgba(88,166,255,0.3);"><div style="font-size:12px;font-weight:900;color:#58a6ff;">📖 K線均線小知識</div><div id="arrow-ma" class="ka">▼</div></div>
+            <div id="content-ma" style="display:none;margin-top:6px;">
+              <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:6px;">
+                <div style="font-size:12px;font-weight:900;color:#58a6ff;margin-bottom:6px;">📈 MA5｜1週均線</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">5個交易日</b>的平均價。短線交易、當沖、隔日沖常用。適合判斷<b style="color:var(--text)">短期市場情緒</b>與大戶博心理戰，但不適合拿來判別公司長期好壞。</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:6px;">
+                <div style="font-size:12px;font-weight:900;color:#f0b429;margin-bottom:6px;">📈 MA20｜月均線（成本防線）</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">20個交易日</b>的平均價。有些人視為「<b style="color:var(--text)">成本防線</b>」，股價維持在月線之上代表中期趨勢未變，法人可能持續鎖籌碼。<b style="color:var(--red)">帶量跌破 MA20</b>，可能代表大戶撤退，是中期投資、波段操作者的重要參考線。</div>
+              </div>
+              <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+                <div style="font-size:12px;font-weight:900;color:#5dcaa5;margin-bottom:6px;">📈 MA100｜20週均線（終極防線）</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.8;">計算過去 <b style="color:var(--text)">100個交易日</b>的平均價。過濾所有短中期雜訊後的「<b style="color:var(--text)">真實趨勢</b>」。長線投資、價值投資、大波段操作者的終極防線，通常用於判斷一家公司長期趨勢與法人態度。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="margin:0 0 10px;border:1.5px solid rgba(63,185,80,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(63,185,80,0.04);">
+          <div style="font-size:10px;font-weight:700;color:#3fb950;padding:0 16px 6px;letter-spacing:1px;">📊 成交量</div>
+          <div class="cb" style="margin-bottom:6px;"><div class="cl">📦 成交量（張）<span style="font-size:10px;font-weight:400;">每日</span></div><div id="vol-plotly" style="width:100%;height:100px;"></div></div>
+          <div style="margin:0 16px 8px;">
+            <div onclick="toggleKnowledge('vol')" class="kt" style="border:1px solid rgba(63,185,80,0.3);"><div style="font-size:12px;font-weight:900;color:#3fb950;">📊 成交量小知識</div><div id="arrow-vol" class="ka">▼</div></div>
+            <div id="content-vol" style="display:none;margin-top:6px;">
+              <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+                <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:8px;">📊 成交量｜分辨真假訊號的關鍵</div>
+                <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">一、價量關係基礎規則</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+                  <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--green);">✅ 價漲量增（最健康）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場高度認同，買盤願意加價進場，上漲趨勢通常延續。</div></div>
+                  <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 價漲量縮（背離）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">追價力道薄弱，可能是散戶在推或主力縮手，隨時可能反轉回跌。</div></div>
+                  <div style="background:rgba(88,166,255,0.08);border-left:3px solid var(--blue);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--blue);">✅ 價跌量縮（良性修正）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">賣壓不重，持股者惜售，通常是健康盤整，未來有機會重啟漲勢。</div></div>
+                  <div style="background:rgba(248,81,73,0.12);border-left:3px solid #ff6b35;padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:#ff6b35;">🚨 價跌量增（恐慌殺盤）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">市場信心崩潰，大家不計代價出脫持股，股價容易繼續探底。</div></div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">二、結合均線的關鍵徵兆</div>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+                  <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--green);">✅ 帶量突破（真實）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">站上 MA20 或 MA100 時成交量達平時 <b style="color:var(--text)">1.5～2倍</b>以上，代表大戶法人出錢出力強攻，是很好的買進訊號。</div></div>
+                  <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--red);">⚠️ 無量突破（假突破）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價勉強站上均線但量能平平，通常很快就跌回來套牢追高的人。</div></div>
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:6px;">三、特殊警訊：爆量</div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="background:rgba(63,185,80,0.08);border-left:3px solid var(--green);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--green);">📍 低檔爆量（見底訊號）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">股價跌很久後在 MA100 下方突然驚人巨量，通常是主力低位吃貨，可能是長線反轉的前兆。</div></div>
+                  <div style="background:rgba(248,81,73,0.08);border-left:3px solid var(--red);padding:8px 10px;border-radius:0 8px 8px 0;"><div style="font-size:11px;font-weight:700;color:var(--red);">📍 高檔爆量（見頂訊號）</div><div style="font-size:11px;color:var(--muted);margin-top:3px;line-height:1.7;">沿著 MA5 連漲好幾天後突現天量長紅或長黑，往往是「<b style="color:var(--text)">利多出盡</b>」，大戶趁熱鬧把貨倒給散戶，要小心大回檔。</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         <div style="margin-bottom:10px;border:1.5px solid rgba(88,166,255,0.35);border-radius:16px;padding:10px 0 4px;background:rgba(88,166,255,0.04);">
           <div style="font-size:10px;font-weight:700;color:#58a6ff;padding:0 16px 6px;letter-spacing:1px;">🏦 三大法人</div>
           <div class="cb" style="margin-bottom:6px;"><div class="cl">外資買賣超（張）<span style="font-size:10px;font-weight:400;">每日</span></div><div id="foreign-plotly" style="width:100%;height:130px;"></div></div>
@@ -345,7 +393,16 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
           </div>
           <div style="margin:0 16px 8px;">
             <div onclick="toggleKnowledge('inst')" class="kt" style="border:1px solid rgba(240,136,62,0.3);"><div style="font-size:12px;font-weight:900;color:#f0883e;">⚖️ 主力法人15日累計 vs 融資餘額</div><div id="arrow-inst" class="ka">▼</div></div>
-            <div id="content-inst" style="display:none;"><div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;font-size:12px;color:var(--muted);line-height:1.8;"><b style="color:var(--text)">主力法人15日累計</b>：觀察外資、投信、自營商及大戶近15個交易日的總買賣力道。<br><br><b style="color:var(--text)">融資餘額</b>：市場投資人「借錢買股票」的總量，通常被視為<b>散戶動向與市場情緒的溫度計</b>。</div></div>
+            <div id="content-inst" style="display:none;margin-top:6px;">
+              <div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;">
+                <div style="font-size:12px;font-weight:900;color:var(--accent);margin-bottom:6px;">⚖️ 主力法人15日累計 vs 融資餘額</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:8px;"><b style="color:var(--text)">主力法人15日累計</b>：觀察外資、投信、自營商及大戶近15個交易日的總買賣力道。<br><br><b style="color:var(--text)">融資餘額</b>：市場投資人「借錢買股票」的總量，通常被視為<b style="color:var(--text)">散戶動向與市場情緒的溫度計</b>。</div>
+                <div style="background:rgba(240,180,41,0.08);border:1px solid rgba(240,180,41,0.3);border-radius:10px;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px;">🔍 如何判讀？</div>
+                  <div style="font-size:11px;color:var(--muted);line-height:1.8;">用來判斷該股處於「<b style="color:var(--green)">外資買、散戶丟</b>」還是「<b style="color:var(--red)">外資丟、散戶接</b>」的狀態。前者是健康格局，後者要特別小心。</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
