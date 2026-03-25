@@ -36,6 +36,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:background .3s;}
 .dot.done{background:var(--accent);}.dot.current{background:var(--blue);}
 @keyframes cowBob{0%{transform:translateY(0)}20%{transform:translateY(-8px)}35%{transform:translateY(0)}50%{transform:translateY(-6px)}65%{transform:translateY(0)}100%{transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 /* 側欄 */
 .sidebar{width:var(--sw);min-width:var(--sw);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--tr),min-width var(--tr);overflow:hidden;z-index:10;flex-shrink:0;}
@@ -175,7 +176,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.026</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.027</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -273,7 +274,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.026</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.027</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -305,7 +306,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.026</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.027</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -314,8 +315,10 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       </div>
     </div>
   </div>
-  <div class="ca">
-    <div class="cm">
+  <div class="ca" style="position:relative;overflow:hidden;">
+    <div id="ai-code-bg" style="position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;padding:10px 8px;z-index:0;pointer-events:none;"></div>
+    <canvas id="ai-star-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
+    <div class="cm" style="position:relative;z-index:2;">
 
       <!-- K線 & 籌碼頁 -->
       <div class="pg active" id="page-detail">
@@ -986,6 +989,50 @@ window.addEventListener('offline',()=>showToast('network-toast',5000));
 // ===== Matrix 登入背景 =====
 (function(){const canvas=document.getElementById('matrix-canvas');if(!canvas)return;const ctx=canvas.getContext('2d');function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}resize();window.addEventListener('resize',resize);let columns,drops;function init(){columns=Math.floor(canvas.width/16);drops=Array(columns).fill(1);}init();function draw(){ctx.fillStyle='rgba(6,2,15,0.22)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.font='16px monospace';for(let i=0;i<drops.length;i++){const char='01'[Math.floor(Math.random()*2)];if(drops[i]<2)ctx.fillStyle='rgba(255,255,255,1)';else if(drops[i]<5)ctx.fillStyle='rgba(255,230,100,1)';else{const b=Math.max(0.35,1-drops[i]*0.06);ctx.fillStyle='rgba(240,180,41,'+b+')';}ctx.fillText(char,i*16,drops[i]*16);if(drops[i]*16>canvas.height&&Math.random()>0.975)drops[i]=0;drops[i]++;}}let mt=setInterval(draw,50);const lp=document.getElementById('page-login');if(lp)new MutationObserver(()=>{if(lp.style.display==='none')clearInterval(mt);}).observe(lp,{attributes:true,attributeFilter:['style']});})();
 
+
+// ===== 背景效果 =====
+(function(){
+  const codeSets=[
+    ['import AI from "niuniu-core"','const api = init(config)','if(ma20 > ma100) bull()','vol_avg = sum(vol[-20:]) / 20','support = min(low[-5:])','resist = max(high[-5:])','chip_ratio = inst / retail','trend = ema(close, 20)','signal = macd.crossover()','rsi_val = rsi(close, 14)','if rsi_val > 70: overbought','target = close * 1.15','stop = close * 0.95','foreign_net: +12.4B','momentum > threshold','model.score = 4/5','neural.predict(stock)','confidence: 0.941','MA20 > MA100: TRUE','inst_buy: +45.2B','output: bias detected','trend_strength: 0.82','pattern: engulfing','epoch: 2048 done','chip_flow: positive'],
+    ['import pandas as pd','import numpy as np','df = load_twse_data()','df["ma20"] = df.close.rolling(20).mean()','df["ma100"] = df.close.rolling(100).mean()','df["rsi"] = calc_rsi(df.close, 14)','df["macd"] = calc_macd(df.close)','df["vol_avg"] = df.vol.rolling(20).mean()','df["chip"] = inst_data.merge(df)','X = df[features].dropna()','y = df["label"].dropna()','model = XGBClassifier()','model.fit(X_train, y_train)','acc = model.score(X_test, y_test)','print(f"accuracy: {acc:.3f}")','pred = model.predict(X_live)','score = pred[0] * 5','bull_prob = pred_proba[1]','support = df.low[-5:].min()','resist = df.high[-5:].max()','foreign_net = inst.sum()','margin_chg = margin.diff()','vol_surge = vol / vol_avg','if vol_surge > 2: alert()','trend = "bull" if score>3 else "bear"','target = close * (1 + 0.15)','stop_loss = close * (1 - 0.05)','report = gen_report(stock_id)','send_alert(report, channel)','db.save(stock_id, score)','cache.set(key, result, ttl=3600)','logger.info("analysis done")','pipeline.next_step()','scheduler.run_at("09:00")','status: COMPLETE ✓'],
+    ['scanning market...','universe: 1,832 stocks','filter: vol > 1000','filter: rsi 40~65','candidates: 47 found','ranking by momentum','#1  2330 score:4.8','#2  2317 score:4.2','#3  2454 score:3.9','sentiment: POSITIVE','inst_flow: net buy','breakout: confirmed','risk: LOW','win_rate: 68.4%','sharpe_ratio: 1.84','recommendation ready','report generated ✓','status: READY ✓'],
+  ];
+  const bg=document.getElementById('ai-code-bg');
+  if(bg){
+    const lineStyle='font-size:9px;color:rgba(210,153,34,0.28);font-family:monospace;white-space:nowrap;line-height:1.75;';
+    let current=0,bgTimer=null;
+    function renderSet(idx){
+      if(bgTimer){clearTimeout(bgTimer);bgTimer=null;}
+      bg.innerHTML='';bg.style.opacity='0';bg.style.transition='opacity 0.5s';
+      setTimeout(()=>{bg.style.opacity='1';},50);
+      const lines=codeSets[idx];
+      lines.forEach((l,i)=>{setTimeout(()=>{
+        const oldCur=bg.querySelector('.ai-cursor-line');if(oldCur)oldCur.remove();
+        const d=document.createElement('div');d.style.cssText=lineStyle;d.textContent='> '+l;bg.appendChild(d);
+        const curLine=document.createElement('div');curLine.className='ai-cursor-line';curLine.style.cssText=lineStyle+'display:flex;align-items:center;';
+        const cur=document.createElement('span');cur.style.cssText='display:inline-block;width:7px;height:11px;background:rgba(210,153,34,0.75);animation:blink 1s step-end infinite;vertical-align:middle;margin-left:2px;';
+        curLine.textContent='> ';curLine.appendChild(cur);bg.appendChild(curLine);
+      },i*130);});
+      bgTimer=setTimeout(()=>{current=(current+1)%codeSets.length;renderSet(current);},lines.length*130+2000);
+    }
+    renderSet(0);
+  }
+  const sc=document.getElementById('ai-star-canvas');
+  if(sc){
+    const ctx=sc.getContext('2d');
+    function resize(){sc.width=sc.parentElement.clientWidth||window.innerWidth;sc.height=sc.parentElement.clientHeight||window.innerHeight;}
+    resize();window.addEventListener('resize',resize);
+    const stars=Array.from({length:55},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.3+0.4,vx:(Math.random()-0.5)*0.18,vy:(Math.random()-0.5)*0.18,alpha:Math.random()*0.5+0.25,col:Math.random()>0.5?'93,202,165':'175,169,236'}));
+    function drawStars(){
+      const W=sc.width,H=sc.height;
+      ctx.clearRect(0,0,W,H);
+      for(let i=0;i<stars.length;i++){for(let j=i+1;j<stars.length;j++){const a=stars[i],b=stars[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<80){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle='rgba(127,119,221,'+(0.18*(1-d/80))+')';ctx.lineWidth=0.6;ctx.stroke();}}}
+      stars.forEach(s=>{s.x+=s.vx;s.y+=s.vy;s.alpha+=(Math.random()-0.5)*0.025;s.alpha=Math.max(0.15,Math.min(0.7,s.alpha));if(s.x<0)s.x=W;if(s.x>W)s.x=0;if(s.y<0)s.y=H;if(s.y>H)s.y=0;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='rgba('+s.col+','+s.alpha+')';ctx.fill();});
+      requestAnimationFrame(drawStars);
+    }
+    drawStars();
+  }
+})();
 
 // ===== 初始化 =====
 localStorage.removeItem('geminiApiKey');
