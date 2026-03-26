@@ -177,7 +177,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.042</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.043</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -278,7 +278,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.042</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.043</div></div>
   </div>
   <div class="nsec">技術指標</div>
   <div class="ni active" id="nav-detail" data-label="K線 & 籌碼" onclick="showPage('detail')"><span class="ni-icon">📈</span><span class="ni-lbl">K線 &amp; 籌碼</span></div>
@@ -314,8 +314,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <a href="niuniu-mobile.html" style="display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:10px;padding:5px 10px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;white-space:nowrap;flex-shrink:0;">📱 手機版</a>
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.042</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.043</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -331,6 +330,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
 
       <!-- K線 & 籌碼頁 -->
       <div class="pg active" id="page-detail">
+        <a href="niuniu-mobile.html" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:0;padding:10px 0;font-size:14px;font-weight:900;cursor:pointer;text-decoration:none;box-shadow:0 2px 8px rgba(240,180,41,0.3);box-sizing:border-box;">📱 切換手機版介面</a>
         <div class="dh">
           <div class="dht">
             <div><div style="font-size:20px;font-weight:900;" id="d-name" style="color:var(--muted);">尚未選擇股票</div><div style="font-size:12px;color:var(--muted);" id="d-code">請使用上方搜尋列輸入代號</div></div>
@@ -499,6 +499,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
           <button onclick="toggleWatchbar()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:13px;padding:3px 8px;cursor:pointer;flex-shrink:0;font-weight:700;" id="wl-toggle-btn" title="收合/展開"><span style="font-size:14px;">☰</span> <span style="font-size:12px;">收合</span></button>
         </div>
         <div class="csi-body">
+          <a href="niuniu-mobile.html" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:linear-gradient(135deg,#f0b429,#d29922);color:#000;border:none;border-radius:12px;padding:10px 0;font-size:13px;font-weight:900;cursor:pointer;text-decoration:none;margin-bottom:10px;box-shadow:0 2px 8px rgba(240,180,41,0.4);box-sizing:border-box;">📱 切換手機版介面</a>
           <div style="margin-bottom:8px;"><button class="wab" onclick="toggleAddForm()" style="width:100%;">+ 新增</button></div>
           <div class="af" id="addForm"><input class="ai2" id="addInput" placeholder="股票代號" maxlength="6" onkeydown="if(event.key==='Enter')addWatch()"><button class="ac" onclick="addWatch()">加入</button></div>
           <div id="watchlistEl"></div>
