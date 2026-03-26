@@ -99,7 +99,10 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 .cm::-webkit-scrollbar{width:4px;}
 .cm::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 /* 右側自選股 */
-.cs{width:215px;min-width:215px;border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.cs{width:215px;min-width:215px;border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;transition:width var(--tr),min-width var(--tr);}
+.cs.col{width:36px;min-width:36px;overflow:hidden;}
+.cs.col .csi-body{display:none;}
+.cs.col .wl-toggle-btn{writing-mode:vertical-rl;white-space:nowrap;}
 .csi{padding:14px;}
 .st{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
 .wlr{display:flex;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .15s;}
@@ -177,7 +180,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.031</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.032</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -275,7 +278,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.031</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.032</div></div>
     <div class="cbtn">◀</div>
   </div>
   <div class="nsec">技術指標</div>
@@ -312,7 +315,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.031</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.032</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
@@ -489,10 +492,14 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
     </div><!-- end cm -->
 
     <!-- 右側自選股 -->
-    <div class="cs">
-      <div class="csi">
-        <div class="st" onclick="toggleWatchlist()" style="cursor:pointer;user-select:none;"><span>📌 我的自選股</span><span id="wl-arrow" style="font-size:11px;color:var(--muted);margin-left:4px;">▼</span><button class="wab" onclick="event.stopPropagation();toggleAddForm()">+ 新增</button></div>
-        <div id="wl-body">
+    <div class="cs" id="watchbar">
+      <div class="csi" style="position:relative;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;white-space:nowrap;" class="csi-body">📌 我的自選股</span>
+          <button onclick="toggleWatchbar()" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:2px 6px;cursor:pointer;flex-shrink:0;" id="wl-toggle-btn" title="收合/展開">◀</button>
+        </div>
+        <div class="csi-body">
+          <div style="margin-bottom:8px;"><button class="wab" onclick="toggleAddForm()" style="width:100%;">+ 新增</button></div>
           <div class="af" id="addForm"><input class="ai2" id="addInput" placeholder="股票代號" maxlength="6" onkeydown="if(event.key==='Enter')addWatch()"><button class="ac" onclick="addWatch()">加入</button></div>
           <div id="watchlistEl"></div>
         </div>
@@ -944,7 +951,7 @@ let watchlist=JSON.parse(localStorage.getItem('niuniu_desktop_wl')||'null')||[{c
 function saveWatchlist(){localStorage.setItem('niuniu_desktop_wl',JSON.stringify(watchlist));}
 function renderWatchlist(){const el=document.getElementById('watchlistEl');if(!el)return;el.innerHTML=watchlist.map((s,i)=>`<div class="wlr" onclick="goStock('${s.code}')"><span class="wc">${s.code}</span><span class="wn">${s.name}</span><span class="wp ${s.up?'up':'down'}">${s.price||'--'}</span><span class="wg ${s.up?'up':'down'}">${s.price?(s.up?'▲':'▼')+s.chg:''}</span><button class="wd" onclick="event.stopPropagation();removeWatch(${i})">✕</button></div>`).join('');watchlist.forEach(async s=>{const data=await fetchRealPrice(s.code);if(!data)return;s.price=data.price;s.chg=data.chg;s.up=data.up;if(!stockDB[s.code])stockDB[s.code]={name:s.name,price:data.price,chg:data.chg,up:data.up};else{stockDB[s.code].price=data.price;stockDB[s.code].chg=data.chg;stockDB[s.code].up=data.up;}renderWatchlistPricesOnly();});}
 function renderWatchlistPricesOnly(){const el=document.getElementById('watchlistEl');if(!el)return;el.innerHTML=watchlist.map((s,i)=>`<div class="wlr" onclick="goStock('${s.code}')"><span class="wc">${s.code}</span><span class="wn">${s.name}</span><span class="wp ${s.up?'up':'down'}">${s.price||'--'}</span><span class="wg ${s.up?'up':'down'}">${s.price?(s.up?'▲':'▼')+s.chg:''}</span><button class="wd" onclick="event.stopPropagation();removeWatch(${i})">✕</button></div>`).join('');}
-function toggleWatchlist(){const b=document.getElementById('wl-body'),a=document.getElementById('wl-arrow');if(!b||!a)return;const open=b.style.display!=='none';b.style.display=open?'none':'block';a.textContent=open?'▶':'▼';}
+function toggleWatchbar(){const wb=document.getElementById('watchbar'),btn=document.getElementById('wl-toggle-btn');if(!wb||!btn)return;const col=wb.classList.toggle('col');btn.textContent=col?'▶':'◀';}
 function toggleAddForm(){const f=document.getElementById('addForm');f.classList.toggle('show');if(f.classList.contains('show'))document.getElementById('addInput').focus();}
 function addWatch(){const code=document.getElementById('addInput').value.trim().toUpperCase();if(!code)return;if(watchlist.find(w=>w.code===code)){alert('已在自選股清單中');return;}const found=_allStocks.find(s=>s.code===code);const name=stockDB[code]?.name||found?.name||code;watchlist.push({code,name,price:0,chg:'-',up:true});saveWatchlist();document.getElementById('addInput').value='';document.getElementById('addForm').classList.remove('show');renderWatchlist();}
 function removeWatch(i){watchlist.splice(i,1);saveWatchlist();renderWatchlistPricesOnly();}
