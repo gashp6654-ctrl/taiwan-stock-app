@@ -264,7 +264,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（手機網頁版） <span style="font-size:10px;opacity:0.5;">v1.042</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（手機網頁版） <span style="font-size:10px;opacity:0.5;">v1.043</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -365,12 +365,19 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.042</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.043</span></div>
           <div class="app-subtitle">台股智慧診斷平台（手機網頁版）</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
-        <div id="home-avatar" onclick="confirmSignOut()" style="display:none;width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--accent);flex-shrink:0;cursor:pointer;" title="點擊登出">
-          <img id="home-avatar-img" style="width:100%;height:100%;object-fit:cover;"/>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div id="home-stock-tag" style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:5px 10px;text-align:right;cursor:pointer;" onclick="showScreen('detail')">
+            <div style="font-size:11px;color:var(--muted);font-weight:700;" id="home-tag-name">--</div>
+            <div style="font-size:14px;font-weight:900;" id="home-tag-price">--</div>
+            <div style="font-size:10px;font-weight:700;" id="home-tag-chg">--</div>
+          </div>
+          <div id="home-avatar" onclick="confirmSignOut()" style="display:none;width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid var(--accent);flex-shrink:0;cursor:pointer;" title="點擊登出">
+            <img id="home-avatar-img" style="width:100%;height:100%;object-fit:cover;"/>
+          </div>
         </div>
       </div>
       <div class="search-box">
@@ -382,6 +389,7 @@
         <div class="bubble" id="bubbleText">有牛牛在！股市不怕熊！🐮</div>
         <div class="cow-container" style="filter: drop-shadow(0 0 10px #f0b429) drop-shadow(0 0 22px #f0b42988) drop-shadow(0 0 40px #f0b42944);"><img class="cow-img" style="width:180px;height:180px;object-fit:contain;"/></div>
         <div onclick="cowTalk()" style="margin-top:10px;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:5px 20px;font-size:13px;font-weight:900;color:var(--accent);letter-spacing:1px;cursor:pointer;">AI牛牛</div>
+        <div onclick="switchToDesktop()" style="margin-top:8px;background:var(--card);border:1.5px solid var(--border);border-radius:20px;padding:5px 20px;font-size:12px;font-weight:900;color:var(--muted);letter-spacing:1px;cursor:pointer;">🖥️ 切換電腦版介面</div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px;margin-bottom:10px;">
         <div class="section-title" style="margin:0;">📌 我的首頁自選</div>
@@ -1676,7 +1684,7 @@ function goStock(code) {
   if(sr) { sr.style.display = 'none'; sr.innerHTML = ''; }
 
   // 更新股票 header
-  setEl('d-name','text',s.name);
+  setEl('d-name','text',s.name);updateHomeStockTag(code,s.name,s.price,s.chg,s.up);
   setEl('d-code','text',code+' · TW');
   setEl('d-price','text',s.price.toLocaleString());
   const dPrice=document.getElementById('d-price'); if(dPrice) dPrice.className='dh-price '+(s.up?'up':'down');
