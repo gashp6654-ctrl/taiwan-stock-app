@@ -23,7 +23,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
 :root{--bg:#06020f;--card:#0d0520;--card2:#130830;--border:#2a1060;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--blue:#58a6ff;--accent:#f0b429;--sw:200px;--scw:60px;--tr:0.22s cubic-bezier(.4,0,.2,1);}
-body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;overflow:hidden;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);display:flex;height:100vh;height:100dvh;overflow:hidden;}
 /* 登入覆蓋層 */
 .login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;}
 .login-overlay.quiz-mode{justify-content:flex-start;padding-top:30px;overflow-y:auto;}
@@ -40,7 +40,7 @@ body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
 /* 側欄 */
-.sidebar{width:var(--sw);min-width:var(--sw);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--tr),min-width var(--tr);overflow:hidden;z-index:10;flex-shrink:0;}
+.sidebar{width:var(--sw);min-width:var(--sw);background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--tr),min-width var(--tr);overflow:hidden;z-index:10;flex-shrink:0;height:100vh;height:100dvh;}
 .sidebar.col{width:var(--scw);min-width:var(--scw);}
 .logo{display:flex;align-items:center;gap:10px;padding:14px;border-bottom:1px solid var(--border);min-height:60px;cursor:pointer;user-select:none;flex-shrink:0;}
 .logo:hover{background:rgba(240,180,41,0.04);}
@@ -177,7 +177,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
   <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
   <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/></svg></div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.036</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（網頁版） <span style="font-size:10px;opacity:0.5;">v1.037</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -278,7 +278,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <path d="M70 55 L45 60 L68 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
       <path d="M130 55 L155 60 L132 75 Z" fill="#FFFFFF" stroke="#1A202C" stroke-width="2"/>
     </svg>
-    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.036</div></div>
+    <div class="logo-texts"><div class="logo-title">牛牛診股</div><div class="logo-sub">台股智慧診斷平台（網頁版）v1.037</div></div>
   </div>
   <div class="nsec">技術指標</div>
   <div class="ni active" id="nav-detail" data-label="K線 & 籌碼" onclick="showPage('detail')"><span class="ni-icon">📈</span><span class="ni-lbl">K線 &amp; 籌碼</span></div>
@@ -314,7 +314,7 @@ svg text{font-family:'Noto Sans TC',sans-serif;}
       <div class="sres" id="searchResults"></div>
     </div>
     <div class="tright">
-      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.036</span>
+      <span style="font-size:10px;color:var(--muted);opacity:0.5;white-space:nowrap;">v1.037</span>
       <div class="stag">
         <span style="color:var(--muted);font-weight:700;font-size:12px;" id="tb-code">--</span>
         <span id="tb-name" style="color:var(--muted);">請輸入股票</span>
