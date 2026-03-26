@@ -265,7 +265,7 @@
       <img class="cow-img" style="width:110px;height:110px;object-fit:contain;"/>
     </div>
     <div style="font-size:24px;font-weight:900;color:var(--accent);margin-bottom:4px;">🐮 牛牛診股</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（手機網頁版） <span style="font-size:10px;opacity:0.5;">v1.045</span></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:28px;">台股智慧診斷平台（手機網頁版） <span style="font-size:10px;opacity:0.5;">v1.048</span></div>
     <button onclick="googleLogin()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;color:#3c4043;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3);">
       <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       使用 Google 帳號登入
@@ -366,7 +366,7 @@
     <div class="screen active" id="screen-home">
       <div class="home-header">
         <div>
-          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.045</span></div>
+          <div class="app-title">🐮 牛牛診股 <span style="font-size:10px;font-weight:400;color:var(--muted);">v1.048</span></div>
           <div class="app-subtitle">台股智慧診斷平台（手機網頁版）</div>
           <div id="home-welcome" style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px;display:none;">👋 歡迎，<span id="home-username"></span>！</div>
         </div>
@@ -1521,15 +1521,15 @@ function showLoading() {
       bar.style.width = pct + '%';
     }
   }, 100);
+  ['a','b','c','d','my'].forEach(p=>{const btn=document.getElementById('btn-'+p);if(btn&&btn.style.display!=='none'){btn.textContent='⏳ AI分析中...';btn.disabled=true;btn.style.opacity='0.6';btn.style.cursor='not-allowed';}});
 }
 
-function hideLoading() {
+function hideLoading(success=false) {
   isAnalyzing = false;
   clearInterval(window._loadingTimer);
   const overlay = document.getElementById('loading-overlay');
   const bar = document.getElementById('loading-bar');
   if(!overlay || !bar) return;
-  // 快速跑完到100%再消失
   bar.style.transition = 'width 0.3s ease';
   bar.style.width = '100%';
   setTimeout(() => {
@@ -1537,6 +1537,7 @@ function hideLoading() {
     bar.style.width = '0%';
     bar.style.transition = '';
   }, 350);
+  if(!success){['a','b','c','d','my'].forEach(p=>{const btn=document.getElementById('btn-'+p);if(btn){btn.textContent=p==='my'?'🐮 開始綜合評估':'🐮 開始AI診斷';btn.disabled=false;btn.style.opacity='1';btn.style.cursor='pointer';}});}
 }
 
 function showWithLoading(name) {
@@ -3474,8 +3475,8 @@ MA20與MA100作為關鍵支撐壓力位。
 
     const fullText = await callGemini(prompt, signal);
 
-    if(currentStock !== diagStock || signal.aborted) { hideLoading(); return; }
-    hideLoading();
+    if(currentStock !== diagStock || signal.aborted) { hideLoading(false); return; }
+    hideLoading(true);
 
     // 切割5章到各頁
     const chapters = splitChapters(fullText);
@@ -3518,8 +3519,8 @@ MA20與MA100作為關鍵支撐壓力位。
     }
 
   } catch(err) {
-    if(err.name === 'AbortError' || currentStock !== diagStock) { hideLoading(); return; }
-    hideLoading();
+    if(err.name === 'AbortError' || currentStock !== diagStock) { hideLoading(false); return; }
+    hideLoading(false);
     const errEl = document.getElementById('a-error');
     if(errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ AI分析失敗：' + err.message + '\n請確認API Key是否正確，或稍後再試。'; }
   }
@@ -4411,7 +4412,7 @@ function showAdOverlay() {
     mask.id = 'ad-mask-'+id;
     mask.style.cssText = 'position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:20;cursor:pointer;width:85%;';
     mask.innerHTML = `
-      <div onclick="openAdPopup()" style="background:linear-gradient(135deg,#f0b429,#d29922);border-radius:16px;padding:14px 20px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.6);">
+      <div onclick="openAdPopup()" style="background:linear-gradient(135deg,#f0b429,#d29922);border-radius:16px;padding:14px 20px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.6);pointer-events:auto;cursor:pointer;">
         <div style="font-size:20px;margin-bottom:4px;">🔓</div>
         <div style="font-size:14px;font-weight:900;color:#000;margin-bottom:6px;">觀看廣告解鎖分析</div>
         <div style="font-size:11px;color:rgba(0,0,0,0.7);line-height:1.7;margin-bottom:6px;">由於 AI 分析成本高<br>為了維持牛牛生計<br>需觀看 30 秒廣告解鎖</div>
@@ -4419,6 +4420,7 @@ function showAdOverlay() {
       </div>`;
     el.appendChild(mask);
     el.style.pointerEvents = 'none';
+    mask.style.pointerEvents = 'auto';
   });
 }
 
