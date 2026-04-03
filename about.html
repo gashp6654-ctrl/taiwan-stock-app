@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>關於牛牛診股 — 台股AI智慧診斷平台</title>
+<meta name="description" content="牛牛診股是專為台灣散戶投資者設計的AI股票分析平台，整合K線技術分析、法人籌碼、月營收等多維度資料，搭配Gemini AI深度解讀，幫助投資人做出更明智的投資決策。">
+<meta name="keywords" content="牛牛診股,台股AI分析,股票診斷,K線分析,法人籌碼,營收分析,台灣股市,AI投資工具,散戶投資,技術分析">
+<link rel="canonical" href="https://www.niuniu-stock.tw/about.html">
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-93P8EVLD7C"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-93P8EVLD7C');
+</script>
+<!-- AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9484337826738822" crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --card: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #f0b429;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --red: #f85149;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.8;
+  }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Header */
+  .header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .header-nav {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+  .header-nav a {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #f0b429, #d29922);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .btn-primary:hover { text-decoration: none; opacity: 0.9; }
+
+  /* Hero */
+  .hero {
+    text-align: center;
+    padding: 80px 24px 60px;
+    background: linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(240,180,41,0.1);
+    border: 1px solid rgba(240,180,41,0.3);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 1.3;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #f0b429, #58a6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 600px;
+    margin: 0 auto 32px;
+  }
+
+  /* Main */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* Section */
+  .section {
+    padding: 60px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 24px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .section-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  /* Features Grid */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .feature-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: border-color 0.2s;
+  }
+  .feature-card:hover { border-color: var(--accent); }
+  .feature-icon { font-size: 28px; margin-bottom: 12px; }
+  .feature-title { font-size: 15px; font-weight: 900; margin-bottom: 8px; }
+  .feature-desc { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  /* Article */
+  .article h2 {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--accent);
+    margin: 36px 0 12px;
+    padding-left: 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .article h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--blue);
+    margin: 24px 0 8px;
+  }
+  .article p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.9;
+    margin-bottom: 12px;
+  }
+  .article ul {
+    padding-left: 20px;
+    margin-bottom: 12px;
+  }
+  .article ul li {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.9;
+    margin-bottom: 4px;
+  }
+  .article strong { color: var(--text); }
+
+  /* Steps */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .step-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f0b429, #d29922);
+    color: #000;
+    font-weight: 900;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-content h4 { font-size: 15px; font-weight: 900; margin-bottom: 4px; }
+  .step-content p { font-size: 13px; color: var(--muted); line-height: 1.7; margin: 0; }
+
+  /* FAQ */
+  .faq-list { display: flex; flex-direction: column; gap: 12px; }
+  .faq-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .faq-q {
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .faq-q:hover { color: var(--accent); }
+  .faq-a {
+    padding: 0 20px 16px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    display: none;
+  }
+  .faq-item.open .faq-a { display: block; }
+  .faq-item.open .faq-arrow { transform: rotate(180deg); }
+  .faq-arrow { transition: transform 0.2s; font-size: 11px; color: var(--muted); }
+
+  /* CTA */
+  .cta {
+    text-align: center;
+    padding: 60px 24px;
+    background: linear-gradient(135deg, rgba(240,180,41,0.05), rgba(88,166,255,0.05));
+    border-top: 1px solid var(--border);
+  }
+  .cta h2 { font-size: 28px; font-weight: 900; margin-bottom: 12px; }
+  .cta p { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+  .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-secondary {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  /* Footer */
+  footer {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  footer a { color: var(--muted); margin: 0 8px; }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 28px; }
+    .header-nav { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <a href="/" class="header-logo">🐮 牛牛診股</a>
+  <nav class="header-nav">
+    <a href="/about.html">首頁</a>
+    <a href="/about.html">關於我們</a>
+    <a href="/privacy-policy.html">隱私政策</a>
+    <a href="/niuniu-desktop-draft.html" class="btn-primary">立即使用</a>
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">🐮 台股 AI 智慧診斷平台</div>
+  <h1>讓 AI 幫你看懂台股<br>做出更明智的投資決策</h1>
+  <p>牛牛診股整合 K 線技術分析、三大法人籌碼、月營收趨勢，搭配 Google Gemini AI 深度解讀，幫助台灣散戶投資者快速掌握個股動態。</p>
+  <div style="font-size:22px;font-weight:900;color:var(--text);margin-bottom:20px;">🐮 免費開始使用</div>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+    <a href="/niuniu-desktop-draft.html" class="btn-primary" style="padding:12px 28px;font-size:15px;">💻 電腦版</a>
+    <a href="/niuniu-mobile.html" style="display:inline-block;background:var(--card);color:var(--text);border:1.5px solid var(--border);border-radius:10px;padding:12px 28px;font-size:15px;font-weight:900;text-decoration:none;">📱 手機版</a>
+  </div>
+</section>
+
+<div class="container">
+
+  <!-- 功能介紹 -->
+  <section class="section">
+    <div class="section-title">🔍 牛牛股市功能一覽</div>
+    <div class="section-sub">多維度分析，全面掌握個股動態</div>
+    <div class="features-grid">
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">K 線走勢分析</div>
+        <div class="feature-desc">顯示日、週、月 K 線圖，整合 MA5、MA20、MA100 均線，一眼看出多空趨勢。支援縮放、平移，互動式操作直覺好用。</div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/kline-chart.png" alt="台積電K線走勢圖範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 台積電（2330）K線走勢圖範例，含 MA5、MA20、MA100 均線</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#58a6ff;margin-bottom:10px;">📖 K線均線小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            <b style="color:var(--text);">MA5（1週均線）</b>：計算過去5個交易日的平均價。短線交易、當沖、隔日沖常用。適合判斷短期市場情緒與大戶博心理戰，但不適合拿來判別公司長期好壞。<br><br>
+            <b style="color:var(--text);">MA20（月均線｜成本防線）</b>：計算過去20個交易日的平均價。有些人視為「成本防線」，股價維持在月線之上代表中期趨勢未變，法人可能持續鎖籌碼。帶量跌破MA20，可能代表大戶撤退，是中期投資、波段操作者的重要參考線。<br><br>
+            <b style="color:var(--text);">MA100（20週均線｜終極防線）</b>：計算過去100個交易日的平均價。過濾所有短中期雜訊後的「真實趨勢」。長線投資、價值投資、大波段操作者的終極防線，通常用於判斷一家公司長期趨勢與法人態度。
+          </div>
+        </div>
+      </div>
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">📊</div>
+        <div class="feature-title">成交量分析</div>
+        <div class="feature-desc">成交量是判斷突破真假的關鍵指標。</div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/vol-chart.png" alt="台積電成交量分析範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 台積電（2330）成交量分析範例</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#58a6ff;margin-bottom:10px;">📊 成交量小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            <b style="color:var(--text);">一、價量關係基礎規則</b><br>
+            ✅ <b style="color:var(--text);">價漲量增（最健康）</b>：市場高度認同，買盤願意加價進場，上漲趨勢通常延續。<br>
+            ⚠️ <b style="color:var(--text);">價漲量縮（背離）</b>：追價力道薄弱，可能是散戶在推或主力縮手，隨時可能反轉回跌。<br>
+            ✅ <b style="color:var(--text);">價跌量縮（良性修正）</b>：賣壓不重，持股者惜售，通常是健康盤整，未來有機會重啟漲勢。<br>
+            🚨 <b style="color:var(--text);">價跌量增（恐慌殺盤）</b>：市場信心崩潰，大家不計代價出脫持股，股價容易繼續探底。<br><br>
+            <b style="color:var(--text);">二、結合均線的關鍵徵兆</b><br>
+            ✅ <b style="color:var(--text);">帶量突破（真實）</b>：站上 MA20 或 MA100 時成交量達平時 1.5～2 倍以上，代表大戶法人出錢出力強攻，是很好的買進訊號。<br>
+            ⚠️ <b style="color:var(--text);">無量突破（假突破）</b>：股價勉強站上均線但量能平平，通常很快就跌回來套牢追高的人。<br><br>
+            <b style="color:var(--text);">三、特殊警訊：爆量</b><br>
+            📍 <b style="color:var(--text);">低檔爆量（見底訊號）</b>：股價跌很久後在 MA100 下方突然驚人巨量，通常是主力低位吃貨，可能是長線反轉的前兆。<br>
+            📍 <b style="color:var(--text);">高檔爆量（見頂訊號）</b>：沿著 MA5 連漲好幾天後突現天量長紅或長黑，往往是「利多出盡」，大戶趁熱鬧把貨倒給散戶，要小心大回檔。
+          </div>
+        </div>
+      </div>
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">🐋</div>
+        <div class="feature-title">三大法人籌碼</div>
+        <div class="feature-desc">追蹤外資、投信、自營商每日買賣超，掌握主力動向。法人連續買超通常是股票上漲的重要訊號。</div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/foreign-chart.png" alt="三大法人籌碼分析範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 台積電（2330）三大法人買賣超分析範例</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#58a6ff;margin-bottom:10px;">🐋 外資買賣超小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            正值代表買超、負值代表賣超。外資連續 3～5 天以上買超同一檔股票，可能資金正在布局。需結合基本面與技術面一起判斷。
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/inst-chart.png" alt="主力法人15日累計vs融資餘額範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 主力法人15日累計 vs 融資餘額分析範例</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#58a6ff;margin-bottom:10px;">⚖️ 主力法人15日累計 vs 融資餘額小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            <b style="color:var(--text);">主力法人15日累計</b>：觀察外資、投信、自營商及大戶近15個交易日的總買賣力道。<br><br>
+            <b style="color:var(--text);">融資餘額</b>：市場投資人「借錢買股票」的總量，通常被視為散戶動向與市場情緒的溫度計。<br><br>
+            🔍 <b style="color:var(--text);">如何判讀？</b><br>
+            用來判斷該股處於「外資買、散戶丟」還是「外資丟、散戶接」的狀態。前者是健康格局，後者要特別小心。
+          </div>
+        </div>
+      </div>
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">💰</div>
+        <div class="feature-title">營收</div>
+        <div class="feature-desc">呈現近 14 個月月營收與年增率變化，季營收加計毛利率，幫助判斷公司基本面是否持續改善。</div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/rev-monthly-chart.png" alt="月營收分析範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 台積電（2330）月營收 + 年增率分析範例</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#58a6ff;margin-bottom:10px;">📊 年增率（YoY）小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            將<b style="color:var(--text);">當月營收與去年同月</b>比較，直接觀察公司是否有實質成長。<br><br>
+            ▲ <b style="color:var(--text);">正值</b>：業務擴張，較去年同期更具競爭力。<br>
+            ▼ <b style="color:var(--text);">負值</b>：營收可能衰退，需警惕需求下滑或產業下行。
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/rev-quarterly-chart.png" alt="季營收毛利率分析範例" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 台積電（2330）季營收 + 毛利率分析範例</div>
+        </div>
+        <div style="margin-top:16px;background:var(--bg);border-radius:12px;padding:16px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:900;color:#3fb950;margin-bottom:10px;">📈 季營收 + 毛利率小知識</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.9;">
+            你觀察過「<b style="color:var(--text);">營收創新高、股價卻不漲</b>」的情況嗎？這通常是毛利率出問題的警訊。毛利率越高，代表公司扣除直接成本後能留下的錢越多，幫你判斷公司是「表面訂單接不完根本沒賺錢」還是「質與量同步成長」。<br><br>
+            <b style="color:var(--text);">四種情境綜合分析</b><br>
+            ✅ <b style="color:var(--text);">營收升 + 毛利升（最理想）</b>：產品供不應求，公司甚至有漲價能力，或新產品毛利更高。<br>
+            ⚠️ <b style="color:var(--text);">營收升 + 毛利降（需警戒）</b>：可能採「降價競爭」搶市佔率，或原物料成本大幅上升無法轉嫁。<br>
+            🔄 <b style="color:var(--text);">營收降 + 毛利升（轉型期）</b>：公司可能精簡產品線，放棄低毛利訂單，專注高價值產品。<br>
+            🚨 <b style="color:var(--text);">營收降 + 毛利降（衰退中）</b>：產業可能進入寒冬或競爭力喪失，產品賣不動且必須降價出清。
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">🐄</div>
+        <div class="feature-title">牛友同溫層</div>
+        <div class="feature-desc">即時股票社群討論區，分享你對個股的看法，與其他投資者交流心得，集思廣益做出更好的投資決策。</div>
+        <div style="margin-top:14px;">
+          <img src="https://www.niuniu-stock.tw/images/community-chart.png" alt="牛友同溫層社群討論區" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          <div style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px;">▲ 牛友同溫層 — 每日股票心得分享社群</div>
+        </div>
+      </div>
+    </div>
+  </section>
+      <div class="feature-card" style="grid-column:1/-1;">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">Gemini AI 深度解讀</div>
+        <div class="feature-desc">整合 K 線、籌碼、營收數據，由 Google Gemini AI 生成五大章節完整分析報告，幫助投資人全方位掌握個股動態。</div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:16px;">
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">📈 第一章：K線診斷</div>
+            <img src="https://www.niuniu-stock.tw/images/ai-kline.png" alt="K線診斷AI分析" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">📊 第二章：均線趨勢分析</div>
+            <img src="https://www.niuniu-stock.tw/images/ai-ma.png" alt="均線趨勢AI分析" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🐋 第三章：大戶散戶動向</div>
+            <img src="https://www.niuniu-stock.tw/images/ai-chip.png" alt="大戶散戶AI分析" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">🔭 第四章：產業未來展望</div>
+            <img src="https://www.niuniu-stock.tw/images/ai-industry.png" alt="產業展望AI分析" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          </div>
+          <div>
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px;">💡 第五章：綜合評估</div>
+            <img src="https://www.niuniu-stock.tw/images/ai-summary.png" alt="綜合評估AI分析" style="width:100%;border-radius:10px;border:1px solid var(--border);"/>
+          </div>
+        </div>
+      </div>
+
+
+  <!-- 關於開發者 -->
+  <section class="section">
+    <div class="section-title">👨‍💻 關於開發者</div>
+    <div class="section-sub">一個人、一個夢想、一款工具</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px;">
+        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#f0b429,#d29922);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">🐮</div>
+        <div>
+          <div style="font-size:18px;font-weight:900;">冬龍</div>
+          <div style="font-size:13px;color:var(--muted);">獨立開發者 ／ 台股散戶投資人</div>
+        </div>
+      </div>
+      <p style="font-size:14px;color:var(--muted);line-height:1.9;margin-bottom:14px;">
+        牛牛診股由我一人獨立開發。身為台股散戶多年，深刻感受到市場資訊龐雜、分析工具昂貴，一般投資人很難像法人一樣系統性地分析個股。
+      </p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.9;margin-bottom:14px;">
+        於是我結合自身的程式開發專長，整合 K 線技術分析、三大法人籌碼、月營收趨勢，再搭配 Google Gemini AI 深度解讀，打造這款專為台灣散戶設計的免費 AI 股票分析工具。
+      </p>
+      <p style="font-size:14px;color:var(--muted);line-height:1.9;">
+        牛牛診股從手機 APP 到電腦網頁版，每一個功能都是我親手開發、親自測試。希望這款工具能幫助更多台灣散戶投資人，在複雜的市場中做出更有依據的投資決策。
+      </p>
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);">
+        📧 聯絡開發者：<a href="mailto:gashp6654@gmail.com" style="color:var(--blue);">gashp6654@gmail.com</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用步驟 -->
+  <section class="section">
+    <div class="section-title">🚀 如何開始使用</div>
+    <div class="section-sub">三步驟，快速上手牛牛診股</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Google 帳號登入</h4>
+          <p>使用您的 Google 帳號快速登入，不需要另外註冊。登入後完成簡單的問答設定，即可開始使用所有功能。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>搜尋股票代號</h4>
+          <p>在搜尋列輸入台股代號（如 2330 台積電），系統會自動載入 K 線圖、三大法人籌碼、月營收等資料。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>查看 AI 分析報告</h4>
+          <p>點擊「開始 AI 診斷」，由 Google Gemini AI 生成完整的 K 線診斷、均線趨勢、大戶動向、產業展望四大章節分析。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section">
+    <div class="section-title">❓ 常見問題</div>
+    <div class="section-sub">解答您對牛牛診股的疑問</div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">牛牛診股是免費使用的嗎？<span class="faq-arrow">▼</span></div>
+        <div class="faq-a">基本功能完全免費，包括 K 線圖、法人籌碼、月營收查詢。AI 分析功能需觀看廣告解鎖，VIP 訂閱用戶可免廣告無限使用。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">股票資料的來源是哪裡？<span class="faq-arrow">▼</span></div>
+        <div class="faq-a">股價資料來自 Yahoo Finance，法人籌碼和月營收資料來自 FinMind（整合自公開資訊觀測站），均為公開合法資料。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">AI 分析報告準確嗎？<span class="faq-arrow">▼</span></div>
+        <div class="faq-a">AI 分析基於歷史數據和技術指標，提供多角度解讀，僅供參考。股票投資涉及眾多因素，任何分析工具都無法保證準確預測，請結合自身判斷做出決策。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">支援哪些平台？<span class="faq-arrow">▼</span></div>
+        <div class="faq-a">牛牛診股提供電腦網頁版、手機網頁版，以及 Android APP（封測中）。所有平台使用相同的 Google 帳號，資料互通。</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">我的個人資料安全嗎？<span class="faq-arrow">▼</span></div>
+        <div class="faq-a">我們僅收集 Google 登入所需的基本資料（姓名、Email、頭像），儲存於 Google Firebase 雲端，受 Google 安全機制保護。詳情請參閱我們的<a href="/privacy-policy.html">隱私政策</a>。</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>🐮 立即使用</h2>
+  <p>免費使用，讓 AI 幫你分析台股，做出更明智的投資決策</p>
+  <div class="cta-btns">
+    <a href="/niuniu-desktop-draft.html" class="btn-primary">💻 電腦版</a>
+    <a href="/niuniu-mobile.html" class="btn-secondary">📱 手機版</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2026 牛牛診股 — 台股AI智慧診斷平台</p>
+  <p style="margin-top:8px;">
+    <a href="/about.html">首頁</a>
+    <a href="/about.html">關於我們</a>
+    <a href="/privacy-policy.html">隱私政策</a>
+    <a href="/cdn-cgi/l/email-protection#5a3d3b29322a6c6c6f6e1a3d373b333674393537">聯絡我們</a>
+  </p>
+  <p style="margin-top:8px; font-size:11px;">免責聲明：本站所有分析內容僅供參考，不構成投資建議。股票投資有風險，請謹慎評估。</p>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-dec
