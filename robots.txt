@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Allow: /index.html
+Disallow: /niuniu-mobile.html
+Disallow: /about.html
+Disallow: /niuniu-desktop-draft.html
 
 Sitemap: https://www.niuniu-stock.tw/sitemap.xml
