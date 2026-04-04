@@ -8,7 +8,15 @@
 <meta name="keywords" content="牛牛診股,台股AI分析,股票診斷,K線分析,法人籌碼,營收分析,台灣股市,AI投資工具,個人投資,技術分析">
 <link rel="canonical" href="https://www.niuniu-stock.tw/about.html">
 <!-- Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-93P8EVLD7C"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-93P8EVLD7C">function toggleKnowledge(key) {
+  const c = document.getElementById('content-' + key);
+  const a = document.getElementById('arrow-' + key);
+  if(!c || !a) return;
+  const isOpen = c.style.display !== 'none';
+  c.style.display = isOpen ? 'none' : 'block';
+  a.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+}
+</script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -340,6 +348,180 @@
             <b style="color:var(--text);">MA100（20週均線｜終極防線）</b>：計算過去100個交易日的平均價。過濾所有短中期雜訊後的「真實趨勢」。長線投資、價值投資、大波段操作者的終極防線，通常用於判斷一家公司長期趨勢與法人態度。
           </div>
         </div>
+        <!-- 牛牛K線小知識 -->
+        <div style="margin-top:24px;">
+          <div onclick="(function(){const c=document.getElementById('content-kbar16'),a=document.getElementById('arrow-kbar16');if(!c||!a)return;const o=c.style.display!=='none';c.style.display=o?'none':'block';a.style.transform=o?'rotate(0deg)':'rotate(180deg)';})()" style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:12px 16px;cursor:pointer;margin-bottom:6px;">
+            <div style="font-size:12px;font-weight:900;color:var(--accent);">📖 K線16種核心型態</div>
+            <div id="arrow-kbar16" style="font-size:12px;color:var(--muted);transition:transform 0.3s;">▼</div>
+          </div>
+          <div id="content-kbar16" style="display:none;">
+          <div style="font-size:12px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-bottom:12px;">🐮 牛牛K線小知識｜16種核心型態</div>
+
+          <!-- 標題列 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:rgba(42,16,96,0.6);border-radius:10px 10px 0 0;padding:8px 12px;font-size:10px;font-weight:700;color:var(--muted);">
+            <div>型態</div>
+            <div>定義</div>
+            <div>市場訊號</div>
+          </div>
+
+          <!-- 多頭K線 -->
+          <div style="font-size:10px;font-weight:700;color:var(--text);background:rgba(63,185,80,0.08);padding:5px 12px;border-left:3px solid var(--green);">▲ 多頭K線</div>
+          <!-- 大紅K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="4" width="20" height="62" fill="#c0392b" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">大紅K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">收盤價遠高於開盤價，實體長度佔全日波動大部分。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">多頭力道極強。低檔轉折或突破時，為<b style="color:var(--text)">強烈起漲訊號</b>。</div>
+          </div>
+          <!-- 中紅K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="18" width="20" height="34" fill="#c0392b" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">中紅K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">實體長度適中，買賣激戰後由多頭勝出。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">多方穩定主導趨勢，上升途中出現代表<b style="color:var(--text)">走勢健康</b>。</div>
+          </div>
+          <!-- 小紅K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="28" width="20" height="14" fill="#c0392b" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">小紅K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">實體短小且收盤微幅上漲，波動率較低。</div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;">多頭力道微弱，市場多處於<b style="color:var(--text)">觀望、盤整或蓄勢</b>階段。</div>
+          </div>
+
+          <!-- 空頭K線 -->
+          <div style="font-size:10px;font-weight:700;color:var(--red);background:rgba(248,81,73,0.08);padding:5px 12px;border-left:3px solid var(--red);">▼ 空頭K線</div>
+          <!-- 大黑K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="4" width="20" height="62" fill="#3fb950" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">大黑K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">收盤價遠低於開盤價，實體厚實且長。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">空頭極強。高檔出現代表<b style="color:var(--red)">多頭崩盤</b>，後市看跌。</div>
+          </div>
+          <!-- 中黑K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="18" width="20" height="34" fill="#3fb950" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">中黑K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">實體中等，賣壓穩定輸出，買盤抵抗落敗。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">空方主導行情，<b style="color:var(--red)">下跌動能尚未枯竭</b>。</div>
+          </div>
+          <!-- 小黑K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="28" width="20" height="14" fill="#3fb950" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">小黑K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">實體短小且收盤微幅下跌，交投冷清。</div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;">空頭力道受限，可能是下跌途中<b style="color:var(--text)">盤整或底部回穩</b>徵兆。</div>
+          </div>
+
+          <!-- 影線型態 -->
+          <div style="font-size:10px;font-weight:700;color:#f0b429;background:rgba(240,180,41,0.08);padding:5px 12px;border-left:3px solid #f0b429;">↕ 影線型態</div>
+          <!-- 倒鎚紅K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="2" x2="14" y2="55" stroke="var(--muted)" stroke-width="1.5"/><rect x="4" y="55" width="20" height="12" fill="#c0392b" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">倒鎚紅K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">紅色小實體在底部，上影線為實體兩倍以上。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:var(--text)">低檔止跌訊號</b>；高檔出現則稱墓碑線，預警反轉。</div>
+          </div>
+          <!-- 倒鎚黑K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="2" x2="14" y2="55" stroke="var(--muted)" stroke-width="1.5"/><rect x="4" y="55" width="20" height="12" fill="#3fb950" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">倒鎚黑K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">黑色小實體在底部，上影線長，反彈失敗。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">盤中嘗試反攻但收綠，<b style="color:var(--red)">空頭壓力大</b>，信心不足。</div>
+          </div>
+          <!-- 紅K鎚子 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="4" width="20" height="12" fill="#c0392b" rx="1"/><line x1="14" y1="16" x2="14" y2="68" stroke="var(--muted)" stroke-width="1.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">紅K鎚子</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">紅色小實體在頂部，下影線為實體兩倍以上。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:var(--text)">低檔強力止跌</b>；高檔出現（吊人）代表籌碼鬆動。</div>
+          </div>
+          <!-- 黑K鎚子 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><rect x="4" y="4" width="20" height="12" fill="#3fb950" rx="1"/><line x1="14" y1="16" x2="14" y2="68" stroke="var(--muted)" stroke-width="1.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">黑K鎚子</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">黑色小實體在頂部，下影線長，跌勢中有人承接。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">賣壓主導，但長下影線顯示<b style="color:var(--text)">低檔已有支撐買盤</b>。</div>
+          </div>
+
+          <!-- 變盤型態 -->
+          <div style="font-size:10px;font-weight:700;color:#afa9ec;background:rgba(175,169,236,0.08);padding:5px 12px;border-left:3px solid #afa9ec;">⚡ 變盤型態</div>
+          <!-- 紡錘紅K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="2" x2="14" y2="68" stroke="var(--muted)" stroke-width="1.5"/><rect x="4" y="28" width="20" height="14" fill="#c0392b" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:#c0392b;">紡錘紅K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">實體極小，上下影線等長，多空勢均力敵。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">市場深度猶豫，典型<b style="color:#f0b429)">變盤前兆</b>，須注意後續方向。</div>
+          </div>
+          <!-- 紡錘黑K -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="2" x2="14" y2="68" stroke="var(--muted)" stroke-width="1.5"/><rect x="4" y="28" width="20" height="14" fill="#3fb950" rx="1"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">紡錘黑K</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">黑色小實體，上下影線長，多空交投膠著。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">市場失去方向，<b style="color:#f0b429;">預示趨勢可能停頓或反轉</b>。</div>
+          </div>
+          <!-- T字線 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="4" x2="14" y2="56" stroke="var(--muted)" stroke-width="1.5"/><line x1="4" y1="4" x2="24" y2="4" stroke="var(--text)" stroke-width="2.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">T字線</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">僅有下影線，開收最高價全在頂部。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:var(--text);">極強底部支撐</b>，空頭猛攻被全數殲滅。</div>
+          </div>
+          <!-- 倒T線 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="14" x2="14" y2="66" stroke="var(--muted)" stroke-width="1.5"/><line x1="4" y1="66" x2="24" y2="66" stroke="var(--text)" stroke-width="2.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">倒T線</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">僅有上影線，開收最低價全在底部。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:var(--red);">上方賣壓重</b>，多頭衝鋒遭狙擊，不利後市。</div>
+          </div>
+          <!-- 一字線 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="4" y1="35" x2="24" y2="35" stroke="var(--text)" stroke-width="2.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">一字線</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">開高低收四價合一，盤中幾乎無價差。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;">見於漲跌停。市場達成<b style="color:#f0b429;">絕對共識</b>或缺乏流動性。</div>
+          </div>
+          <!-- 十字線 -->
+          <div style="display:grid;grid-template-columns:80px 1fr 1fr;gap:0;background:var(--card2);border-bottom:1px solid var(--border);padding:10px 12px;align-items:center;border-radius:0 0 10px 10px;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <svg width="28" height="70"><line x1="14" y1="4" x2="14" y2="66" stroke="var(--muted)" stroke-width="1.5"/><line x1="4" y1="35" x2="24" y2="35" stroke="var(--text)" stroke-width="2.5"/></svg>
+              <div style="font-size:10px;font-weight:700;color:var(--text);">十字線</div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);line-height:1.6;padding-right:6px;">開盤價與收盤價相等，具有長上下影線。</div>
+            <div style="font-size:10px;color:var(--text);line-height:1.6;"><b style="color:#f0b429;">強烈轉折訊號</b>，舊趨勢動能徹底消耗，極大機率反轉。</div>
+          </div>
+
+          </div>
+        </div>
       </div>
       <div class="feature-card" style="grid-column:1/-1;">
         <div class="feature-icon">📊</div>
@@ -662,7 +844,3 @@
     <a href="/niuniu-mobile.html" class="btn-secondary">📱 手機版</a>
   </div>
 </section>
-
-<!-- Footer -->
-<footer>
-  <p>© 2026 牛牛診股 — 台
